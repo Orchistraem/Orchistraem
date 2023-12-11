@@ -2,16 +2,7 @@ declare var Chart: any; // Déclare Chart.js comme une variable globale
 
 window.onload = function () {
     const canvas = document.getElementById('audiogram') as HTMLCanvasElement;
-    if (!canvas) {
-        console.error('Élément canvas non trouvé dans le DOM');
-        return;
-    }
-
     const ctx = canvas.getContext('2d');
-    if (!ctx) {
-        console.error('Impossible de récupérer le contexte de rendu 2D');
-        return;
-    }
 
     new Chart(ctx, {
         type: 'line',
@@ -57,7 +48,6 @@ window.onload = function () {
             options: {
               responsive: false, // Empêche le redimensionnement automatique
               maintainAspectRatio: true, // Maintient l'aspect ratio si nécessaire
-              // Autres options...
           },
         }
     });
