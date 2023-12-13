@@ -19,6 +19,7 @@ function initAudiogram() {
                     datasets: [{
                             label: 'Niveau d\'audition (dB)',
                             data: Array(7).fill(null),
+                            showLine: true,
                             backgroundColor: 'rgba(0, 123, 255, 0.2)',
                             borderColor: 'rgba(0, 123, 255, 1)',
                             borderWidth: 1,
@@ -34,9 +35,30 @@ function initAudiogram() {
                             max: 120,
                             ticks: {
                                 stepSize: 10
+                            },
+                            title: {
+                                display: true,
+                                text: 'Seuil Auditif (db)'
                             }
                         },
                         x: {
+                            type: 'logarithmic',
+                            position: 'bottom',
+                            min: 100,
+                            max: 8000,
+                            ticks: {
+                                min: 100,
+                                max: 8000,
+                                callback: function (value, index, ticks) {
+                                    return value.toString();
+                                }
+                            },
+                            afterBuildTicks: function (chart) {
+                                chart.ticks = [125, 250, 500, 1000, 2000, 4000, 8000];
+                                chart.ticks.forEach(function (value, index, array) {
+                                    array[index] = { value: value.toString() };
+                                });
+                            },
                             title: {
                                 display: true,
                                 text: 'Fréquence (Hz)'
@@ -50,7 +72,7 @@ function initAudiogram() {
                     },
                     elements: {
                         line: {
-                            tension: 0
+                            tension: 0 // Lignes droites sans courbure
                         }
                     },
                     responsive: false,
@@ -82,16 +104,28 @@ function addPointToAudiogram(chart, frequency, decibels) {
         const index = labels.indexOf(frequency);
         data[index] = decibels;
     }
+    console.log(chart.data.datasets[0].data);
     chart.update();
 }
-/**
- * Configure les gestionnaires d'événements pour l'audiogramme.
- *
- * @param chart - L'instance de l'audiogramme Chart.js.
- *
- * @example
- * setupEventHandlers(audiogramChart); // Configure les gestionnaires d'événements pour l'audiogramme
- */
+function addArbitraryPointToAudiogram(chart, frequency, decibels) {
+    chart.data.datasets[0].data.push({
+        x: frequency,
+        y: decibels
+    });
+    chart.update();
+}
+// This function can handle arbitrary frequencies.
+function addDataPoint(chart, frequency, decibels) {
+    // Add the new data point
+    chart.data.datasets[0].data.push({ x: frequency, y: decibels });
+    // Filter out null values and then sort the data based on the x value
+    chart.data.datasets[0].data = chart.data.datasets[0].data
+        .filter((point) => point !== null && point !== undefined)
+        .sort((a, b) => a.x - b.x);
+    // Update the chart
+    chart.update();
+}
+// Set up event handlers for the form.
 function setupEventHandlers(chart) {
     const addPointForm = document.getElementById('addPointForm');
     addPointForm === null || addPointForm === void 0 ? void 0 : addPointForm.addEventListener('submit', function (event) {
@@ -100,10 +134,10 @@ function setupEventHandlers(chart) {
         const decibelsInput = document.getElementById('decibels');
         const frequencyValue = parseFloat(frequencyInput.value);
         const decibelsValue = parseFloat(decibelsInput.value);
-        addPointToAudiogram(chart, frequencyValue, decibelsValue);
+        addDataPoint(chart, frequencyValue, decibelsValue);
     });
 }
-// Initialisation de l'audiogramme lorsque la fenêtre se charge
+// Initialize the audiogram when the window loads.
 window.onload = function () {
     const audiogramChart = initAudiogram();
     if (audiogramChart) {

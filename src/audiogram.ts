@@ -10,59 +10,83 @@ declare var Chart: any;
  * 
  */
 function initAudiogram() {
-    const canvas = document.getElementById('audiogram') as HTMLCanvasElement | null;
-    if (canvas && canvas.getContext) {
+  const canvas = document.getElementById('audiogram') as HTMLCanvasElement | null;
+  if (canvas && canvas.getContext) {
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        return new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: [125, 250, 500, 1000, 2000, 4000, 8000],
-            datasets: [{
-              label: 'Niveau d\'audition (dB)',
-              data: Array(7).fill(null),
-              backgroundColor: 'rgba(0, 123, 255, 0.2)',
-              borderColor: 'rgba(0, 123, 255, 1)',
-              borderWidth: 1,
-              pointRadius: 5
-            }]
-          },
-          options: {
-            scales: {
-              y: {
-                beginAtZero: false,
-                reverse: true,
-                min: -10,
-                max: 120,
-                ticks: {
-                  stepSize: 10
-                }
+          return new Chart(ctx, {
+              type: 'line',
+              data: {
+                  labels: [125, 250, 500, 1000, 2000, 4000, 8000],
+                  datasets: [{
+                      label: 'Niveau d\'audition (dB)',
+                      data: Array(7).fill(null),
+                      showLine: true,
+                      backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                      borderColor: 'rgba(0, 123, 255, 1)',
+                      borderWidth: 1,
+                      pointRadius: 5
+                  }]
               },
-              x: {
-                title: {
-                  display: true,
-                  text: 'Fréquence (Hz)'
-                }
+              options: {
+                  scales: {
+                      y: {
+                          beginAtZero: false,
+                          reverse: true,
+                          min: -10,
+                          max: 120,
+                          ticks: {
+                              stepSize: 10
+                          },
+                          title: {
+                            display: true,
+                            text: 'Seuil Auditif (db)'
+                          }
+                      },
+                      x: {
+                        type: 'logarithmic',
+                        position: 'bottom',
+                        min: 100, 
+                        max: 8000,
+                        ticks: {
+                          min: 100,
+                          max: 8000,
+                          callback: function(value: number, index: number, ticks: any[]) {
+                            return value.toString();
+                          }
+                        },
+                        afterBuildTicks: function(chart: any) {
+                          chart.ticks = [125, 250, 500, 1000, 2000, 4000, 8000];
+                          chart.ticks.forEach(function(value: number, index: number, array: any[]) {
+                            array[index] = { value: value.toString() }; 
+                          });
+                        },
+                        title: {
+                          display: true,
+                          text: 'Fréquence (Hz)'
+                        }
+                      } 
+                  },
+                  plugins: {
+                      legend: {
+                          display: false
+                      }
+                  },
+                  elements: {
+                      line: {
+                          tension: 0 // Lignes droites sans courbure
+                      }
+                  },
+                  responsive: false,
+                  maintainAspectRatio: true
               }
-            },
-            plugins: {
-              legend: {
-                display: false
-              }
-            },
-            elements: {
-              line: {
-                tension: 0
-              }
-            },
-            responsive: false,
-            maintainAspectRatio: true
-          }
-        });
+          });
       }
-    }
-    return null; // Retourne null si le canvas ou le contexte 2D n'existe pas
   }
+  return null; // Retourne null si le canvas ou le contexte 2D n'existe pas
+}
+
+
 
 /**
  * Ajoute un point à l'audiogramme.
@@ -85,37 +109,52 @@ function addPointToAudiogram(chart: any, frequency: number, decibels: number): v
     const index = labels.indexOf(frequency);
     data[index] = decibels;
   }
+  console.log(chart.data.datasets[0].data);
+  chart.update();
+}
+
+function addArbitraryPointToAudiogram(chart: any, frequency: number, decibels: number): void {
+  chart.data.datasets[0].data.push({
+    x: frequency,
+    y: decibels
+  });
 
   chart.update();
 }
 
-/**
- * Configure les gestionnaires d'événements pour l'audiogramme.
- * 
- * @param chart - L'instance de l'audiogramme Chart.js.
- * 
- * @example
- * setupEventHandlers(audiogramChart); // Configure les gestionnaires d'événements pour l'audiogramme
- */
-function setupEventHandlers(chart: any): void {
+
+// This function can handle arbitrary frequencies.
+function addDataPoint(chart: any, frequency: number, decibels: number): void {
+  // Add the new data point
+  chart.data.datasets[0].data.push({ x: frequency, y: decibels });
+
+  // Filter out null values and then sort the data based on the x value
+  chart.data.datasets[0].data = chart.data.datasets[0].data
+    .filter((point: any) => point !== null && point !== undefined)
+    .sort((a: any, b: any) => a.x - b.x);
+
+  // Update the chart
+  chart.update();
+}
+
+
+// Set up event handlers for the form.
+function setupEventHandlers(chart: any) {
   const addPointForm = document.getElementById('addPointForm');
   addPointForm?.addEventListener('submit', function(event) {
     event.preventDefault();
-
     const frequencyInput = document.getElementById('frequency') as HTMLInputElement;
     const decibelsInput = document.getElementById('decibels') as HTMLInputElement;
-
     const frequencyValue = parseFloat(frequencyInput.value);
     const decibelsValue = parseFloat(decibelsInput.value);
-
-    addPointToAudiogram(chart, frequencyValue, decibelsValue);
+    addDataPoint(chart, frequencyValue, decibelsValue);
   });
 }
 
-// Initialisation de l'audiogramme lorsque la fenêtre se charge
+// Initialize the audiogram when the window loads.
 window.onload = function () {
-  const audiogramChart = initAudiogram();
+  const audiogramChart= initAudiogram();
   if (audiogramChart) {
     setupEventHandlers(audiogramChart);
-  } 
+  }
 }
