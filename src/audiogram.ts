@@ -9,8 +9,8 @@ declare var Chart: any;
  * @returns L'instance de Chart créée ou null en cas d'échec.
  * 
  */
-function initAudiogram() {
-  const canvas = document.getElementById('audiogram') as HTMLCanvasElement | null;
+function initAudiogram(canvasID: string, pointColor: string, borderColor: string, earSide: string) {
+  const canvas = document.getElementById(canvasID) as HTMLCanvasElement | null;
   if (canvas && canvas.getContext) {
       const ctx = canvas.getContext('2d');
       if (ctx) {
@@ -19,11 +19,11 @@ function initAudiogram() {
               data: {
                   labels: [125, 250, 500, 1000, 2000, 4000, 8000],
                   datasets: [{
-                      label: 'Niveau d\'audition (dB)',
+                      label: 'Seuil Auditif (dB)',
                       data: Array(7).fill(null),
                       showLine: true,
-                      backgroundColor: 'rgba(0, 123, 255, 0.2)',
-                      borderColor: 'rgba(0, 123, 255, 1)',
+                      backgroundColor: pointColor,
+                      borderColor: borderColor,
                       borderWidth: 1,
                       pointRadius: 5
                   }]
@@ -68,10 +68,21 @@ function initAudiogram() {
                       } 
                   },
                   plugins: {
-                      legend: {
-                          display: false
+                    legend: {
+                      display: false
+                  },
+                    title: {
+                      display: true,
+                      text: earSide, 
+                      font: {
+                        size: 18
+                      },
+                      padding: {
+                        top: 10,
+                        bottom: 30
                       }
                   },
+                },
                   elements: {
                       line: {
                           tension: 0 // Lignes droites sans courbure
@@ -122,39 +133,53 @@ function addArbitraryPointToAudiogram(chart: any, frequency: number, decibels: n
   chart.update();
 }
 
-
-// This function can handle arbitrary frequencies.
+/**
+ * Ajoute un point de données à un audiogramme.
+ * 
+ * Cette fonction prend une fréquence et un niveau de décibels, les ajoute au graphique et trie les données pour s'assurer que les points sont affichés dans l'ordre correct. 
+ * La fonction filtre également les valeurs nulles avant de trier pour éviter les erreurs.
+ * 
+ * @param chart - L'instance de l'audiogramme Chart.js à mettre à jour.
+ * @param frequency - La fréquence du point à ajouter.
+ * @param decibels - Le niveau de décibels correspondant à la fréquence.
+ */
 function addDataPoint(chart: any, frequency: number, decibels: number): void {
-  // Add the new data point
   chart.data.datasets[0].data.push({ x: frequency, y: decibels });
 
-  // Filter out null values and then sort the data based on the x value
   chart.data.datasets[0].data = chart.data.datasets[0].data
     .filter((point: any) => point !== null && point !== undefined)
     .sort((a: any, b: any) => a.x - b.x);
 
-  // Update the chart
   chart.update();
 }
 
+/**
+ * Configure les gestionnaires d'événements pour les formulaires d'ajout de points aux audiogrammes.
+ * 
+ * Cette fonction associe des gestionnaires d'événements 'submit' aux formulaires qui permettent d'ajouter des points aux graphiques d'audiogrammes gauche et droit.
+ * 
+ * @param chartLeft - L'instance de l'audiogramme pour l'oreille gauche.
+ * @param chartRight - L'instance de l'audiogramme pour l'oreille droite.
+ */
+function setupEventHandlers(chartLeft: any, chartRight: any) {
+  const addPointFormLeft = document.getElementById('addPointFormLeft');
+  const addPointFormRight = document.getElementById('addPointFormRight');
 
-// Set up event handlers for the form.
-function setupEventHandlers(chart: any) {
-  const addPointForm = document.getElementById('addPointForm');
-  addPointForm?.addEventListener('submit', function(event) {
+  addPointFormLeft?.addEventListener('submit', function(event) {
     event.preventDefault();
-    const frequencyInput = document.getElementById('frequency') as HTMLInputElement;
-    const decibelsInput = document.getElementById('decibels') as HTMLInputElement;
+    const frequencyInput = document.getElementById('frequencyLeft') as HTMLInputElement;
+    const decibelsInput = document.getElementById('decibelsLeft') as HTMLInputElement;
     const frequencyValue = parseFloat(frequencyInput.value);
     const decibelsValue = parseFloat(decibelsInput.value);
-    addDataPoint(chart, frequencyValue, decibelsValue);
+    addDataPoint(chartLeft, frequencyValue, decibelsValue);
   });
-}
 
-// Initialize the audiogram when the window loads.
-window.onload = function () {
-  const audiogramChart= initAudiogram();
-  if (audiogramChart) {
-    setupEventHandlers(audiogramChart);
-  }
+  addPointFormRight?.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const frequencyInput = document.getElementById('frequencyRight') as HTMLInputElement;
+    const decibelsInput = document.getElementById('decibelsRight') as HTMLInputElement;
+    const frequencyValue = parseFloat(frequencyInput.value);
+    const decibelsValue = parseFloat(decibelsInput.value);
+    addDataPoint(chartRight, frequencyValue, decibelsValue);
+  });
 }

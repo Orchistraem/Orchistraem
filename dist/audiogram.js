@@ -7,8 +7,8 @@
  * @returns L'instance de Chart créée ou null en cas d'échec.
  *
  */
-function initAudiogram() {
-    const canvas = document.getElementById('audiogram');
+function initAudiogram(canvasID, pointColor, borderColor, earSide) {
+    const canvas = document.getElementById(canvasID);
     if (canvas && canvas.getContext) {
         const ctx = canvas.getContext('2d');
         if (ctx) {
@@ -17,11 +17,11 @@ function initAudiogram() {
                 data: {
                     labels: [125, 250, 500, 1000, 2000, 4000, 8000],
                     datasets: [{
-                            label: 'Niveau d\'audition (dB)',
+                            label: 'Seuil Auditif (dB)',
                             data: Array(7).fill(null),
                             showLine: true,
-                            backgroundColor: 'rgba(0, 123, 255, 0.2)',
-                            borderColor: 'rgba(0, 123, 255, 1)',
+                            backgroundColor: pointColor,
+                            borderColor: borderColor,
                             borderWidth: 1,
                             pointRadius: 5
                         }]
@@ -68,7 +68,18 @@ function initAudiogram() {
                     plugins: {
                         legend: {
                             display: false
-                        }
+                        },
+                        title: {
+                            display: true,
+                            text: earSide,
+                            font: {
+                                size: 18
+                            },
+                            padding: {
+                                top: 10,
+                                bottom: 30
+                            }
+                        },
                     },
                     elements: {
                         line: {
@@ -114,33 +125,43 @@ function addArbitraryPointToAudiogram(chart, frequency, decibels) {
     });
     chart.update();
 }
-// This function can handle arbitrary frequencies.
+// ... autres parties du script ...
+// Cette fonction peut gérer des fréquences arbitraires.
 function addDataPoint(chart, frequency, decibels) {
-    // Add the new data point
+    // Ajoute le nouveau point de données
     chart.data.datasets[0].data.push({ x: frequency, y: decibels });
-    // Filter out null values and then sort the data based on the x value
+    // Filtre les valeurs nulles puis trie les données en fonction de la valeur x
     chart.data.datasets[0].data = chart.data.datasets[0].data
         .filter((point) => point !== null && point !== undefined)
         .sort((a, b) => a.x - b.x);
-    // Update the chart
+    // Met à jour le graphique
     chart.update();
 }
-// Set up event handlers for the form.
-function setupEventHandlers(chart) {
-    const addPointForm = document.getElementById('addPointForm');
-    addPointForm === null || addPointForm === void 0 ? void 0 : addPointForm.addEventListener('submit', function (event) {
+function setupEventHandlers(chartLeft, chartRight) {
+    const addPointFormLeft = document.getElementById('addPointFormLeft');
+    const addPointFormRight = document.getElementById('addPointFormRight');
+    addPointFormLeft === null || addPointFormLeft === void 0 ? void 0 : addPointFormLeft.addEventListener('submit', function (event) {
         event.preventDefault();
-        const frequencyInput = document.getElementById('frequency');
-        const decibelsInput = document.getElementById('decibels');
+        const frequencyInput = document.getElementById('frequencyLeft');
+        const decibelsInput = document.getElementById('decibelsLeft');
         const frequencyValue = parseFloat(frequencyInput.value);
         const decibelsValue = parseFloat(decibelsInput.value);
-        addDataPoint(chart, frequencyValue, decibelsValue);
+        addDataPoint(chartLeft, frequencyValue, decibelsValue);
+    });
+    addPointFormRight === null || addPointFormRight === void 0 ? void 0 : addPointFormRight.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const frequencyInput = document.getElementById('frequencyRight');
+        const decibelsInput = document.getElementById('decibelsRight');
+        const frequencyValue = parseFloat(frequencyInput.value);
+        const decibelsValue = parseFloat(decibelsInput.value);
+        addDataPoint(chartRight, frequencyValue, decibelsValue);
     });
 }
-// Initialize the audiogram when the window loads.
+// Initialise les audiogrammes lorsque la fenêtre se charge.
 window.onload = function () {
-    const audiogramChart = initAudiogram();
-    if (audiogramChart) {
-        setupEventHandlers(audiogramChart);
+    const audiogramChartLeft = initAudiogram('audiogramLeft', 'rgba(0, 123, 255, 0.2)', 'rgba(0, 123, 255, 1)', 'Oreille Gauche');
+    const audiogramChartRight = initAudiogram('audiogramRight', 'rgb(255,160,122)', 'rgb(220,20,60)', 'Oreille Droite');
+    if (audiogramChartLeft && audiogramChartRight) {
+        setupEventHandlers(audiogramChartLeft, audiogramChartRight);
     }
 };

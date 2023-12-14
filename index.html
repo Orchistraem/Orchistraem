@@ -4,28 +4,34 @@
     <meta charset="UTF-8">
     <title>Audiogram</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-      #audiogram {
-          width: 800px;
-          height: 400px;
-          display: block;
-          margin: auto;
-      }
-      form {
-          text-align: center;
-          margin: 20px;
-      }
-  </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <form id="addPointForm">
-    Fréquence : <input type="text" id="frequency" name="frequency"><br>
-    dB : <input type="text" id="decibels" name="decibels"><br>
-    <button type="submit">Ajouter</button>
-  </form>
+  <div class="audiogram-container">
+    <div>
+      <canvas id="audiogramLeft" class="audiogram"></canvas>
+      <div class="form-container">
+        <form id="addPointFormLeft">
+          Fréquence : <input type="text" id="frequencyLeft" name="frequency"><br>
+          dB : <input type="text" id="decibelsLeft" name="decibels"><br>
+          <button type="submit">Ajouter</button>
+        </form>
+      </div>
+    </div>
 
-    <canvas id="audiogram" width="800" height="400"></canvas>
-    <script src="dist/audiogram.js"></script>
+    <div>
+      <canvas id="audiogramRight" class="audiogram"></canvas>
+      <div class="form-container">
+        <form id="addPointFormRight">
+          Fréquence : <input type="text" id="frequencyRight" name="frequency"><br>
+          dB : <input type="text" id="decibelsRight" name="decibels"><br>
+          <button type="submit">Ajouter</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="dist/audiogram.js"></script>
 </body>
 </html>
