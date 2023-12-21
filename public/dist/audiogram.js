@@ -1,4 +1,6 @@
 "use strict";
+let audiogramChartLeft = null;
+let audiogramChartRight = null;
 /**
  * Initialise un audiogramme.
  *
@@ -125,18 +127,31 @@ function addArbitraryPointToAudiogram(chart, frequency, decibels) {
     });
     chart.update();
 }
-// ... autres parties du script ...
-// Cette fonction peut gérer des fréquences arbitraires.
+/**
+ * Ajoute un point de données à un audiogramme.
+ *
+ * Cette fonction prend une fréquence et un niveau de décibels, les ajoute au graphique et trie les données pour s'assurer que les points sont affichés dans l'ordre correct.
+ * La fonction filtre également les valeurs nulles avant de trier pour éviter les erreurs.
+ *
+ * @param chart - L'instance de l'audiogramme Chart.js à mettre à jour.
+ * @param frequency - La fréquence du point à ajouter.
+ * @param decibels - Le niveau de décibels correspondant à la fréquence.
+ */
 function addDataPoint(chart, frequency, decibels) {
-    // Ajoute le nouveau point de données
     chart.data.datasets[0].data.push({ x: frequency, y: decibels });
-    // Filtre les valeurs nulles puis trie les données en fonction de la valeur x
     chart.data.datasets[0].data = chart.data.datasets[0].data
         .filter((point) => point !== null && point !== undefined)
         .sort((a, b) => a.x - b.x);
-    // Met à jour le graphique
     chart.update();
 }
+/**
+ * Configure les gestionnaires d'événements pour les formulaires d'ajout de points aux audiogrammes.
+ *
+ * Cette fonction associe des gestionnaires d'événements 'submit' aux formulaires qui permettent d'ajouter des points aux graphiques d'audiogrammes gauche et droit.
+ *
+ * @param chartLeft - L'instance de l'audiogramme pour l'oreille gauche.
+ * @param chartRight - L'instance de l'audiogramme pour l'oreille droite.
+ */
 function setupEventHandlers(chartLeft, chartRight) {
     const addPointFormLeft = document.getElementById('addPointFormLeft');
     const addPointFormRight = document.getElementById('addPointFormRight');
@@ -147,6 +162,14 @@ function setupEventHandlers(chartLeft, chartRight) {
         const frequencyValue = parseFloat(frequencyInput.value);
         const decibelsValue = parseFloat(decibelsInput.value);
         addDataPoint(chartLeft, frequencyValue, decibelsValue);
+        // Construire les données de l'audiogramme
+        const audiogramDataLeft = {
+            ear: 'gauche',
+            frequency: frequencyValue,
+            decibels: decibelsValue,
+        };
+        // Envoyer les données au serveur
+        sendDataToServer(audiogramDataLeft);
     });
     addPointFormRight === null || addPointFormRight === void 0 ? void 0 : addPointFormRight.addEventListener('submit', function (event) {
         event.preventDefault();
@@ -155,13 +178,66 @@ function setupEventHandlers(chartLeft, chartRight) {
         const frequencyValue = parseFloat(frequencyInput.value);
         const decibelsValue = parseFloat(decibelsInput.value);
         addDataPoint(chartRight, frequencyValue, decibelsValue);
+        // Construire les données de l'audiogramme
+        const audiogramDataRight = {
+            ear: 'droite',
+            frequency: frequencyValue,
+            decibels: decibelsValue,
+        };
+        // Envoyer les données au serveur
+        sendDataToServer(audiogramDataRight);
     });
+}
+function sendDataToServer(audiogramData) {
+    fetch('/audiogram', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(audiogramData),
+    })
+        .then(response => {
+        if (response.ok) {
+            return response.text();
+        }
+        throw new Error('Erreur dans l\'envoi des données');
+    })
+        .then(data => console.log(data))
+        .catch(error => console.error('Erreur:', error));
+}
+function getAudiogramData() {
+    fetch('/get-audiogram-data')
+        .then(response => {
+        if (!response.ok) {
+            throw new Error('Erreur de réseau lors de la récupération des données');
+        }
+        return response.json();
+    })
+        .then(data => {
+        // Mettez à jour l'état de votre application avec ces données
+        console.log(data);
+        updateAudiogramWithData(data);
+    })
+        .catch(error => console.error('Erreur lors de la récupération des données:', error));
+}
+function updateAudiogramWithData(data) {
+    if (Array.isArray(data)) {
+        data.forEach((point) => {
+            if (point.ear === 'gauche' && audiogramChartLeft) {
+                addDataPoint(audiogramChartLeft, point.frequency, point.decibels);
+            }
+            else if (point.ear === 'droite' && audiogramChartRight) {
+                addDataPoint(audiogramChartRight, point.frequency, point.decibels);
+            }
+        });
+    }
 }
 // Initialise les audiogrammes lorsque la fenêtre se charge.
 window.onload = function () {
-    const audiogramChartLeft = initAudiogram('audiogramLeft', 'rgba(0, 123, 255, 0.2)', 'rgba(0, 123, 255, 1)', 'Oreille Gauche');
-    const audiogramChartRight = initAudiogram('audiogramRight', 'rgb(255,160,122)', 'rgb(220,20,60)', 'Oreille Droite');
+    audiogramChartLeft = initAudiogram('audiogramLeft', 'rgba(0, 123, 255, 0.2)', 'rgba(0, 123, 255, 1)', 'Oreille Gauche');
+    audiogramChartRight = initAudiogram('audiogramRight', 'rgb(255,160,122)', 'rgb(220,20,60)', 'Oreille Droite');
     if (audiogramChartLeft && audiogramChartRight) {
         setupEventHandlers(audiogramChartLeft, audiogramChartRight);
     }
+    getAudiogramData();
 };
