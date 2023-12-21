@@ -1,0 +1,13 @@
+.audiogram-container {
+    display: flex;
+    justify-content: space-around;
+}
+.audiogram {
+    width: 800px;
+    height: 400px;
+    margin-top: 5em;
+}
+.form-container {
+    text-align: center;
+    margin: 20px;
+}
