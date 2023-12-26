@@ -216,13 +216,23 @@ function setupEventHandlers(chartLeft: any, chartRight: any) {
   });
 }
 
-
+/**
+ * Représente les données d'un audiogramme pour une oreille spécifique.
+ * 
+ * Cette interface est utilisée pour typer les données envoyées au serveur et celles récupérées.
+ */
 interface AudiogramData {
   ear: string;
   frequency: number;
   decibels: number;
 }
 
+/**
+ * Envoie les données d'audiogramme au serveur via une requête POST.
+ * 
+ * @param audiogramData - Les données de l'audiogramme à envoyer.
+ * @throws {Error} - Lance une erreur si l'envoi des données échoue.
+ */
 function sendDataToServer(audiogramData : AudiogramData) {
   fetch('/audiogram', {
     method: 'POST',
@@ -241,7 +251,11 @@ function sendDataToServer(audiogramData : AudiogramData) {
   .catch(error => console.error('Erreur:', error));
 }
 
-
+/**
+ * Récupère les données d'audiogramme du serveur.
+ * 
+ * @throws {Error} - Lance une erreur si la récupération des données échoue.
+ */
 function getAudiogramData() {
   fetch('/get-audiogram-data')
     .then(response => {
@@ -258,6 +272,11 @@ function getAudiogramData() {
     .catch(error => console.error('Erreur lors de la récupération des données:', error));
 }
 
+/**
+ * Met à jour les graphiques d'audiogramme avec les données récupérées.
+ * 
+ * @param data - Un tableau de données d'audiogramme à utiliser pour mettre à jour les graphiques.
+ */
 function updateAudiogramWithData(data : AudiogramData[]) {
   if (Array.isArray(data)) {
       data.forEach((point) => {
@@ -270,7 +289,10 @@ function updateAudiogramWithData(data : AudiogramData[]) {
   }
 }
 
-// Initialise les audiogrammes lorsque la fenêtre se charge.
+/**
+ * Initialise les audiogrammes lorsque la fenêtre se charge.
+ * Crée les graphiques d'audiogramme et configure les gestionnaires d'événements pour les formulaires d'ajout de points.
+ */
 window.onload = function () {
   audiogramChartLeft = initAudiogram('audiogramLeft', 'rgba(0, 123, 255, 0.2)', 'rgba(0, 123, 255, 1)', 'Oreille Gauche');
   audiogramChartRight = initAudiogram('audiogramRight', 'rgb(255,160,122)', 'rgb(220,20,60)', 'Oreille Droite');
