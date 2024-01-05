@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Audiogram</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div class="header">
+        <div class="tab1"><img src="src/Images/Patients.png"></div>
+        <div class="tab2"><img src="src/Images/Sons.png"></div>        
+        <div class="header-title">Orchistraem</div>
+    </div>
+
+    <div class="dropdown-menu">
+      <div>David Dupont</div>
+      <div>Maxime Louis</div>
+      <div>Eric Martin</div>
+    </div>
+
+  <div class="audiogram-container">
+    <div>
+      <canvas id="audiogramLeft" class="audiogram"></canvas>
+      <div class="form-container">
+        <form id="addPointFormLeft">
+          Fréquence : <input type="text" id="frequenciesLeft" name="frequency"><br>
+          dB : <input type="text" id="decibelsLeft" name="decibels"><br>
+          <button type="submit">Ajouter</button>
+        </form>
+      </div>
+    </div>
+
+    <div>
+      <canvas id="audiogramRight" class="audiogram"></canvas>
+      <div class="form-container">
+        <form id="addPointFormRight">
+          Fréquence : <input type="text" id="frequenciesRight" name="frequency"><br>
+          dB : <input type="text" id="decibelsRight" name="decibels"><br>
+          <button type="submit">Ajouter</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="dist/audiogram.js"></script>
+</body>
+</html>
