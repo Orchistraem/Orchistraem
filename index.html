@@ -1,18 +1,14 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Mon Projet Audio</title>
-    <script src="script.ts"></script>
+    <title>Upload de Fichier Audio</title>
 </head>
 <body>
-    <!-- Bouton pour jouer le son -->
-    <button id="monBouton">Jouer le Son</button>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="audioFile" name="audioFile" accept=".mp3">
+        <button type="button" onclick="uploadFile()">Upload</button>
+    </form>
 
-    <!-- Balise audio (cachée) -->
-    <audio id="monSon" src="audio/mon_audio.mp3"></audio>
-
-    <!-- Inclure le fichier TypeScript compilé -->
-    <script src="script.js"></script>
+    <script src="upload.js"></script>
 </body>
 </html>
