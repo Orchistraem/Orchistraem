@@ -1,4 +1,5 @@
 "use strict";
+// Déclaration des instances de Chart.js pour les audiogrammes de chaque oreille.
 let audiogramChartLeft = null;
 let audiogramChartRight = null;
 /**
@@ -20,7 +21,7 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
                     labels: [125, 250, 500, 1000, 2000, 4000, 8000],
                     datasets: [{
                             label: 'Seuil Auditif (dB)',
-                            data: Array(7).fill(null),
+                            data: [],
                             showLine: true,
                             backgroundColor: pointColor,
                             borderColor: borderColor,
@@ -107,24 +108,7 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
  * addPointToAudiogram(audiogramChart, 1000, 20); // Ajoute ou met à jour le point à 1000 Hz avec 20 dB
  */
 function addPointToAudiogram(chart, frequency, decibels) {
-    const labels = chart.data.labels;
-    const data = chart.data.datasets[0].data;
-    if (!labels.includes(frequency)) {
-        labels.push(frequency);
-        data.push(decibels);
-    }
-    else {
-        const index = labels.indexOf(frequency);
-        data[index] = decibels;
-    }
-    console.log(chart.data.datasets[0].data);
-    chart.update();
-}
-function addArbitraryPointToAudiogram(chart, frequency, decibels) {
-    chart.data.datasets[0].data.push({
-        x: frequency,
-        y: decibels
-    });
+    chart.data.datasets[0].data.push({ x: frequency, y: decibels });
     chart.update();
 }
 /**
@@ -231,7 +215,6 @@ function getAudiogramData() {
         return response.json();
     })
         .then(data => {
-        // Mettez à jour l'état de votre application avec ces données
         console.log(data);
         updateAudiogramWithData(data);
     })
@@ -254,15 +237,87 @@ function updateAudiogramWithData(data) {
         });
     }
 }
+const standardFrequencies = [125, 250, 500, 1000, 2000, 4000, 8000];
+const decibelLevels = [-10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120];
+for (let i = -10; i <= 120; i += 10) {
+    decibelLevels.push(i);
+}
+/**
+ * Écoute les clics sur le graphique et ajoute des points d'audiogramme en fonction de la position du clic.
+ */
+function setupClickListeners(chart, ear) {
+    const canvas = chart.canvas;
+    canvas.addEventListener('click', function (event) {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        let { frequency, decibels } = convertClickToChartData(chart, x, y);
+        frequency = nearestStandardFrequency(frequency);
+        decibels = snapToDecibelLevels(decibels);
+        addPointToAudiogram(chart, frequency, decibels);
+        sendDataToServer({ ear, frequency, decibels });
+    });
+}
+function convertClickToChartData(chart, clickX, clickY) {
+    const xAxis = chart.scales.x;
+    const yAxis = chart.scales.y;
+    const frequency = xAxis.getValueForPixel(clickX);
+    const decibels = yAxis.getValueForPixel(clickY);
+    return { frequency, decibels };
+}
+function nearestStandardFrequency(frequency) {
+    const standardFrequencies = [125, 250, 500, 1000, 2000, 4000, 8000];
+    let nearest = standardFrequencies[0];
+    let smallestDifference = Math.abs(frequency - nearest);
+    for (let i = 1; i < standardFrequencies.length; i++) {
+        const currentDifference = Math.abs(frequency - standardFrequencies[i]);
+        if (currentDifference < smallestDifference) {
+            smallestDifference = currentDifference;
+            nearest = standardFrequencies[i];
+        }
+    }
+    return nearest;
+}
+function snapToDecibelLevels(decibels) {
+    return decibelLevels.reduce((prev, curr) => (Math.abs(curr - decibels) < Math.abs(prev - decibels) ? curr : prev));
+}
+const startRecordButton = document.getElementById('startRecord');
+const stopRecordButton = document.getElementById('stopRecord');
+let mediaRecorder;
+let audioChunks = [];
+navigator.mediaDevices.getUserMedia({ audio: true })
+    .then((stream) => {
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+    };
+    startRecordButton.onclick = () => {
+        audioChunks = [];
+        mediaRecorder.start();
+    };
+    stopRecordButton.onclick = () => {
+        mediaRecorder.stop();
+    };
+    mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const formData = new FormData();
+        formData.append("audioFile", audioBlob);
+        fetch("/upload-audio", { method: "POST", body: formData });
+    };
+}).catch((error) => {
+    console.error("Error accessing media devices:", error);
+});
 /**
  * Initialise les audiogrammes lorsque la fenêtre se charge.
  * Crée les graphiques d'audiogramme et configure les gestionnaires d'événements pour les formulaires d'ajout de points.
  */
 window.onload = function () {
-    audiogramChartLeft = initAudiogram('audiogramLeft', 'rgba(0, 123, 255, 0.2)', 'rgba(0, 123, 255, 1)', 'Oreille Gauche');
-    audiogramChartRight = initAudiogram('audiogramRight', 'rgb(255,160,122)', 'rgb(220,20,60)', 'Oreille Droite');
+    audiogramChartLeft = initAudiogram('audiogramLeft', 'rgb(0, 123, 255)', 'rgba(0, 123, 255)', 'Oreille Gauche');
+    audiogramChartRight = initAudiogram('audiogramRight', 'rgb(220,20,60)', 'rgb(220,20,60)', 'Oreille Droite');
     if (audiogramChartLeft && audiogramChartRight) {
         setupEventHandlers(audiogramChartLeft, audiogramChartRight);
     }
     getAudiogramData();
+    setupClickListeners(audiogramChartLeft, 'gauche');
+    setupClickListeners(audiogramChartRight, 'droite');
 };
