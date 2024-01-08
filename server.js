@@ -10,6 +10,7 @@ app.use(bodyParser.json());
 
 // Middleware pour servir les fichiers statiques (CSS, JS, images, etc.)
 app.use(express.static('public')); // Remplacez 'public' par le nom de votre dossier contenant les fichiers statiques
+app.use('/uploads', express.static('uploads')); // Pour rendre accessible le dossier des uploads
 
 // Route pour la racine qui répond aux requêtes GET
 app.get('/', (req, res) => {
@@ -34,6 +35,23 @@ app.post('/audiogram', (req, res) => {
     console.error('Erreur lors de l\'enregistrement des données:', error);
     res.status(500).send('Erreur interne du serveur');
   }
+});
+
+app.get('/list-audios', (req, res) => {
+  const UPLOADS_DIR = './uploads';
+
+  fs.readdir(UPLOADS_DIR, (err, files) => {
+      if (err) {
+          console.error('Erreur lors de la lecture du dossier:', err);
+          return res.status(500).send('Erreur interne du serveur');
+      }
+
+      // Filtrer pour ne garder que les fichiers audio
+      let audioFiles = files.filter(file => file.endsWith('.mp3'));
+
+      // Envoyer la liste des fichiers audio
+      res.json(audioFiles);
+  });
 });
 
 app.get('/get-audiogram-data', (req, res) => {
