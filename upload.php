@@ -1,5 +1,5 @@
 <?php
-$target_dir = "uploads/";
+$target_dir = "audio/";
 $target_file = $target_dir . basename($_FILES["audioFile"]["name"]);
 
 // Vérifiez si le fichier est un fichier audio MP3
