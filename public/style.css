@@ -1,8 +1,3 @@
-@font-face {
-    font-family: Colagraph;
-    src: url('ressources/Colagraph8-Regular.ttf');
-}
-
 /* Style général de la page */
 body {
     background-color: #f5deb3; /* Couleur de fond beige */
@@ -39,20 +34,6 @@ body {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    font-family: Colagraph;
-    font-size: 250%;
-}
-
-input[type=text] {
-	appearance: none;
-	border: none;
-	outline: none;
-	border-bottom: .2em solid #f3a20d;
-	background: rgba(#f3a20d, .2);
-	border-radius: .2em .2em 0 0;
-	padding: .4em;
-	color: #f3a20d;
-    margin: 0.2em;
 }
 
 /* Style des boutons */

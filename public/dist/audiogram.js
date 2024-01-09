@@ -1,7 +1,7 @@
-"use strict";
 // Déclaration des instances de Chart.js pour les audiogrammes de chaque oreille.
 let audiogramChartLeft = null;
 let audiogramChartRight = null;
+import Swal from 'sweetalert2';
 /**
  * Initialise un audiogramme.
  *
@@ -385,11 +385,28 @@ function setupUploadAudioForm() {
                     body: formData
                 })
                     .then(response => response.text())
-                    .then(data => console.log(data))
-                    .catch(error => console.error('Erreur:', error));
+                    .then(data => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Succès!',
+                        text: 'Votre fichier audio a été chargé avec succès.'
+                    });
+                })
+                    .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur!',
+                        text: 'Une erreur s\'est produite lors du chargement du fichier.'
+                    });
+                    console.error('Erreur:', error);
+                });
             }
             else {
-                console.error('Aucun fichier n\'a été sélectionné.');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Attention!',
+                    text: 'Aucun fichier n\'a été sélectionné.'
+                });
             }
         });
     }

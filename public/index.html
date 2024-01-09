@@ -5,6 +5,8 @@
     <title>Audiogram</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 <body>
 
@@ -49,22 +51,6 @@
     <input type="file" id="audioFile" name="audioFile" accept="audio/*">
     <button type="submit">Télécharger l'audio</button>
 </form>
-
-<div id="audioList"></div>
-<script>
-  fetch('/list-audios')
-      .then(response => response.json())
-      .then(audioFiles => {
-          const audioListContainer = document.getElementById('audioList');
-          audioFiles.forEach(file => {
-              const audioElement = document.createElement('audio');
-              audioElement.setAttribute('controls', '');
-              audioElement.src = `/uploads/${file}`;
-              audioListContainer.appendChild(audioElement);
-          });
-      })
-      .catch(error => console.error('Erreur:', error));
-</script>
 
 </body>
 </html>

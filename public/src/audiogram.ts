@@ -15,7 +15,7 @@ interface AudiogramData {
   frequency: number;
   decibels: number;
 }
-
+import Swal from 'sweetalert2';
 /**
  * Initialise un audiogramme.
  * 
@@ -422,6 +422,7 @@ function snapToDecibelLevels(decibels: number) {
  * 
  * @returns Aucune valeur n'est retournée.
  */
+
 function setupUploadAudioForm() {
   const uploadAudioForm = document.getElementById('uploadAudioForm');
   const audioFileInput = document.getElementById('audioFile') as HTMLInputElement | null;
@@ -429,28 +430,45 @@ function setupUploadAudioForm() {
   if (uploadAudioForm && audioFileInput) {
       uploadAudioForm.addEventListener('submit', function(event) {
           event.preventDefault();
-    
           const formData = new FormData();
           const audioFile = audioFileInput.files ? audioFileInput.files[0] : null;
-    
+
           if (audioFile) {
               formData.append('audioFile', audioFile);
-    
               fetch('/upload-audio', {
                   method: 'POST',
                   body: formData
               })
               .then(response => response.text())
-              .then(data => console.log(data))
-              .catch(error => console.error('Erreur:', error));
+              .then(data => {
+                  Swal.fire({ // Utilisation de SweetAlert2
+                      icon: 'success',
+                      title: 'Succès!',
+                      text: 'Votre fichier audio a été chargé avec succès.'
+                  });
+              })
+              .catch(error => {
+                  Swal.fire({ // Utilisation de SweetAlert2 pour l'erreur
+                      icon: 'error',
+                      title: 'Erreur!',
+                      text: 'Une erreur s\'est produite lors du chargement du fichier.'
+                  });
+                  console.error('Erreur:', error);
+              });
           } else {
-              console.error('Aucun fichier n\'a été sélectionné.');
+              Swal.fire({ // Utilisation de SweetAlert2 pour un avertissement
+                  icon: 'warning',
+                  title: 'Attention!',
+                  text: 'Aucun fichier n\'a été sélectionné.'
+              });
           }
       });
   } else {
       console.error('Élément(s) de formulaire introuvable(s).');
   }
 }
+
+
     
   
 /**
