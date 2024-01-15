@@ -220,19 +220,29 @@ function setupEventHandlers(chartLeft: any, chartRight: any) {
  * @param audiogramData - Les données de l'audiogramme à envoyer.
  * @throws {Error} - Lance une erreur si l'envoi des données échoue.
  */
-function sendDataToServer(audiogramData : AudiogramData) {
-  fetch('/audiogram', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(audiogramData),
+function sendDataToServer(audiogramData: AudiogramData) {
+  let url = '/audiogram'; // URL de base
+
+  // Vérifie si l'audiogramme est pour l'oreille gauche ou droite
+  if (audiogramData.ear === 'gauche') {
+      url = '/audiogram/left'; // Modifiez ceci pour le chemin du dossier de l'oreille gauche
+  } else if (audiogramData.ear === 'droite') {
+      url = '/audiogram/right'; // Modifiez ceci pour le chemin du dossier de l'oreille droite
+  }
+
+  // La requête POST est envoyée à l'URL appropriée
+  fetch(url, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(audiogramData),
   })
   .then(response => {
-    if (response.ok) {
-      return response.text();
-    }
-    throw new Error('Erreur dans l\'envoi des données');
+      if (response.ok) {
+          return response.text();
+      }
+      throw new Error('Erreur dans l\'envoi des données');
   })
   .then(data => console.log(data))
   .catch(error => console.error('Erreur:', error));

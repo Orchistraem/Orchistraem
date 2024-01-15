@@ -20,6 +20,36 @@ app.get('/', (req, res) => {
 // Répertoire pour stocker les données (assurez-vous qu'il existe)
 const DATA_DIR = './data';
 
+// Répertoires pour stocker les données
+const LEFT_DATA_DIR = './data/left';
+const RIGHT_DATA_DIR = './data/right';
+
+// Point de terminaison pour stocker les données des audiogrammes de l'oreille gauche
+app.post('/audiogram/left', (req, res) => {
+  saveAudiogramData(req.body, LEFT_DATA_DIR, res);
+});
+
+// Point de terminaison pour stocker les données des audiogrammes de l'oreille droite
+app.post('/audiogram/right', (req, res) => {
+  saveAudiogramData(req.body, RIGHT_DATA_DIR, res);
+});
+
+// Fonction pour enregistrer les données d'audiogramme
+function saveAudiogramData(data, directory, res) {
+  try {
+    if (!fs.existsSync(directory)) {
+      fs.mkdirSync(directory, { recursive: true });
+    }
+    const filePath = `${directory}/audiogram_${Date.now()}.json`;
+    fs.writeFileSync(filePath, JSON.stringify(data));
+    console.log('Données enregistrées:', data);
+    res.status(200).send('Données enregistrées');
+  } catch (error) {
+    console.error('Erreur lors de l\'enregistrement des données:', error);
+    res.status(500).send('Erreur interne du serveur');
+  }
+}
+
 // Point de terminaison pour stocker les données des audiogrammes
 app.post('/audiogram', (req, res) => {
   console.log("Requête reçue:", req.body); // Afficher les données reçues

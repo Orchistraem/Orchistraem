@@ -186,7 +186,16 @@ function setupEventHandlers(chartLeft, chartRight) {
  * @throws {Error} - Lance une erreur si l'envoi des données échoue.
  */
 function sendDataToServer(audiogramData) {
-    fetch('/audiogram', {
+    let url = '/audiogram'; // URL de base
+    // Vérifie si l'audiogramme est pour l'oreille gauche ou droite
+    if (audiogramData.ear === 'gauche') {
+        url = '/audiogram/left'; // Modifiez ceci pour le chemin du dossier de l'oreille gauche
+    }
+    else if (audiogramData.ear === 'droite') {
+        url = '/audiogram/right'; // Modifiez ceci pour le chemin du dossier de l'oreille droite
+    }
+    // La requête POST est envoyée à l'URL appropriée
+    fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
