@@ -15,7 +15,13 @@ interface AudiogramData {
   frequency: number;
   decibels: number;
 }
-import Swal from 'sweetalert2';
+
+// Define un type pour les points sur l'audiogramme
+type DataPoint = {
+  x: number; // Frequency
+  y: number; // Decibels
+};
+
 /**
  * Initialise un audiogramme.
  * 
@@ -115,39 +121,20 @@ function initAudiogram(canvasID: string, pointColor: string, borderColor: string
   return null; // Retourne null si le canvas ou le contexte 2D n'existe pas
 }
 
-
 /**
- * Ajoute un point à l'audiogramme.
+ * Ajoute un point à l'audiogramme et trie le point.
  * 
  * @param chart - L'instance de l'audiogramme Chart.js.
  * @param frequency - La fréquence à ajouter ou mettre à jour.
  * @param decibels - Le niveau en décibels correspondant à la fréquence.
  * 
  * @example
- * addPointToAudiogram(audiogramChart, 1000, 20); // Ajoute ou met à jour le point à 1000 Hz avec 20 dB
+ * addDataPointAndSort(audiogramChart, 1000, 20); // Ajoute ou met à jour le point à 1000 Hz avec 20 dB
  */
-function addPointToAudiogram(chart: any, frequency: number, decibels: number): void {
-  chart.data.datasets[0].data.push({ x: frequency, y: decibels });
-  chart.update();
-}
-
-/**
- * Ajoute un point de données à un audiogramme.
- * 
- * Cette fonction prend une fréquence et un niveau de décibels, les ajoute au graphique et trie les données pour s'assurer que les points sont affichés dans l'ordre correct. 
- * La fonction filtre également les valeurs nulles avant de trier pour éviter les erreurs.
- * 
- * @param chart - L'instance de l'audiogramme Chart.js à mettre à jour.
- * @param frequency - La fréquence du point à ajouter.
- * @param decibels - Le niveau de décibels correspondant à la fréquence.
- */
-function addDataPoint(chart: any, frequency: number, decibels: number): void {
-  chart.data.datasets[0].data.push({ x: frequency, y: decibels });
-
-  chart.data.datasets[0].data = chart.data.datasets[0].data
-    .filter((point: any) => point !== null && point !== undefined)
-    .sort((a: any, b: any) => a.x - b.x);
-
+function addDataPointAndSort(chart: any, frequency: number, decibels: number): void {
+  const newDataPoint = { x: frequency, y: decibels };
+  chart.data.datasets[0].data.push(newDataPoint);
+  chart.data.datasets[0].data.sort((a: { x: number }, b: { x: number }) => a.x - b.x);
   chart.update();
 }
 
@@ -188,7 +175,7 @@ function setupEventHandlers(chartLeft: any, chartRight: any) {
             }
 
             if (isValid) {
-                addDataPoint(chartLeft, frequency, decibel);
+                addDataPointAndSort(chartLeft, frequency, decibel);
 
         const audiogramDataLeft = {
           ear: 'gauche',
@@ -213,7 +200,7 @@ function setupEventHandlers(chartLeft: any, chartRight: any) {
     frequencies.forEach((frequency, index) => {
       const decibel = decibels[index];
       if (!isNaN(frequency) && !isNaN(decibel)) {
-        addDataPoint(chartRight, frequency, decibel);
+        addDataPointAndSort(chartRight, frequency, decibel);
 
         const audiogramDataRight = {
           ear: 'droite',
@@ -280,20 +267,27 @@ function updateAudiogramWithData(data : AudiogramData[]) {
   if (Array.isArray(data)) {
       data.forEach((point) => {
           if (point.ear === 'gauche' && audiogramChartLeft) {
-              addDataPoint(audiogramChartLeft, point.frequency, point.decibels);
+              addDataPointAndSort(audiogramChartLeft, point.frequency, point.decibels);
           } else if (point.ear === 'droite' && audiogramChartRight) {
-              addDataPoint(audiogramChartRight, point.frequency, point.decibels);
+              addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels);
           }
       });
   }
 }
 
 const standardFrequencies = [125, 250, 500, 1000, 2000, 4000, 8000];
-const decibelLevels = [-10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120];
+const decibelLevels: number[] = [];
 
+// Cette boucle crée une liste de -10 à 120 avec un pas de 10
 for (let i = -10; i <= 120; i += 10) {
   decibelLevels.push(i);
 }
+
+// Assurez-vous que la liste est triée et unique
+const uniqueDecibelLevels = Array.from(new Set(decibelLevels)).sort((a, b) => a - b);
+
+console.log(uniqueDecibelLevels); // Affiche la liste triée pour vérification
+
 
 /**
  * Initialise les onglets et configure les gestionnaires d'événements pour les interactions.
@@ -343,16 +337,15 @@ function setupClickListeners(chart: any, ear: string) {
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-
+  
     let { frequency, decibels } = convertClickToChartData(chart, x, y);
-
-    frequency = nearestStandardFrequency(frequency);
-    decibels = snapToDecibelLevels(decibels);
-
-    addPointToAudiogram(chart, frequency, decibels);
-
-    sendDataToServer({ ear, frequency, decibels });
-  });
+  
+    frequency = findNearestFrequency(frequency, standardFrequencies); // Mettre à jour avec la nouvelle méthode
+    decibels = snapToDecibelLevels(decibels); // Ajustement des décibels si nécessaire
+  
+    addDataPointAndSort(chart, frequency, decibels); // Ajouter et trier
+    sendDataToServer({ ear, frequency, decibels }); // Envoyer au serveur
+  });  
 }
 
 /**
@@ -385,20 +378,29 @@ function convertClickToChartData(chart: any, clickX: number, clickY: number) {
  * @param frequency - La fréquence à comparer.
  * @returns La fréquence standard la plus proche de la fréquence donnée.
  */
-function nearestStandardFrequency(frequency: number) {
-  const standardFrequencies = [125, 250, 500, 1000, 2000, 4000, 8000];
-  let nearest = standardFrequencies[0];
-  let smallestDifference = Math.abs(frequency - nearest);
+function findNearestFrequency(frequency: number, standardFrequencies: number[]): number {
+  if (frequency <= standardFrequencies[0]) return standardFrequencies[0];
+  if (frequency >= standardFrequencies[standardFrequencies.length - 1]) return standardFrequencies[standardFrequencies.length - 1];
 
-  for (let i = 1; i < standardFrequencies.length; i++) {
-    const currentDifference = Math.abs(frequency - standardFrequencies[i]);
-    if (currentDifference < smallestDifference) {
-      smallestDifference = currentDifference;
-      nearest = standardFrequencies[i];
+  for (let i = 0; i < standardFrequencies.length - 1; i++) {
+    const lower = standardFrequencies[i];
+    const upper = standardFrequencies[i + 1];
+    const middle = (lower + upper) / 2;
+
+    if (frequency === middle) {
+      // Si la fréquence est exactement au milieu, on la retourne
+      return frequency;
+    } else if (frequency > lower && frequency < middle) {
+      // Si la fréquence est plus proche de la borne inférieure, on retourne la borne inférieure
+      return lower;
+    } else if (frequency > middle && frequency < upper) {
+      // Si la fréquence est plus proche de la borne supérieure, on retourne le milieu
+      return middle;
     }
   }
 
-  return nearest;
+  // Par sécurité, si aucune condition n'est remplie, on retourne la fréquence la plus basse
+  return standardFrequencies[0];
 }
 
 /**
@@ -410,9 +412,17 @@ function nearestStandardFrequency(frequency: number) {
  * @param decibels - Le niveau de décibels à ajuster.
  * @returns Le niveau de décibels ajusté au plus proche dans la gamme prédéfinie.
  */
-function snapToDecibelLevels(decibels: number) {
-  return decibelLevels.reduce((prev, curr) => (Math.abs(curr - decibels) < Math.abs(prev - decibels) ? curr : prev));
+function snapToDecibelLevels(decibels: number): number {
+  console.log(`Décibels cliqués: ${decibels}`); // Ajouter pour le débogage
+
+  const snappedDecibels = decibelLevels.reduce((prev, curr) => {
+    return (Math.abs(curr - decibels) < Math.abs(prev - decibels) ? curr : prev);
+  });
+
+  console.log(`Décibels ajustés: ${snappedDecibels}`); // Ajouter pour le débogage
+  return snappedDecibels;
 }
+
 
 /**
  * Configure le formulaire pour le téléchargement de fichiers audio.
@@ -422,7 +432,6 @@ function snapToDecibelLevels(decibels: number) {
  * 
  * @returns Aucune valeur n'est retournée.
  */
-
 function setupUploadAudioForm() {
   const uploadAudioForm = document.getElementById('uploadAudioForm');
   const audioFileInput = document.getElementById('audioFile') as HTMLInputElement | null;
@@ -430,45 +439,28 @@ function setupUploadAudioForm() {
   if (uploadAudioForm && audioFileInput) {
       uploadAudioForm.addEventListener('submit', function(event) {
           event.preventDefault();
+    
           const formData = new FormData();
           const audioFile = audioFileInput.files ? audioFileInput.files[0] : null;
-
+    
           if (audioFile) {
               formData.append('audioFile', audioFile);
+    
               fetch('/upload-audio', {
                   method: 'POST',
                   body: formData
               })
               .then(response => response.text())
-              .then(data => {
-                  Swal.fire({ // Utilisation de SweetAlert2
-                      icon: 'success',
-                      title: 'Succès!',
-                      text: 'Votre fichier audio a été chargé avec succès.'
-                  });
-              })
-              .catch(error => {
-                  Swal.fire({ // Utilisation de SweetAlert2 pour l'erreur
-                      icon: 'error',
-                      title: 'Erreur!',
-                      text: 'Une erreur s\'est produite lors du chargement du fichier.'
-                  });
-                  console.error('Erreur:', error);
-              });
+              .then(data => console.log(data))
+              .catch(error => console.error('Erreur:', error));
           } else {
-              Swal.fire({ // Utilisation de SweetAlert2 pour un avertissement
-                  icon: 'warning',
-                  title: 'Attention!',
-                  text: 'Aucun fichier n\'a été sélectionné.'
-              });
+              console.error('Aucun fichier n\'a été sélectionné.');
           }
       });
   } else {
       console.error('Élément(s) de formulaire introuvable(s).');
   }
 }
-
-
     
   
 /**
