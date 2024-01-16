@@ -85,27 +85,38 @@ app.get('/list-audios', (req, res) => {
 });
 
 app.get('/get-audiogram-data', (req, res) => {
-  const DATA_DIR = './data';
+  const LEFT_DATA_DIR = './data/left';
+  const RIGHT_DATA_DIR = './data/right';
 
-  // Lister tous les fichiers dans le dossier /data
-  fs.readdir(DATA_DIR, (err, files) => {
-    if (err) {
-      console.error('Erreur lors de la lecture du dossier:', err);
-      return res.status(500).send('Erreur interne du serveur');
-    }
-
-    // Filtrer les fichiers JSON et lire leur contenu
+  // Fonction pour lire les données d'un dossier spécifique
+  function readAudiogramData(directory) {
     let audiograms = [];
+    const files = fs.readdirSync(directory);
+
     files.forEach(file => {
       if (file.endsWith('.json')) {
-        const data = fs.readFileSync(`${DATA_DIR}/${file}`, 'utf8');
+        const data = fs.readFileSync(`${directory}/${file}`, 'utf8');
         audiograms.push(JSON.parse(data));
       }
     });
 
-    // Envoyer les données de tous les audiogrammes
-    res.json(audiograms);
-  });
+    return audiograms;
+  }
+
+  // Lire les données des deux dossiers
+  try {
+    const leftAudiograms = readAudiogramData(LEFT_DATA_DIR);
+    const rightAudiograms = readAudiogramData(RIGHT_DATA_DIR);
+
+    // Fusionner les données des audiogrammes gauche et droite
+    const allAudiograms = leftAudiograms.concat(rightAudiograms);
+
+    // Envoyer les données combinées
+    res.json(allAudiograms);
+  } catch (error) {
+    console.error('Erreur lors de la lecture des dossiers:', error);
+    res.status(500).send('Erreur interne du serveur');
+  }
 });
 
 const storage = multer.diskStorage({
