@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Audiogram</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div class="header">
+        <div class="tab1"><img src="src/Images/Patients.png"></div>
+        <div class="tab2"><img src="src/Images/Sons.png"></div>        
+        <div class="header-title">Orchistraem</div>
+    </div>
+
+    <div class="dropdown-menu">
+      <div>David Dupont</div>
+      <div>Maxime Louis</div>
+      <div>Eric Martin</div>
+    </div>
+
+  <div class="audiogram-container">
+    <div>
+      <canvas id="audiogramLeft" class="audiogram"></canvas>
+      <div class="form-container">
+        <form id="addPointFormLeft">
+          Fréquence : <input type="text" id="frequenciesLeft" name="frequency"><br>
+          dB : <input type="text" id="decibelsLeft" name="decibels"><br>
+          <button type="submit">Ajouter</button>
+        </form>
+      </div>
+    </div>
+
+    <div>
+      <canvas id="audiogramRight" class="audiogram"></canvas>
+      <div class="form-container">
+        <form id="addPointFormRight">
+          Fréquence : <input type="text" id="frequenciesRight" name="frequency"><br>
+          dB : <input type="text" id="decibelsRight" name="decibels"><br>
+          <button type="submit">Ajouter</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="dist/audiogram.js"></script>
+  <form id="uploadAudioForm" enctype="multipart/form-data">
+    <input type="file" id="audioFile" name="audioFile" accept="audio/*">
+    <button type="submit">Télécharger l'audio</button>
+</form>
+
+<div id="audioList"></div>
+<script>
+  fetch('/list-audios')
+      .then(response => response.json())
+      .then(audioFiles => {
+          const audioListContainer = document.getElementById('audioList');
+          audioFiles.forEach(file => {
+              const audioElement = document.createElement('audio');
+              audioElement.setAttribute('controls', '');
+              audioElement.src = `/uploads/${file}`;
+              audioListContainer.appendChild(audioElement);
+          });
+      })
+      .catch(error => console.error('Erreur:', error));
+</script>
+
+</body>
+</html>
