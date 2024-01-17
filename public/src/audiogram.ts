@@ -404,6 +404,20 @@ function setupClickListeners(chart: any, ear: string) {
   });  
 }
 
+/**
+ * Supprime un point de l'audiogramme et met à jour le graphique.
+ * 
+ * Cette fonction retire un point spécifique du graphique d'audiogramme basé sur son index.
+ * Elle envoie également une requête DELETE au serveur pour supprimer ce point des données stockées.
+ * 
+ * @param chart - L'instance de l'audiogramme Chart.js à laquelle le point est retiré.
+ * @param index - L'index du point dans le dataset du graphique Chart.js.
+ * @param ear - Indique l'oreille concernée ('gauche' ou 'droite') pour identifier le bon endpoint sur le serveur.
+ * @param pointId - L'identifiant unique du point à supprimer, utilisé dans l'URL de la requête DELETE.
+ * 
+ * @example
+ * removeDataPoint(audiogramChart, 2, 'gauche', '123456789'); // Supprime le point d'index 2 pour l'oreille gauche avec l'ID '123456789'
+ */
 function removeDataPoint(chart: any, index : number, ear : string, pointId : string) {
   // Supprimer le point du graphique
   chart.data.datasets[0].data.splice(index, 1);
