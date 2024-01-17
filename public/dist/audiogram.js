@@ -13,6 +13,41 @@ if (toggleDeletionMode) {
         console.log("Mode de suppression est maintenant " + (isDeletionModeActive ? "activé" : "désactivé"));
     });
 }
+let legendSelector = document.getElementById('legendSelector');
+if (legendSelector) {
+    legendSelector.addEventListener('change', (event) => {
+        const selectedLegend = event.target.value;
+        updatePointStyle(selectedLegend);
+    });
+}
+function updatePointStyle(selectedStyle) {
+    audiogramChartLeft.data.datasets.forEach((dataset) => {
+        dataset.pointStyle = selectedStyle === 'circle' ? 'circle' : createPointStyle(selectedStyle);
+    });
+    audiogramChartLeft.update();
+}
+// Fonction pour créer un canvas avec une lettre
+function createPointStyle(letter) {
+    if (letter === 'circle') {
+        return 'circle';
+    }
+    const pointSize = 20;
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = pointSize * 2; // Taille du canvas
+    const context = canvas.getContext('2d');
+    if (context) {
+        context.beginPath();
+        context.lineWidth = 2;
+        context.strokeStyle = '#000';
+        context.stroke();
+        context.fillStyle = 'black';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.font = `${pointSize}px Arial`;
+        context.fillText(letter, pointSize, pointSize); // Dessiner la lettre au centre
+    }
+    return canvas;
+}
 /**
  * Initialise un audiogramme.
  *
@@ -40,7 +75,8 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
                             backgroundColor: pointColor,
                             borderColor: borderColor,
                             borderWidth: 1,
-                            pointRadius: 5
+                            pointRadius: 5,
+                            pointStyle: (context, index) => createPointStyle('A')
                         }]
                 },
                 options: {

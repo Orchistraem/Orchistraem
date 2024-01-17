@@ -19,6 +19,34 @@ if (toggleDeletionMode){
   });
 }
 
+// On recupère le bouton de selection de légende
+let legendSelector = document.getElementById('legendSelector');
+
+// On ajoute l'ecouteur pour chaque changement de légende
+if(legendSelector){
+
+  legendSelector.addEventListener('change', (event) => {
+    const selectedLegend = (event.target as HTMLSelectElement).value;
+    updatePointStyle(selectedLegend);
+  });
+}
+
+/**
+ * Met à jour le style des points de l'audiogramme.
+ * 
+ * Cette fonction modifie le style des points sur le graphique de l'audiogramme de l'oreille gauche.
+ * Elle permet de choisir entre un style de point standard (cercle) ou une lettre personnalisée.
+ * 
+ * @param selectedStyle - Le style de point sélectionné (par exemple 'A', 'I', ou 'circle').
+ */
+function updatePointStyle(selectedStyle: string): void {
+  audiogramChartLeft.data.datasets.forEach((dataset:any) => {
+    dataset.pointStyle = selectedStyle === 'circle' ? 'circle' : createPointStyle(selectedStyle);
+  });
+  audiogramChartLeft.update(); // Changement de style pour l'audiogram de gauche
+}
+
+
 
 
 /**
@@ -39,6 +67,28 @@ type DataPoint = {
   y: number; // Decibels
 };
 
+// Fonction pour créer un canvas avec une lettre
+function createPointStyle(letter: string): HTMLCanvasElement | string {
+  if (letter === 'circle') {
+    return 'circle';
+  }
+  const pointSize = 20;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = pointSize * 2; // Taille du canvas
+  const context = canvas.getContext('2d');
+  if (context) {
+    context.beginPath();
+    context.lineWidth = 2;
+    context.strokeStyle = '#000';
+    context.stroke();
+    context.fillStyle = 'black';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.font = `${pointSize}px Arial`;
+    context.fillText(letter, pointSize, pointSize); // Dessiner la lettre au centre
+  }
+  return canvas;
+}
 /**
  * Initialise un audiogramme.
  * 
@@ -66,7 +116,8 @@ function initAudiogram(canvasID: string, pointColor: string, borderColor: string
                       backgroundColor: pointColor,
                       borderColor: borderColor,
                       borderWidth: 1,
-                      pointRadius: 5
+                      pointRadius: 5,
+                      pointStyle: (context: any, index: any) => createPointStyle('A')
                   }]
               },
               options: {
@@ -513,6 +564,8 @@ function snapToDecibelLevels(decibels: number): number {
   console.log(`Décibels ajustés: ${snappedDecibels}`); // Ajouter pour le débogage
   return snappedDecibels;
 }
+
+
 
 
 /**
