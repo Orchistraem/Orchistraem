@@ -2,6 +2,17 @@
 // Déclaration des instances de Chart.js pour les audiogrammes de chaque oreille.
 let audiogramChartLeft = null;
 let audiogramChartRight = null;
+// Mode de suppression désactivé par défaut
+let isDeletionModeActive = false;
+// Recupération du bouton de suppression
+let toggleDeletionMode = document.getElementById('toggleDeletionMode');
+// Ajout de l'ecouteur
+if (toggleDeletionMode) {
+    toggleDeletionMode.addEventListener('click', function () {
+        isDeletionModeActive = !isDeletionModeActive;
+        console.log("Mode de suppression est maintenant " + (isDeletionModeActive ? "activé" : "désactivé"));
+    });
+}
 /**
  * Initialise un audiogramme.
  *
@@ -110,8 +121,8 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
  * @example
  * addDataPointAndSort(audiogramChart, 1000, 20); // Ajoute ou met à jour le point à 1000 Hz avec 20 dB
  */
-function addDataPointAndSort(chart, frequency, decibels) {
-    const newDataPoint = { x: frequency, y: decibels };
+function addDataPointAndSort(chart, frequency, decibels, id) {
+    const newDataPoint = { x: frequency, y: decibels, id: id };
     chart.data.datasets[0].data.push(newDataPoint);
     chart.data.datasets[0].data.sort((a, b) => a.x - b.x);
     chart.update();
@@ -146,11 +157,13 @@ function setupEventHandlers(chartLeft, chartRight) {
                 errorMessage += 'Décibels doivent être compris entre -10 et 120 dB.\n';
             }
             if (isValid) {
-                addDataPointAndSort(chartLeft, frequency, decibel);
+                const uniqueId = Date.now().toString(); // Générer un ID unique ici
+                addDataPointAndSort(chartLeft, frequency, decibel, uniqueId);
                 const audiogramDataLeft = {
                     ear: 'gauche',
                     frequency: frequency,
                     decibels: decibel,
+                    id: uniqueId
                 };
                 sendDataToServer(audiogramDataLeft);
             }
@@ -165,14 +178,26 @@ function setupEventHandlers(chartLeft, chartRight) {
         const decibelsInput = document.getElementById('decibelsRight');
         const frequencies = frequenciesInput.value.split(',').map(f => parseFloat(f.trim()));
         const decibels = decibelsInput.value.split(',').map(d => parseFloat(d.trim()));
+        let isValid = true;
+        let errorMessage = '';
         frequencies.forEach((frequency, index) => {
             const decibel = decibels[index];
-            if (!isNaN(frequency) && !isNaN(decibel)) {
-                addDataPointAndSort(chartRight, frequency, decibel);
+            if (isNaN(frequency) || frequency < 0 || frequency > 8000) {
+                isValid = false;
+                errorMessage += 'Fréquence doit être comprise entre 0 et 8000 Hz.\n';
+            }
+            if (isNaN(decibel) || decibel < -10 || decibel > 120) {
+                isValid = false;
+                errorMessage += 'Décibels doivent être compris entre -10 et 120 dB.\n';
+            }
+            if (isValid) {
+                const uniqueId = Date.now().toString(); // Générer un ID unique ici
+                addDataPointAndSort(chartLeft, frequency, decibel, uniqueId);
                 const audiogramDataRight = {
                     ear: 'droite',
                     frequency: frequency,
                     decibels: decibel,
+                    id: uniqueId,
                 };
                 sendDataToServer(audiogramDataRight);
             }
@@ -236,16 +261,14 @@ function getAudiogramData() {
  * @param data - Un tableau de données d'audiogramme à utiliser pour mettre à jour les graphiques.
  */
 function updateAudiogramWithData(data) {
-    if (Array.isArray(data)) {
-        data.forEach((point) => {
-            if (point.ear === 'gauche' && audiogramChartLeft) {
-                addDataPointAndSort(audiogramChartLeft, point.frequency, point.decibels);
-            }
-            else if (point.ear === 'droite' && audiogramChartRight) {
-                addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels);
-            }
-        });
-    }
+    data.forEach((point) => {
+        if (point.ear === 'gauche' && audiogramChartLeft) {
+            addDataPointAndSort(audiogramChartLeft, point.frequency, point.decibels, point.id);
+        }
+        else if (point.ear === 'droite' && audiogramChartRight) {
+            addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id);
+        }
+    });
 }
 const standardFrequencies = [125, 250, 500, 1000, 2000, 4000, 8000];
 const decibelLevels = [];
@@ -298,15 +321,47 @@ function toggleDropdownMenu() {
 function setupClickListeners(chart, ear) {
     const canvas = chart.canvas;
     canvas.addEventListener('click', function (event) {
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        let { frequency, decibels } = convertClickToChartData(chart, x, y);
-        frequency = findNearestFrequency(frequency, standardFrequencies); // Mettre à jour avec la nouvelle méthode
-        decibels = snapToDecibelLevels(decibels); // Ajustement des décibels si nécessaire
-        addDataPointAndSort(chart, frequency, decibels); // Ajouter et trier
-        sendDataToServer({ ear, frequency, decibels }); // Envoyer au serveur
+        // Si le mode de suppression est actif, supprimer le point
+        if (isDeletionModeActive) {
+            const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+            if (points.length) {
+                const index = points[0].index;
+                const pointData = chart.data.datasets[0].data[index];
+                if (window.confirm("Voulez-vous supprimer ce point ?")) {
+                    removeDataPoint(chart, index, ear, pointData.id);
+                }
+            }
+        }
+        else {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            let { frequency, decibels } = convertClickToChartData(chart, x, y);
+            frequency = findNearestFrequency(frequency, standardFrequencies); // Mettre à jour avec la nouvelle méthode
+            decibels = snapToDecibelLevels(decibels); // Ajustement des décibels si nécessaire
+            const id = Date.now().toString(); // Générer un ID unique ici
+            addDataPointAndSort(chart, frequency, decibels, id);
+            sendDataToServer({ ear, frequency, decibels, id }); // Envoyer au serveur
+        }
     });
+}
+function removeDataPoint(chart, index, ear, pointId) {
+    // Supprimer le point du graphique
+    chart.data.datasets[0].data.splice(index, 1);
+    chart.update();
+    // Construire l'URL pour la requête DELETE
+    const url = `/audiogram/${ear}/${pointId}`;
+    // Envoyer la requête DELETE au serveur
+    fetch(url, {
+        method: 'DELETE'
+    })
+        .then(response => {
+        if (!response.ok) {
+            throw new Error('Erreur lors de la suppression du point');
+        }
+        console.log("Point supprimé avec succès");
+    })
+        .catch(error => console.error('Erreur:', error));
 }
 /**
  * Convertit les coordonnées d'un clic sur un graphique en fréquence et décibels.

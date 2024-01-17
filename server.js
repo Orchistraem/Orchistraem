@@ -40,7 +40,11 @@ function saveAudiogramData(data, directory, res) {
     if (!fs.existsSync(directory)) {
       fs.mkdirSync(directory, { recursive: true });
     }
-    const filePath = `${directory}/audiogram_${Date.now()}.json`;
+
+    // Utilisez l'ID fourni dans les données pour nommer le fichier
+    const filename = `${data.id}.json`;
+    const filePath = `${directory}/${filename}`;
+
     fs.writeFileSync(filePath, JSON.stringify(data));
     console.log('Données enregistrées:', data);
     res.status(200).send('Données enregistrées');
@@ -116,6 +120,27 @@ app.get('/get-audiogram-data', (req, res) => {
   } catch (error) {
     console.error('Erreur lors de la lecture des dossiers:', error);
     res.status(500).send('Erreur interne du serveur');
+  }
+});
+
+// Route pour supprimer un point
+app.delete('/audiogram/:ear/:pointId', (req, res) => {
+  const { ear, pointId } = req.params;
+  const directory = ear === 'gauche' ? LEFT_DATA_DIR : RIGHT_DATA_DIR;
+
+  try {
+      const files = fs.readdirSync(directory);
+      const fileToDelete = files.find(file => file.includes(pointId));
+
+      if (fileToDelete) {
+          fs.unlinkSync(`${directory}/${fileToDelete}`);
+          res.status(200).send("Point supprimé");
+      } else {
+          res.status(404).send("Point non trouvé");
+      }
+  } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      res.status(500).send("Erreur interne du serveur");
   }
 });
 
