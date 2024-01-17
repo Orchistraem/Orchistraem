@@ -5,6 +5,7 @@
     <title>Audiogram</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/dist/banque_son/afficher_list.js"></script>
 </head>
 <body>
 
@@ -54,20 +55,6 @@
 </form>
 
 <div id="audioList"></div>
-<script>
-  fetch('/list-audios')
-      .then(response => response.json())
-      .then(audioFiles => {
-          const audioListContainer = document.getElementById('audioList');
-          audioFiles.forEach(file => {
-              const audioElement = document.createElement('audio');
-              audioElement.setAttribute('controls', '');
-              audioElement.src = `/uploads/${file}`;
-              audioListContainer.appendChild(audioElement);
-          });
-      })
-      .catch(error => console.error('Erreur:', error));
-</script>
 
 </body>
 </html>
