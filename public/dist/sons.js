@@ -40,11 +40,30 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(audioFiles => {
             const audioListContainer = document.getElementById('audioList');
             audioFiles.forEach(file => {
+                // Créer un conteneur div pour chaque ligne
+                const rowContainer = document.createElement('div');
+                rowContainer.classList.add('audio-row');
+
+                // Extraire le nom du fichier sans l'extension .mp3 et remplacer '_' et '-' par des espaces
+                const fileName = file.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
+
                 // Ajoute un paragraphe avec le nom du fichier
                 const fileNameParagraph = document.createElement('p');
-                fileNameParagraph.textContent = file;
-                audioListContainer.appendChild(fileNameParagraph);
+                fileNameParagraph.textContent = fileName;
 
+                // Ajoute un bouton à côté du nom du fichier
+                const modifyButton = document.createElement('button');
+                modifyButton.textContent = 'Modifier';
+                modifyButton.addEventListener('click', () => {
+                    
+                });
+
+                // Ajouter les éléments à la ligne
+                rowContainer.appendChild(fileNameParagraph);
+                rowContainer.appendChild(modifyButton);
+
+                // Ajouter le conteneur de ligne à la liste
+                audioListContainer.appendChild(rowContainer);
 
                 const audioElement = document.createElement('audio');
                 audioElement.setAttribute('controls', '');
