@@ -20,14 +20,26 @@ if (toggleDeletionMode){
 }
 
 // On recupère le bouton de selection de légende
-let legendSelector = document.getElementById('legendSelector');
+let legendSelectorLeft = document.getElementById('legendSelectorLeft');
 
 // On ajoute l'ecouteur pour chaque changement de légende
-if(legendSelector){
+if(legendSelectorLeft){
 
-  legendSelector.addEventListener('change', (event) => {
+  legendSelectorLeft.addEventListener('change', (event) => {
     const selectedLegend = (event.target as HTMLSelectElement).value;
-    updatePointStyle(selectedLegend);
+    updatePointStyleLeft(selectedLegend);
+  });
+}
+
+// On recupère le bouton de selection de légende
+let legendSelectorRight = document.getElementById('legendSelectorRight');
+
+// On ajoute l'ecouteur pour chaque changement de légende
+if(legendSelectorRight){
+
+  legendSelectorRight.addEventListener('change', (event) => {
+    const selectedLegend = (event.target as HTMLSelectElement).value;
+    updatePointStyleRight(selectedLegend);
   });
 }
 
@@ -39,12 +51,29 @@ if(legendSelector){
  * 
  * @param selectedStyle - Le style de point sélectionné (par exemple 'A', 'I', ou 'circle').
  */
-function updatePointStyle(selectedStyle: string): void {
+function updatePointStyleLeft(selectedStyle: string): void {
   audiogramChartLeft.data.datasets.forEach((dataset:any) => {
     dataset.pointStyle = selectedStyle === 'circle' ? 'circle' : createPointStyle(selectedStyle);
   });
   audiogramChartLeft.update(); // Changement de style pour l'audiogram de gauche
 }
+
+
+/**
+ * Met à jour le style des points de l'audiogramme Droit.
+ * 
+ * Cette fonction modifie le style des points sur le graphique de l'audiogramme de l'oreille gauche.
+ * Elle permet de choisir entre un style de point standard (cercle) ou une lettre personnalisée.
+ * 
+ * @param selectedStyle - Le style de point sélectionné (par exemple 'A', 'I', ou 'circle').
+ */
+function updatePointStyleRight(selectedStyle: string): void {
+  audiogramChartRight.data.datasets.forEach((dataset:any) => {
+    dataset.pointStyle = selectedStyle === 'circle' ? 'circle' : createPointStyle(selectedStyle);
+  });
+  audiogramChartRight.update(); // Changement de style pour l'audiogram de gauche
+}
+
 
 
 

@@ -13,18 +13,51 @@ if (toggleDeletionMode) {
         console.log("Mode de suppression est maintenant " + (isDeletionModeActive ? "activé" : "désactivé"));
     });
 }
-let legendSelector = document.getElementById('legendSelector');
-if (legendSelector) {
-    legendSelector.addEventListener('change', (event) => {
+// On recupère le bouton de selection de légende
+let legendSelectorLeft = document.getElementById('legendSelectorLeft');
+// On ajoute l'ecouteur pour chaque changement de légende
+if (legendSelectorLeft) {
+    legendSelectorLeft.addEventListener('change', (event) => {
         const selectedLegend = event.target.value;
-        updatePointStyle(selectedLegend);
+        updatePointStyleLeft(selectedLegend);
     });
 }
-function updatePointStyle(selectedStyle) {
+// On recupère le bouton de selection de légende
+let legendSelectorRight = document.getElementById('legendSelectorRight');
+// On ajoute l'ecouteur pour chaque changement de légende
+if (legendSelectorRight) {
+    legendSelectorRight.addEventListener('change', (event) => {
+        const selectedLegend = event.target.value;
+        updatePointStyleRight(selectedLegend);
+    });
+}
+/**
+ * Met à jour le style des points de l'audiogramme.
+ *
+ * Cette fonction modifie le style des points sur le graphique de l'audiogramme de l'oreille gauche.
+ * Elle permet de choisir entre un style de point standard (cercle) ou une lettre personnalisée.
+ *
+ * @param selectedStyle - Le style de point sélectionné (par exemple 'A', 'I', ou 'circle').
+ */
+function updatePointStyleLeft(selectedStyle) {
     audiogramChartLeft.data.datasets.forEach((dataset) => {
         dataset.pointStyle = selectedStyle === 'circle' ? 'circle' : createPointStyle(selectedStyle);
     });
-    audiogramChartLeft.update();
+    audiogramChartLeft.update(); // Changement de style pour l'audiogram de gauche
+}
+/**
+ * Met à jour le style des points de l'audiogramme Droit.
+ *
+ * Cette fonction modifie le style des points sur le graphique de l'audiogramme de l'oreille gauche.
+ * Elle permet de choisir entre un style de point standard (cercle) ou une lettre personnalisée.
+ *
+ * @param selectedStyle - Le style de point sélectionné (par exemple 'A', 'I', ou 'circle').
+ */
+function updatePointStyleRight(selectedStyle) {
+    audiogramChartRight.data.datasets.forEach((dataset) => {
+        dataset.pointStyle = selectedStyle === 'circle' ? 'circle' : createPointStyle(selectedStyle);
+    });
+    audiogramChartRight.update(); // Changement de style pour l'audiogram de gauche
 }
 // Fonction pour créer un canvas avec une lettre
 function createPointStyle(letter) {
