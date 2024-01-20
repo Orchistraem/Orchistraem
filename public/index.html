@@ -5,6 +5,7 @@
     <title>Audiogram</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/dist/banque_son/afficher_list.js"></script>
 </head>
 <body>
 
@@ -44,6 +45,23 @@
     </div>
   </div>
 
+  <select id="legendSelectorLeft">
+    <option value="circle">Cercle</option>
+    <option value="A">A</option>
+    <option value="I">I</option>
+  </select>
+
+
+  <select id="legendSelectorRight">
+    <option value="circle">Cercle</option>
+    <option value="A">A</option>
+    <option value="I">I</option>
+  </select>
+
+
+  <button id="toggleDeletionMode">Activer/Desactiver Mode Suppression</button>
+
+
   <script src="dist/audiogram.js"></script>
   <form id="uploadAudioForm" enctype="multipart/form-data">
     <input type="file" id="audioFile" name="audioFile" accept="audio/*">
@@ -51,20 +69,6 @@
 </form>
 
 <div id="audioList"></div>
-<script>
-  fetch('/list-audios')
-      .then(response => response.json())
-      .then(audioFiles => {
-          const audioListContainer = document.getElementById('audioList');
-          audioFiles.forEach(file => {
-              const audioElement = document.createElement('audio');
-              audioElement.setAttribute('controls', '');
-              audioElement.src = `/uploads/${file}`;
-              audioListContainer.appendChild(audioElement);
-          });
-      })
-      .catch(error => console.error('Erreur:', error));
-</script>
 
 </body>
 </html>

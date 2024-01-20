@@ -55,6 +55,30 @@ input[type=text] {
     margin: 0.2em;
 }
 
+
+#toggleDeletionMode {
+
+    background-color: blue; /* Couleur de fond verte */
+    color: white; /* Texte blanc */
+    padding: 15px 32px; /* Remplissage autour du texte */
+    text-align: center; /* Texte centré */
+    text-decoration: none; /* Pas de soulignement */
+    display: inline-block; /* Type d'affichage */
+    font-size: 16px; /* Taille de la police */
+    margin: 4px 2px; /* Marge autour du bouton */
+    cursor: pointer; /* Curseur en forme de pointeur */
+    border: none; /* Pas de bordure */
+}
+
+#toggleDeletionMode:active {
+
+    background-color: rgb(41, 41, 204); /* Couleur de fond plus foncée */
+    box-shadow: 0 5px #666; /* Ombre pour donner un effet enfoncé */
+    transform: translateY(4px); /* Déplace légèrement le bouton vers le bas */
+    
+}
+
+
 /* Style des boutons */
 button {
     background-color: blue; /* Couleur de fond verte */
