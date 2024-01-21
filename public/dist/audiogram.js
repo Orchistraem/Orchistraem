@@ -69,8 +69,8 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
                             label: 'Aide auditive',
                             data: [],
                             showLine: true,
-                            backgroundColor: pointColor,
-                            borderColor: borderColor,
+                            backgroundColor: 'rgb(255,0,255)',
+                            borderColor: 'rgb(255,0,255)',
                             borderWidth: 1,
                             pointRadius: 5,
                             pointStyle: createPointStyle('A'),
@@ -156,7 +156,7 @@ function addDataPointAndSort(chart, frequency, decibels, id, style) {
         x: frequency,
         y: decibels,
         id: id,
-        pointStyle: style === 'circle' ? 'circle' : createPointStyle(style)
+        style: style === 'circle' ? 'circle' : createPointStyle(style)
     };
     const datasetIndex = style === 'circle' ? 0 : 1;
     chart.data.datasets[datasetIndex].data.push(newDataPoint);
@@ -200,7 +200,8 @@ function setupEventHandlers(chartLeft, chartRight, legendSelectorLeft, legendSel
                     ear: 'gauche',
                     frequency: frequency,
                     decibels: decibel,
-                    id: uniqueId
+                    id: uniqueId,
+                    style: pointStyle,
                 };
                 sendDataToServer(audiogramDataLeft);
             }
@@ -236,6 +237,7 @@ function setupEventHandlers(chartLeft, chartRight, legendSelectorLeft, legendSel
                     frequency: frequency,
                     decibels: decibel,
                     id: uniqueId,
+                    style: pointStyle,
                 };
                 sendDataToServer(audiogramDataRight);
             }
@@ -252,10 +254,10 @@ function sendDataToServer(audiogramData) {
     let url = '/audiogram'; // URL de base
     // Vérifie si l'audiogramme est pour l'oreille gauche ou droite
     if (audiogramData.ear === 'gauche') {
-        url = '/data/left'; // Modifiez ceci pour le chemin du dossier de l'oreille gauche
+        url = '/audiogram/left';
     }
     else if (audiogramData.ear === 'droite') {
-        url = '/data/right'; // Modifiez ceci pour le chemin du dossier de l'oreille droite
+        url = '/audiogram/right';
     }
     // La requête POST est envoyée à l'URL appropriée
     fetch(url, {
@@ -289,7 +291,7 @@ function getAudiogramData(chart, legendSelector) {
     })
         .then(data => {
         const pointStyle = legendSelector.value;
-        updateAudiogramWithData(data, chart, pointStyle);
+        updateAudiogramWithData(data, chart);
     })
         .catch(error => console.error('Erreur lors de la récupération des données:', error));
 }
@@ -298,9 +300,9 @@ function getAudiogramData(chart, legendSelector) {
  *
  * @param data - Un tableau de données d'audiogramme à utiliser pour mettre à jour les graphiques.
  */
-function updateAudiogramWithData(data, chart, style) {
+function updateAudiogramWithData(data, chart) {
     data.forEach((point) => {
-        addDataPointAndSort(chart, point.frequency, point.decibels, point.id, style);
+        addDataPointAndSort(chart, point.frequency, point.decibels, point.id, point.style);
     });
 }
 const standardFrequencies = [125, 250, 500, 1000, 2000, 4000, 8000];
@@ -375,7 +377,7 @@ function setupClickListeners(chart, ear, legendSelector) {
             const style = legendSelector.value;
             const id = Date.now().toString(); // Générer un ID unique ici
             addDataPointAndSort(chart, frequency, decibels, id, style);
-            sendDataToServer({ ear, frequency, decibels, id }); // Envoyer au serveur
+            sendDataToServer({ ear, frequency, decibels, id, style }); // Envoyer au serveur
         }
     });
 }
