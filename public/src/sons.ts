@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(response => response.json())
         .then(audioFiles => {
             const audioListContainer = document.getElementById('audioList');
-            audioFiles.forEach(file => {
+            audioFiles.forEach((file:string) => {
                 // Créer un conteneur div pour chaque ligne
                 const rowContainer = document.createElement('div');
                 rowContainer.classList.add('audio-row');
@@ -66,12 +66,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 rowContainer.appendChild(modifyButton);
 
                 // Ajouter le conteneur de ligne à la liste
-                audioListContainer.appendChild(rowContainer);
+                if(audioListContainer){audioListContainer.appendChild(rowContainer);}
+                
 
                 const audioElement = document.createElement('audio');
                 audioElement.setAttribute('controls', '');
                 audioElement.src = `/uploads/${file}`;
-                audioListContainer.appendChild(audioElement);
+                if(audioListContainer){audioListContainer.appendChild(audioElement);}
             });
 
         })
