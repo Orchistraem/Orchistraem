@@ -59,6 +59,12 @@ function displayAudioList() {
                         modifyName(file);
                     });
 
+                    // Créer un bouton supprimer à côté du nom du fichier
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Supprimer';
+                    deleteButton.addEventListener('click', () => {
+                        deleteSong(file);
+                    });
                     
 
                     // Créer l'élément audio
@@ -152,6 +158,54 @@ function modifyName(currentFileName) {
     }
 }
 
+function deleteSong(fileName) {
+    const audioContainer = document.querySelector(`.audio-container[data-file="${fileName}"]`);
+
+    if (audioContainer) {
+        if (!audioContainer.querySelector('.confirm-container')) {
+            const confirmContainer = document.createElement('div');
+            confirmContainer.classList.add('confirm-container');
+
+            const confirmMessage = document.createElement('p');
+            confirmMessage.textContent = `Êtes-vous sûr de vouloir supprimer le son "${fileName.replace(/\.mp3$/, '').replace(/[_-]/g, ' ')}" ?`;
+            confirmContainer.appendChild(confirmMessage);
+
+            const confirmButton = document.createElement('button');
+            confirmButton.textContent = 'Confirmer';
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Annuler';
+
+            confirmContainer.appendChild(confirmButton);
+            confirmContainer.appendChild(cancelButton);
+            audioContainer.appendChild(confirmContainer);
+
+            confirmButton.addEventListener('click', () => {
+                fetch('/delete-audio', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ fileName }),
+                })
+                .then(response => {
+                    if (response.ok) {
+                        audioContainer.remove();
+                        console.log(`Fichier ${fileName} supprimé`);
+                    } else {
+                        console.error('Erreur lors de la suppression du fichier');
+                    }
+                })
+                .catch(error => console.error('Erreur:', error));
+            });
+
+            cancelButton.addEventListener('click', () => {
+                confirmContainer.remove();
+            });
+        }
+    } else {
+        console.error(`Aucun élément audio correspondant à ${fileName} n'a été trouvé.`);
+    }
+}
 
 
 window.onload = function () {

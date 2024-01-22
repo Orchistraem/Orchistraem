@@ -109,6 +109,21 @@ app.post('/rename-audio', (req, res) => {
   });
 });
 
+//Route pour supprimer un fichier audio
+app.post('/delete-audio', (req, res) => {
+  const { fileName } = req.body;
+  const filePath = `uploads/${fileName}`;
+
+  fs.unlink(filePath, (err) => {
+      if (err) {
+          console.error('Erreur lors de la suppression du fichier:', err);
+          return res.status(500).send('Erreur lors de la suppression du fichier');
+      }
+      res.send(`Fichier ${fileName} supprimé`);
+  });
+});
+
+
 app.listen(port, () => {
   console.log(`Serveur démarré sur http://localhost:${port}/index.html`);
 });
