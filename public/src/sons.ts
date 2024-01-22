@@ -1,25 +1,22 @@
 /**
  * Configure le formulaire pour le téléchargement de fichiers audio.
- * 
- * Cette fonction prépare le formulaire pour télécharger des fichiers audio. Elle définit un gestionnaire 
- * d'événements pour le formulaire et gère l'envoi du fichier audio sélectionné au serveur.
- * 
- * @returns Aucune valeur n'est retournée.
+ *
+ * Cette fonction prépare le formulaire pour télécharger des fichiers audio. 
+ * Elle définit un gestionnaire d'événements pour le formulaire et gère l'envoi du fichier audio sélectionné au serveur.
+ * @returns aucune valeur n'est retourné
  */
-function setupUploadAudioForm() {
-    const uploadAudioForm = document.getElementById('uploadAudioForm');
+function setupUploadAudioForm(): void {
+    const uploadAudioForm = document.getElementById('uploadAudioForm') as HTMLFormElement | null;
     const audioFileInput = document.getElementById('audioFile') as HTMLInputElement | null;
-  
+
     if (uploadAudioForm && audioFileInput) {
-        uploadAudioForm.addEventListener('submit', function(event) {
+        uploadAudioForm.addEventListener('submit', function (event: Event): void {
             event.preventDefault();
-      
             const formData = new FormData();
             const audioFile = audioFileInput.files ? audioFileInput.files[0] : null;
-      
+
             if (audioFile) {
                 formData.append('audioFile', audioFile);
-      
                 fetch('/upload-audio', {
                     method: 'POST',
                     body: formData
@@ -36,49 +33,190 @@ function setupUploadAudioForm() {
     }
 }
 
-
-document.addEventListener('DOMContentLoaded', () => {
+/**
+ * Affiche la liste des fichiers audio.
+ * @returns aucune valeur n'est retourné
+ */
+function displayAudioList(): void {
     fetch('/list-audios')
         .then(response => response.json())
-        .then(audioFiles => {
-            const audioListContainer = document.getElementById('audioList');
-            audioFiles.forEach((file:string) => {
-                // Créer un conteneur div pour chaque ligne
-                const rowContainer = document.createElement('div');
-                rowContainer.classList.add('audio-row');
+        .then((audioFiles: string[]) => {
+            const audioListContainer = document.getElementById('audioList') as HTMLDivElement | null;
+            if (audioListContainer) {
+                audioFiles.forEach((file: string) => {
+                    // Créer un conteneur div pour chaque fichier audio
+                    const audioContainer = document.createElement('div');
+                    audioContainer.classList.add('audio-container');
+                    audioContainer.setAttribute('data-file', file);
 
-                // Extraire le nom du fichier sans l'extension .mp3 et remplacer '_' et '-' par des espaces
-                const fileName = file.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
+                    // Extraire le nom du fichier sans l'extension .mp3 et remplacer '_' et '-' par des espaces
+                    const fileName = file.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
 
-                // Ajoute un paragraphe avec le nom du fichier
-                const fileNameParagraph = document.createElement('p');
-                fileNameParagraph.textContent = fileName;
+                    // Ajouter le nom du fichier
+                    const fileNameParagraph = document.createElement('p');
+                    fileNameParagraph.textContent = fileName;
 
-                // Ajoute un bouton à côté du nom du fichier
-                const modifyButton = document.createElement('button');
-                modifyButton.textContent = 'Modifier';
-                modifyButton.addEventListener('click', () => {
-                    
+                    // Créer un bouton modifier à côté du nom du fichier
+                    const modifyButton = document.createElement('button');
+                    modifyButton.textContent = 'Modifier';
+                    modifyButton.addEventListener('click', () => {
+                        modifyName(file);
+                    });
+
+                    // Créer un bouton supprimer à côté du nom du fichier
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Supprimer';
+                    deleteButton.addEventListener('click', () => {
+                        deleteSong(file);
+                    });
+
+                    // Créer l'élément audio
+                    const audioElement = document.createElement('audio');
+                    audioElement.setAttribute('controls', '');
+                    audioElement.src = `/uploads/${file}`;
+
+                    // Ajouter les éléments au conteneur du fichier audio
+                    audioContainer.appendChild(fileNameParagraph);
+                    audioContainer.appendChild(modifyButton);
+                    audioContainer.appendChild(deleteButton);
+                    audioContainer.appendChild(audioElement);
+
+                    // Ajouter le conteneur du fichier audio à la liste
+                    audioListContainer.appendChild(audioContainer);
                 });
-
-                // Ajouter les éléments à la ligne
-                rowContainer.appendChild(fileNameParagraph);
-                rowContainer.appendChild(modifyButton);
-
-                // Ajouter le conteneur de ligne à la liste
-                if(audioListContainer){audioListContainer.appendChild(rowContainer);}
-                
-
-                const audioElement = document.createElement('audio');
-                audioElement.setAttribute('controls', '');
-                audioElement.src = `/uploads/${file}`;
-                if(audioListContainer){audioListContainer.appendChild(audioElement);}
-            });
-
+            }
         })
         .catch(error => console.error('Erreur:', error));
-});
+}
 
-window.onload = function () {
+/**
+ * Modifie le nom d'un fichier audio.
+ * @param currentFileName Le nom actuel du fichier audio.
+ * @returns aucune valeur n'est retourné
+ */
+function modifyName(currentFileName: string): void {
+    const audioContainer = document.querySelector(`.audio-container[data-file="${currentFileName}"]`) as HTMLDivElement | null;
+
+    if (audioContainer && !audioContainer.querySelector('input[type="text"]')) {
+        // Préremplir la zone de texte avec le nom actuel
+        const currentName = currentFileName.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
+        const newFileNameInput = document.createElement('input');
+        newFileNameInput.type = 'text';
+        newFileNameInput.value = currentName;
+
+        // Créer le bouton de confirmation
+        const confirmButton = document.createElement('button');
+        confirmButton.textContent = 'Confirmer';
+
+        // Créer le bouton d'annulation
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = 'Annuler';
+
+        // Créer un conteneur pour la zone de texte, le bouton de confirmation et le bouton d'annulation
+        const container = document.createElement('div');
+        container.appendChild(newFileNameInput);
+        container.appendChild(confirmButton);
+        container.appendChild(cancelButton);
+
+        // Ajouter le conteneur sous l'élément .audio-container
+        audioContainer.appendChild(container);
+
+        // Activer le bouton "Confirmer" uniquement si la zone de texte n'est pas vide
+        newFileNameInput.addEventListener('input', () => {
+            confirmButton.disabled = newFileNameInput.value.trim() === '';
+        });
+
+        // Gérer l'événement de clic sur le bouton de confirmation
+        confirmButton.addEventListener('click', () => {
+            const newFileName = newFileNameInput.value.replace(/\s/g, '_') + '.mp3';
+            
+            fetch('/rename-audio', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ oldName: currentFileName, newName: newFileName }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log(`Nom du fichier modifié : ${newFileName}`);
+                    // Mise à jour du nom d'affichage et de l'attribut data-file
+                    const fileNameDisplay = audioContainer.querySelector('p');
+                    if (fileNameDisplay) {
+                        fileNameDisplay.textContent = newFileName.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
+                    }                    
+                    audioContainer.setAttribute('data-file', newFileName);
+                } else {
+                    console.error('Erreur lors de la modification du nom du fichier');
+                }
+            })
+            .catch(error => console.error('Erreur:', error));
+        
+            container.remove();
+        });
+
+        // Gérer l'événement de clic sur le bouton d'annulation
+        cancelButton.addEventListener('click', () => {
+            container.remove();
+        });
+    } else if (!audioContainer) {
+        console.error(`Aucun élément audio correspondant à ${currentFileName} n'a été trouvé.`);
+    }
+}
+
+/**
+ * Supprime un fichier audio après confirmation.
+ * @param fileName Le nom du fichier audio à supprimer.
+ * @returns aucune valeur n'est retourné
+ */
+function deleteSong(fileName: string): void {
+    const audioContainer = document.querySelector(`.audio-container[data-file="${fileName}"]`) as HTMLDivElement | null;
+
+    if (audioContainer && !audioContainer.querySelector('.confirm-container')) {
+        const confirmContainer = document.createElement('div');
+        confirmContainer.classList.add('confirm-container');
+
+        const confirmMessage = document.createElement('p');
+        confirmMessage.textContent = `Êtes-vous sûr de vouloir supprimer le son "${fileName.replace(/\.mp3$/, '').replace(/[_-]/g, ' ')}" ?`;
+        confirmContainer.appendChild(confirmMessage);
+
+        const confirmButton = document.createElement('button');
+        confirmButton.textContent = 'Confirmer';
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = 'Annuler';
+
+        confirmContainer.appendChild(confirmButton);
+        confirmContainer.appendChild(cancelButton);
+        audioContainer.appendChild(confirmContainer);
+
+        confirmButton.addEventListener('click', () => {
+            fetch('/delete-audio', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ fileName }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    audioContainer.remove();
+                    console.log(`Fichier ${fileName} supprimé`);
+                } else {
+                    console.error('Erreur lors de la suppression du fichier');
+                }
+            })
+            .catch(error => console.error('Erreur:', error));
+        });
+
+        cancelButton.addEventListener('click', () => {
+            confirmContainer.remove();
+        });
+    } else if (!audioContainer) {
+        console.error(`Aucun élément audio correspondant à ${fileName} n'a été trouvé.`);
+    }
+}
+
+window.onload = function (): void {
+    displayAudioList();
     setupUploadAudioForm();
 }
