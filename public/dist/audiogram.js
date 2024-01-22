@@ -368,41 +368,7 @@ function snapToDecibelLevels(decibels) {
     console.log(`Décibels ajustés: ${snappedDecibels}`); // Ajouter pour le débogage
     return snappedDecibels;
 }
-/**
- * Configure le formulaire pour le téléchargement de fichiers audio.
- *
- * Cette fonction prépare le formulaire pour télécharger des fichiers audio. Elle définit un gestionnaire
- * d'événements pour le formulaire et gère l'envoi du fichier audio sélectionné au serveur.
- *
- * @returns Aucune valeur n'est retournée.
- */
-function setupUploadAudioForm() {
-    const uploadAudioForm = document.getElementById('uploadAudioForm');
-    const audioFileInput = document.getElementById('audioFile');
-    if (uploadAudioForm && audioFileInput) {
-        uploadAudioForm.addEventListener('submit', function (event) {
-            event.preventDefault();
-            const formData = new FormData();
-            const audioFile = audioFileInput.files ? audioFileInput.files[0] : null;
-            if (audioFile) {
-                formData.append('audioFile', audioFile);
-                fetch('/upload-audio', {
-                    method: 'POST',
-                    body: formData
-                })
-                    .then(response => response.text())
-                    .then(data => console.log(data))
-                    .catch(error => console.error('Erreur:', error));
-            }
-            else {
-                console.error('Aucun fichier n\'a été sélectionné.');
-            }
-        });
-    }
-    else {
-        console.error('Élément(s) de formulaire introuvable(s).');
-    }
-}
+
 /**
  * Initialise les audiogrammes lorsque la fenêtre se charge.
  * Crée les graphiques d'audiogramme et configure les gestionnaires d'événements pour les formulaires d'ajout de points.

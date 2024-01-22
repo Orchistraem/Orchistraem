@@ -23,6 +23,11 @@ body {
     height: 60px; /* Hauteur fixe pour le header */
 }
 
+.header a {
+    text-decoration: none;
+    color : white;
+}
+
 
 .tab2 img {
     width: 70px;
@@ -113,5 +118,27 @@ button {
     background-color: #ddd;
 }
 
+/* Style pour chaque ligne de fichier audio */
+.audio-row {
+    margin-bottom: 10px;
+}
 
+/* Style du bouton de modification */
+.audio-row button {
+    background-color: #3498db;
+    color: #ffffff;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
 
+.audio-row button:hover {
+    background-color: #2980b9;
+}
+
+/* Style du paragraphe avec le nom du fichier (titre) */
+.audio-row p {
+    margin: 0;
+    display: inline;
+    margin-right: 10px; /* Ajoute de l'espace entre le titre et le bouton */
+}
