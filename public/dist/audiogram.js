@@ -359,9 +359,39 @@ function getAudiogramData(chart, legendSelector) {
  */
 function updateAudiogramWithData(data, chart) {
     data.forEach((point) => {
-        if (!isPointAlreadyPresent(chart, point.frequency)) {
-            addDataPointAndSort(chart, point.frequency, point.decibels, point.id, point.style);
+        if (!isPointAlreadyPresentWithStyle(chart, point.frequency, point.decibels, point.style)) {
+            if (point.ear === 'gauche' && audiogramChartLeft) {
+                if (!isPointAlreadyExist(audiogramChartLeft, point)) {
+                    addDataPointAndSort(audiogramChartLeft, point.frequency, point.decibels, point.id, point.style);
+                }
+            }
+            else if (point.ear === 'droite' && audiogramChartRight) {
+                addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id, point.style);
+            }
         }
+    });
+}
+function isPointAlreadyExist(chart, pointTest) {
+    let pointExists = false;
+    chart.data.datasets.forEach((dataset) => {
+        dataset.data.forEach((point) => {
+            if (point.id === pointTest.id) {
+                pointExists = true;
+            }
+        });
+    });
+    return pointExists;
+}
+// Fonction pour vérifier si un point avec un style, une fréquence et des décibels spécifiques existe déjà
+function isPointAlreadyPresentWithStyle(chart, frequency, decibels, style) {
+    return chart.data.datasets.some((dataset) => {
+        if (style === 'circle' && dataset.pointStyle === 'circle' ||
+            style !== 'circle' && dataset.pointStyle !== 'circle') {
+            return dataset.data.some((point) => {
+                return Math.abs(point.x - frequency) < 0.1 && Math.abs(point.y - decibels) < 0.1;
+            });
+        }
+        return false;
     });
 }
 const standardFrequencies = [125, 250, 500, 1000, 2000, 4000, 8000];
@@ -419,8 +449,10 @@ function setupClickListeners(chart, ear, legendSelector) {
         if (isDeletionModeActive) {
             const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
             if (points.length) {
+                const datasetIndex = points[0].datasetIndex;
                 const index = points[0].index;
-                const pointData = chart.data.datasets[0].data[index];
+                const pointData = chart.data.datasets[datasetIndex].data[index];
+                console.log(pointData);
                 if (window.confirm("Voulez-vous supprimer ce point ?")) {
                     removeDataPoint(chart, index, ear, pointData.id);
                 }
@@ -486,8 +518,14 @@ window.onload = function () {
  * removeDataPoint(audiogramChart, 2, 'gauche', '123456789'); // Supprime le point d'index 2 pour l'oreille gauche avec l'ID '123456789'
  */
 function removeDataPoint(chart, index, ear, pointId) {
-    // Supprimer le point du graphique
-    chart.data.datasets[0].data.splice(index, 1);
+    // Identifier le dataset contenant le point à supprimer
+    chart.data.datasets.forEach((dataset) => {
+        const pointIndex = dataset.data.findIndex((point) => point.id === pointId);
+        if (pointIndex !== -1) {
+            // Supprimer le point de ce dataset spécifique
+            dataset.data.splice(pointIndex, 1);
+        }
+    });
     chart.update();
     // Construire l'URL pour la requête DELETE
     const url = `/audiogram/${ear}/${pointId}`;
