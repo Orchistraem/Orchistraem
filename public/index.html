@@ -5,19 +5,14 @@
     <title>Audiogram</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/dist/banque_son/afficher_list.js"></script>
 </head>
 <body>
 
     <div class="header">
         <div class="tab1"><img src="src/Images/Patients.png"></div>
-        <div class="tab2">
-          <a href="sons.html">
-              <img src="src/Images/Sons.png" alt="Sons">
-          </a>
-        </div>      
-        <div class="header-title">
-          <a href="index.html">Orchistraem</a>
-        </div>
+        <div class="tab2"><img src="src/Images/Sons.png"></div>        
+        <div class="header-title">Orchistraem</div>
     </div>
 
     <div class="dropdown-menu">
@@ -29,6 +24,7 @@
   <div class="audiogram-container">
     <div>
       <canvas id="audiogramLeft" class="audiogram"></canvas>
+      
       <div class="form-container">
         <form id="addPointFormLeft">
           Fréquence : <input type="text" id="frequenciesLeft" name="frequency"><br>
@@ -40,6 +36,7 @@
 
     <div>
       <canvas id="audiogramRight" class="audiogram"></canvas>
+      <div id="tooltipLeft" class="tooltip" style="display: none;"></div>
       <div class="form-container">
         <form id="addPointFormRight">
           Fréquence : <input type="text" id="frequenciesRight" name="frequency"><br>
@@ -50,6 +47,32 @@
     </div>
   </div>
 
+  <select id="legendSelectorLeft">
+    <option value="circle">Cercle</option>
+    <option value="A">A</option>
+    <option value="I">I</option>
+  </select>
+
+
+  <select id="legendSelectorRight">
+    <option value="circle">Cercle</option>
+    <option value="A">A</option>
+    <option value="I">I</option>
+  </select>
+
+
+  <button id="toggleDeletionMode">Activer/Desactiver Mode Suppression</button>
+  <button id="deleteAllPoints">Supprimer Tous les Points</button>
+
+
+
   <script src="dist/audiogram.js"></script>
+  <form id="uploadAudioForm" enctype="multipart/form-data">
+    <input type="file" id="audioFile" name="audioFile" accept="audio/*">
+    <button type="submit">Télécharger l'audio</button>
+</form>
+
+<div id="audioList"></div>
+
 </body>
 </html>

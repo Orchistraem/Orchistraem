@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const app = express();
 const port = 3000;
+const path = require('path');
+
 
 // Pour lire le corps des requêtes POST en JSON
 app.use(bodyParser.json());
@@ -19,6 +21,40 @@ app.get('/', (req, res) => {
 
 // Répertoire pour stocker les données (assurez-vous qu'il existe)
 const DATA_DIR = './data';
+
+// Répertoires pour stocker les données
+const LEFT_DATA_DIR = './data/left';
+const RIGHT_DATA_DIR = './data/right';
+
+// Point de terminaison pour stocker les données des audiogrammes de l'oreille gauche
+app.post('/audiogram/left', (req, res) => {
+  saveAudiogramData(req.body, LEFT_DATA_DIR, res);
+});
+
+// Point de terminaison pour stocker les données des audiogrammes de l'oreille droite
+app.post('/audiogram/right', (req, res) => {
+  saveAudiogramData(req.body, RIGHT_DATA_DIR, res);
+});
+
+// Fonction pour enregistrer les données d'audiogramme
+function saveAudiogramData(data, directory, res) {
+  try {
+    if (!fs.existsSync(directory)) {
+      fs.mkdirSync(directory, { recursive: true });
+    }
+
+    // Utilisez l'ID fourni dans les données pour nommer le fichier
+    const filename = `${data.id}.json`;
+    const filePath = `${directory}/${filename}`;
+
+    fs.writeFileSync(filePath, JSON.stringify(data));
+    console.log('Données enregistrées:', data);
+    res.status(200).send('Données enregistrées');
+  } catch (error) {
+    console.error('Erreur lors de l\'enregistrement des données:', error);
+    res.status(500).send('Erreur interne du serveur');
+  }
+}
 
 // Point de terminaison pour stocker les données des audiogrammes
 app.post('/audiogram', (req, res) => {
@@ -55,28 +91,85 @@ app.get('/list-audios', (req, res) => {
 });
 
 app.get('/get-audiogram-data', (req, res) => {
-  const DATA_DIR = './data';
+  const LEFT_DATA_DIR = './data/left';
+  const RIGHT_DATA_DIR = './data/right';
 
-  // Lister tous les fichiers dans le dossier /data
-  fs.readdir(DATA_DIR, (err, files) => {
-    if (err) {
-      console.error('Erreur lors de la lecture du dossier:', err);
-      return res.status(500).send('Erreur interne du serveur');
-    }
-
-    // Filtrer les fichiers JSON et lire leur contenu
+  // Fonction pour lire les données d'un dossier spécifique
+  function readAudiogramData(directory) {
     let audiograms = [];
+    const files = fs.readdirSync(directory);
+
     files.forEach(file => {
       if (file.endsWith('.json')) {
-        const data = fs.readFileSync(`${DATA_DIR}/${file}`, 'utf8');
+        const data = fs.readFileSync(`${directory}/${file}`, 'utf8');
         audiograms.push(JSON.parse(data));
       }
     });
 
-    // Envoyer les données de tous les audiogrammes
-    res.json(audiograms);
-  });
+    return audiograms;
+  }
+
+  // Lire les données des deux dossiers
+  try {
+    const leftAudiograms = readAudiogramData(LEFT_DATA_DIR);
+    const rightAudiograms = readAudiogramData(RIGHT_DATA_DIR);
+
+    // Fusionner les données des audiogrammes gauche et droite
+    const allAudiograms = leftAudiograms.concat(rightAudiograms);
+
+    // Envoyer les données combinées
+    res.json(allAudiograms);
+  } catch (error) {
+    console.error('Erreur lors de la lecture des dossiers:', error);
+    res.status(500).send('Erreur interne du serveur');
+  }
 });
+
+// Route pour supprimer un point
+app.delete('/audiogram/:ear/:pointId', (req, res) => {
+  const { ear, pointId } = req.params;
+  const directory = ear === 'gauche' ? LEFT_DATA_DIR : RIGHT_DATA_DIR;
+
+  try {
+      const files = fs.readdirSync(directory);
+      const fileToDelete = files.find(file => file.includes(pointId));
+
+      if (fileToDelete) {
+          fs.unlinkSync(`${directory}/${fileToDelete}`);
+          res.status(200).send("Point supprimé");
+      } else {
+          res.status(404).send("Point non trouvé");
+      }
+  } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      res.status(500).send("Erreur interne du serveur");
+  }
+});
+
+// Supprimer tous les points pour une oreille spécifique
+app.delete('/delete-all-points/:ear', (req, res) => {
+  const ear = req.params.ear;
+  const directory = ear === 'gauche' ? LEFT_DATA_DIR : RIGHT_DATA_DIR;
+
+  try {
+      fs.readdir(directory, (err, files) => {
+          if (err) {
+              throw err;
+          }
+
+          for (const file of files) {
+              fs.unlinkSync(path.join(directory, file));
+          }
+
+          res.status(200).send('Tous les points ont été supprimés.');
+      });
+  } catch (error) {
+      console.error('Erreur lors de la suppression des points:', error);
+      res.status(500).send('Erreur interne du serveur');
+  }
+});
+
+
 
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
@@ -94,36 +187,7 @@ app.post('/upload-audio', upload.single('audioFile'), (req, res) => {
     res.send("Fichier audio téléchargé avec succès");
 });
 
-// Route pour renommer un fichier audio
-app.post('/rename-audio', (req, res) => {
-  const { oldName, newName } = req.body;
-  const oldPath = `uploads/${oldName}`;
-  const newPath = `uploads/${newName}`;
-
-  fs.rename(oldPath, newPath, (err) => {
-      if (err) {
-          console.error('Erreur lors du renommage du fichier:', err);
-          return res.status(500).send('Erreur lors du renommage du fichier');
-      }
-      res.send(`Fichier renommé en ${newName}`);
-  });
-});
-
-//Route pour supprimer un fichier audio
-app.post('/delete-audio', (req, res) => {
-  const { fileName } = req.body;
-  const filePath = `uploads/${fileName}`;
-
-  fs.unlink(filePath, (err) => {
-      if (err) {
-          console.error('Erreur lors de la suppression du fichier:', err);
-          return res.status(500).send('Erreur lors de la suppression du fichier');
-      }
-      res.send(`Fichier ${fileName} supprimé`);
-  });
-});
-
-
 app.listen(port, () => {
   console.log(`Serveur démarré sur http://localhost:${port}/index.html`);
 });
+
