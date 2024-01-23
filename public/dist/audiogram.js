@@ -325,7 +325,7 @@ function getAudiogramData(chart, legendSelector) {
     })
         .then(data => {
         const pointStyle = legendSelector.value;
-        updateAudiogramWithData(data, chart);
+        updateAudiogramWithData(data);
     })
         .catch(error => console.error('Erreur lors de la récupération des données:', error));
 }
@@ -334,9 +334,14 @@ function getAudiogramData(chart, legendSelector) {
  *
  * @param data - Un tableau de données d'audiogramme à utiliser pour mettre à jour les graphiques.
  */
-function updateAudiogramWithData(data, chart) {
+function updateAudiogramWithData(data) {
     data.forEach((point) => {
-        addDataPointAndSort(chart, point.frequency, point.decibels, point.id, point.style);
+        if (point.ear === 'gauche' && audiogramChartLeft) {
+            addDataPointAndSort(audiogramChartLeft, point.frequency, point.decibels, point.id, point.style);
+        }
+        else if (point.ear === 'droite' && audiogramChartRight) {
+            addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id, point.style);
+        }
     });
 }
 const standardFrequencies = [125, 250, 500, 1000, 2000, 4000, 8000];
@@ -548,41 +553,6 @@ function snapToDecibelLevels(decibels) {
     return snappedDecibels;
 }
 /**
- * Configure le formulaire pour le téléchargement de fichiers audio.
- *
- * Cette fonction prépare le formulaire pour télécharger des fichiers audio. Elle définit un gestionnaire
- * d'événements pour le formulaire et gère l'envoi du fichier audio sélectionné au serveur.
- *
- * @returns Aucune valeur n'est retournée.
- */
-function setupUploadAudioForm() {
-    const uploadAudioForm = document.getElementById('uploadAudioForm');
-    const audioFileInput = document.getElementById('audioFile');
-    if (uploadAudioForm && audioFileInput) {
-        uploadAudioForm.addEventListener('submit', function (event) {
-            event.preventDefault();
-            const formData = new FormData();
-            const audioFile = audioFileInput.files ? audioFileInput.files[0] : null;
-            if (audioFile) {
-                formData.append('audioFile', audioFile);
-                fetch('/upload-audio', {
-                    method: 'POST',
-                    body: formData
-                })
-                    .then(response => response.text())
-                    .then(data => console.log(data))
-                    .catch(error => console.error('Erreur:', error));
-            }
-            else {
-                console.error('Aucun fichier n\'a été sélectionné.');
-            }
-        });
-    }
-    else {
-        console.error('Élément(s) de formulaire introuvable(s).');
-    }
-}
-/**
  * Initialise les audiogrammes lorsque la fenêtre se charge.
  * Crée les graphiques d'audiogramme et configure les gestionnaires d'événements pour les formulaires d'ajout de points.
  */
@@ -599,7 +569,6 @@ window.onload = function () {
     setupClickListeners(audiogramChartLeft, 'gauche', legendSelectorLeft);
     setupClickListeners(audiogramChartRight, 'droite', legendSelectorRight);
     initTabs();
-    setupUploadAudioForm();
     setupMouseHoverListener(audiogramChartLeft, 'tooltipLeft');
     setupMouseHoverListener(audiogramChartRight, 'tooltipRight');
 };

@@ -125,6 +125,8 @@ app.get('/get-audiogram-data', (req, res) => {
   }
 });
 
+
+
 // Route pour supprimer un point
 app.delete('/audiogram/:ear/:pointId', (req, res) => {
   const { ear, pointId } = req.params;

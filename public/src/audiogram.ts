@@ -375,7 +375,7 @@ function getAudiogramData(chart: any, legendSelector: HTMLSelectElement) {
     })
     .then(data => {
       const pointStyle = legendSelector.value;
-      updateAudiogramWithData(data, chart);
+      updateAudiogramWithData(data);
     })
     .catch(error => console.error('Erreur lors de la récupération des données:', error));
 }
@@ -385,9 +385,13 @@ function getAudiogramData(chart: any, legendSelector: HTMLSelectElement) {
  * 
  * @param data - Un tableau de données d'audiogramme à utiliser pour mettre à jour les graphiques.
  */
-function updateAudiogramWithData(data: AudiogramData[], chart: any) {
+function updateAudiogramWithData(data: AudiogramData[]) {
   data.forEach((point) => {
-    addDataPointAndSort(chart, point.frequency, point.decibels, point.id, point.style);
+    if (point.ear === 'gauche' && audiogramChartLeft) {
+      addDataPointAndSort(audiogramChartLeft, point.frequency, point.decibels, point.id, point.style);
+    } else if (point.ear === 'droite' && audiogramChartRight) {
+      addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id,point.style);
+    }
   });
 }
 
@@ -626,7 +630,7 @@ function snapToDecibelLevels(decibels: number): number {
   console.log(`Décibels ajustés: ${snappedDecibels}`); // Ajouter pour le débogage
   return snappedDecibels;
 }
-      
+
 /**
  * Initialise les audiogrammes lorsque la fenêtre se charge.
  * Crée les graphiques d'audiogramme et configure les gestionnaires d'événements pour les formulaires d'ajout de points.
