@@ -348,7 +348,7 @@ function getAudiogramData(chart, legendSelector) {
     })
         .then(data => {
         const pointStyle = legendSelector.value;
-        updateAudiogramWithData(data);
+        updateAudiogramWithData(data, chart);
     })
         .catch(error => console.error('Erreur lors de la récupération des données:', error));
 }
@@ -357,13 +357,10 @@ function getAudiogramData(chart, legendSelector) {
  *
  * @param data - Un tableau de données d'audiogramme à utiliser pour mettre à jour les graphiques.
  */
-function updateAudiogramWithData(data) {
+function updateAudiogramWithData(data, chart) {
     data.forEach((point) => {
-        if (point.ear === 'gauche' && audiogramChartLeft) {
-            addDataPointAndSort(audiogramChartLeft, point.frequency, point.decibels, point.id, point.style);
-        }
-        else if (point.ear === 'droite' && audiogramChartRight) {
-            addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id, point.style);
+        if (!isPointAlreadyPresent(chart, point.frequency)) {
+            addDataPointAndSort(chart, point.frequency, point.decibels, point.id, point.style);
         }
     });
 }
