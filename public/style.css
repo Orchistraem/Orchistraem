@@ -23,9 +23,9 @@ body {
     background: linear-gradient(#03045e, #0077b6);
     color: white;
     padding: 10px 10px;
-    display: flex; /* Utilisation de Flexbox pour l'alignement */
+    display: flex;
     align-items: center; /* Centre verticalement les éléments dans le header */
-    justify-content: space-between; /* Alignement horizontal à gauche */
+    justify-content:start; /* Alignement horizontal à gauche */
     font-size: 24px;
     height: 60px; /* Hauteur fixe pour le header */
 }
@@ -35,14 +35,10 @@ body {
     color : white;
 }
 
-.tab2 img {
+.tab2 img , .tab1 img{
     width: 70px;
     height: auto;
-}
-
-.tab1 img {
-    width: 70px;
-    height: auto;
+    margin: 3px;
 }
 
 /* Style du titre au milieu du header */
@@ -62,10 +58,17 @@ body {
 
 /* Style des graphiques (ne pas toucher le quadrillage) */
 .audiogram {
-    width: 800px;
+    width: 600px;
     height: 400px;
-    margin-top: 5em;
     background-color: white; /* Définit le fond des graphiques en blanc */
+    border-radius: 1%;
+}
+
+.audiogram-container > div{
+    margin : 1%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .audiogram-container {
