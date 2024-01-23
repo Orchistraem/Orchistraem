@@ -23,6 +23,10 @@ body {
     height: 60px; /* Hauteur fixe pour le header */
 }
 
+.header a {
+    text-decoration: none;
+    color : white;
+}
 
 .tab2 img {
     width: 70px;

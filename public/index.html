@@ -10,9 +10,15 @@
 <body>
 
     <div class="header">
-        <div class="tab1"><img src="src/Images/Patients.png"></div>
-        <div class="tab2"><img src="src/Images/Sons.png"></div>        
-        <div class="header-title">Orchistraem</div>
+      <div class="tab1"><img src="src/Images/Patients.png"></div>
+      <div class="tab2">
+        <a href="sons.html">
+            <img src="src/Images/Sons.png" alt="Sons">
+        </a>
+      </div>      
+      <div class="header-title">
+        <a href="index.html">Orchistraem</a>
+      </div>
     </div>
 
     <div class="dropdown-menu">
@@ -66,13 +72,6 @@
 
 
 
-  <script src="dist/audiogram.js"></script>
-  <form id="uploadAudioForm" enctype="multipart/form-data">
-    <input type="file" id="audioFile" name="audioFile" accept="audio/*">
-    <button type="submit">Télécharger l'audio</button>
-</form>
-
-<div id="audioList"></div>
-
+<script src="dist/audiogram.js"></script>
 </body>
 </html>

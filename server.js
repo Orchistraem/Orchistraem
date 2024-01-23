@@ -187,6 +187,35 @@ app.post('/upload-audio', upload.single('audioFile'), (req, res) => {
     res.send("Fichier audio téléchargé avec succès");
 });
 
+// Route pour renommer un fichier audio
+app.post('/rename-audio', (req, res) => {
+  const { oldName, newName } = req.body;
+  const oldPath = `uploads/${oldName}`;
+  const newPath = `uploads/${newName}`;
+
+  fs.rename(oldPath, newPath, (err) => {
+      if (err) {
+          console.error('Erreur lors du renommage du fichier:', err);
+          return res.status(500).send('Erreur lors du renommage du fichier');
+      }
+      res.send(`Fichier renommé en ${newName}`);
+  });
+});
+
+//Route pour supprimer un fichier audio
+app.post('/delete-audio', (req, res) => {
+  const { fileName } = req.body;
+  const filePath = `uploads/${fileName}`;
+
+  fs.unlink(filePath, (err) => {
+      if (err) {
+          console.error('Erreur lors de la suppression du fichier:', err);
+          return res.status(500).send('Erreur lors de la suppression du fichier');
+      }
+      res.send(`Fichier ${fileName} supprimé`);
+  });
+});
+
 app.listen(port, () => {
   console.log(`Serveur démarré sur http://localhost:${port}/index.html`);
 });
