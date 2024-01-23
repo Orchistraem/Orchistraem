@@ -100,6 +100,16 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
                             pointRadius: 5,
                             pointStyle: createPointStyle('A'),
                         },
+                        {
+                            label: 'Implant',
+                            data: [],
+                            showLine: true,
+                            backgroundColor: 'rgb(255,255,0)',
+                            borderColor: 'rgb(255,255,0)',
+                            borderWidth: 1,
+                            pointRadius: 5,
+                            pointStyle: createPointStyle('I'),
+                        }
                     ]
                 },
                 options: {
@@ -192,7 +202,20 @@ function addDataPointAndSort(chart, frequency, decibels, id, style) {
         id: id,
         style: style === 'circle' ? 'circle' : createPointStyle(style)
     };
-    const datasetIndex = style === 'circle' ? 0 : 1;
+    // Déterminer l'index du dataset en fonction du style
+    let datasetIndex;
+    if (style === 'circle') {
+        datasetIndex = 0; // Index pour le style 'circle'
+    }
+    else if (style === 'A') {
+        datasetIndex = 1; // Index pour le style 'A'
+    }
+    else if (style === 'I') {
+        datasetIndex = 2; // Index pour le style 'I', ajustez selon la configuration de vos datasets
+    }
+    else {
+        datasetIndex = 0; // Par défaut, utilisez le premier dataset
+    }
     chart.data.datasets[datasetIndex].data.push(newDataPoint);
     chart.data.datasets[datasetIndex].data.sort((a, b) => a.x - b.x);
     chart.update();
