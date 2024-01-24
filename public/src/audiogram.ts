@@ -387,7 +387,7 @@ function sendDataToServer(audiogramData: AudiogramData) {
  * 
  * @throws {Error} - Lance une erreur si la récupération des données échoue.
  */
-function getAudiogramData(chart: any, legendSelector: HTMLSelectElement) {
+function getAudiogramData(chart: any, ear: string, legendSelector: HTMLSelectElement) {
   fetch('/get-audiogram-data')
     .then(response => {
       if (!response.ok) {
@@ -396,17 +396,13 @@ function getAudiogramData(chart: any, legendSelector: HTMLSelectElement) {
       return response.json();
     })
     .then(data => {
+      const filteredData = data.filter((point :any)=> point.ear === ear);
       const pointStyle = legendSelector.value;
-      updateAudiogramWithData(data,chart);
+      updateAudiogramWithData(filteredData, chart);
     })
     .catch(error => console.error('Erreur lors de la récupération des données:', error));
 }
 
-/**
- * Met à jour les graphiques d'audiogramme avec les données récupérées.
- * 
- * @param data - Un tableau de données d'audiogramme à utiliser pour mettre à jour les graphiques.
- */
 function updateAudiogramWithData(data: AudiogramData[], chart: any) {
   data.forEach((point) => {
     if (!isPointAlreadyPresent(chart, point.frequency)) {
@@ -663,8 +659,8 @@ window.onload = function () {
   if (audiogramChartLeft && audiogramChartRight) {
     setupEventHandlers(audiogramChartLeft, audiogramChartRight, legendSelectorLeft, legendSelectorRight);
   }
-  getAudiogramData(audiogramChartLeft, legendSelectorLeft);
-  getAudiogramData(audiogramChartRight, legendSelectorRight);
+  getAudiogramData(audiogramChartLeft, 'gauche', legendSelectorLeft);
+  getAudiogramData(audiogramChartRight, 'droit', legendSelectorRight);
   setupClickListeners(audiogramChartLeft, 'gauche', legendSelectorLeft);
   setupClickListeners(audiogramChartRight, 'droite', legendSelectorRight);
   initTabs();
