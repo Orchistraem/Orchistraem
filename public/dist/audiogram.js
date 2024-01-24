@@ -6,11 +6,25 @@ let audiogramChartRight = null;
 let isDeletionModeActive = false;
 // Recupération du bouton de suppression
 let toggleDeletionMode = document.getElementById('toggleDeletionMode');
-// Ajout de l'ecouteur
+function showNotification(message, duration = 1500) {
+    const notification = document.getElementById('notification');
+    if (notification) {
+        notification.innerText = message; // Mettre à jour le texte
+        notification.style.display = 'block'; // Afficher la notification
+        // Masquer la notification après 'duration' millisecondes
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, duration);
+    }
+}
+// Ajout de l'écouteur
 if (toggleDeletionMode) {
     toggleDeletionMode.addEventListener('click', function () {
         isDeletionModeActive = !isDeletionModeActive;
-        console.log("Mode de suppression est maintenant " + (isDeletionModeActive ? "activé" : "désactivé"));
+        const status = isDeletionModeActive ? "activé" : "désactivé";
+        console.log("Mode de suppression est maintenant " + status);
+        // Afficher une notification avec le statut du mode de suppression
+        showNotification("Mode de suppression " + status, 3000); // 3000 millisecondes = 3 secondes
     });
 }
 const deleteAllPointsButton = document.getElementById('deleteAllPoints');
@@ -342,9 +356,18 @@ function sendDataToServer(audiogramData) {
         .catch(error => console.error('Erreur:', error));
 }
 /**
- * Récupère les données d'audiogramme du serveur.
+ * Récupère les données d'audiogramme du serveur et met à jour le graphique d'audiogramme correspondant.
  *
- * @throws {Error} - Lance une erreur si la récupération des données échoue.
+ * Cette fonction envoie une requête au serveur pour obtenir les données des audiogrammes. Une fois les données récupérées,
+ * elle appelle `updateAudiogramWithData` pour mettre à jour le graphique d'audiogramme spécifié avec les nouvelles données.
+ * Elle utilise également un sélecteur de légende pour déterminer le style de point à appliquer.
+ *
+ * @param chart - L'instance de l'audiogramme Chart.js à mettre à jour avec les données récupérées.
+ * @param legendSelector - Le sélecteur HTML pour choisir le style de point à appliquer aux nouveaux points.
+ *
+ * @example
+ * // Appel de la fonction pour le graphique de l'oreille gauche avec son sélecteur de légende
+ * getAudiogramData(audiogramChartLeft, document.getElementById('legendSelectorLeft'));
  */
 function getAudiogramData(chart, ear, legendSelector) {
     fetch('/get-audiogram-data')
@@ -363,9 +386,71 @@ function getAudiogramData(chart, ear, legendSelector) {
 }
 function updateAudiogramWithData(data, chart) {
     data.forEach((point) => {
-        if (!isPointAlreadyPresent(chart, point.frequency)) {
-            addDataPointAndSort(chart, point.frequency, point.decibels, point.id, point.style);
+        if (!isPointAlreadyPresentWithStyle(chart, point.frequency, point.decibels, point.style)) {
+            if (point.ear === 'gauche' && audiogramChartLeft) {
+                if (!isPointAlreadyExist(audiogramChartLeft, point)) {
+                    addDataPointAndSort(audiogramChartLeft, point.frequency, point.decibels, point.id, point.style);
+                }
+            }
+            else if (point.ear === 'droite' && audiogramChartRight) {
+                addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id, point.style);
+            }
         }
+    });
+}
+/**
+ * Vérifie si un point spécifique, identifié par son ID unique, existe déjà dans un graphique d'audiogramme.
+ *
+ * Cette fonction parcourt tous les datasets du graphique d'audiogramme et chaque point dans ces datasets pour déterminer si un point
+ * avec l'ID spécifié existe déjà. Cela permet d'éviter les doublons basés sur l'identité unique du point, indépendamment de ses
+ * coordonnées ou de son style.
+ *
+ * @param chart - L'instance de l'audiogramme Chart.js où la recherche est effectuée.
+ * @param pointTest - L'objet représentant le point à vérifier, contenant au moins l'ID unique du point.
+ * @returns `true` si un point avec l'ID donné est trouvé, sinon `false`.
+ *
+ * @example
+ * // Vérifie si un point avec l'ID spécifique existe déjà
+ * const pointToTest = { id: "12345", frequency: 1000, decibels: 20, style: 'A' };
+ * isPointAlreadyExist(audiogramChart, pointToTest);
+ */
+function isPointAlreadyExist(chart, pointTest) {
+    let pointExists = false;
+    chart.data.datasets.forEach((dataset) => {
+        dataset.data.forEach((point) => {
+            if (point.id === pointTest.id) {
+                pointExists = true;
+            }
+        });
+    });
+    return pointExists;
+}
+/**
+ * Vérifie si un point avec des coordonnées de fréquence, de décibels et un style spécifique existe déjà sur un graphique d'audiogramme.
+ *
+ * Cette fonction parcourt tous les datasets du graphique d'audiogramme pour chercher un point existant avec des coordonnées
+ * et un style correspondants aux valeurs fournies. Elle compare la fréquence et les décibels avec une certaine tolérance pour les
+ * différences mineures, et vérifie également si le style du point (représenté par 'circle', 'A', 'I', etc.) correspond.
+ *
+ * @param chart - L'instance de l'audiogramme Chart.js dans laquelle la recherche est effectuée.
+ * @param frequency - La fréquence du point à vérifier.
+ * @param decibels - Le niveau de décibels du point à vérifier.
+ * @param style - Le style du point (comme 'circle', 'A', 'I', etc.) à vérifier.
+ * @returns `true` si un point correspondant est trouvé, sinon `false`.
+ *
+ * @example
+ * // Vérifie si un point avec 1000 Hz, 20 dB et le style 'A' existe déjà
+ * isPointAlreadyPresentWithStyle(audiogramChart, 1000, 20, 'A');
+ */
+function isPointAlreadyPresentWithStyle(chart, frequency, decibels, style) {
+    return chart.data.datasets.some((dataset) => {
+        if (style === 'circle' && dataset.pointStyle === 'circle' ||
+            style !== 'circle' && dataset.pointStyle !== 'circle') {
+            return dataset.data.some((point) => {
+                return Math.abs(point.x - frequency) < 0.1 && Math.abs(point.y - decibels) < 0.1;
+            });
+        }
+        return false;
     });
 }
 const standardFrequencies = [125, 250, 500, 1000, 2000, 4000, 8000];
@@ -414,7 +499,19 @@ function toggleDropdownMenu() {
     }
 }
 /**
- * Écoute les clics sur le graphique et ajoute des points d'audiogramme en fonction de la position du clic.
+ * Configure un écouteur d'événements pour gérer les clics sur un graphique d'audiogramme.
+ *
+ * Cette fonction ajoute un écouteur d'événements 'click' au canvas du graphique. Lorsqu'un clic est détecté, la fonction
+ * détermine si le mode de suppression est actif. Si c'est le cas, elle tente de supprimer le point cliqué après confirmation.
+ * Sinon, elle ajoute un nouveau point d'audiogramme à l'emplacement cliqué, en ajustant la fréquence et les décibels
+ * en fonction de la position du clic et du style sélectionné dans le menu déroulant.
+ *
+ * @param chart - L'instance de l'audiogramme Chart.js sur laquelle les clics sont écoutés.
+ * @param ear - Indique l'oreille concernée ('gauche' ou 'droite') pour identifier où ajouter le point.
+ * @param legendSelector - Le sélecteur HTML pour choisir le style du point ajouté.
+ *
+ * @example
+ * setupClickListeners(audiogramChartLeft, 'gauche', legendSelectorLeft); // Configure l'écouteur pour l'audiogramme de l'oreille gauche
  */
 function setupClickListeners(chart, ear, legendSelector) {
     const canvas = chart.canvas;
@@ -423,8 +520,10 @@ function setupClickListeners(chart, ear, legendSelector) {
         if (isDeletionModeActive) {
             const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
             if (points.length) {
+                const datasetIndex = points[0].datasetIndex;
                 const index = points[0].index;
-                const pointData = chart.data.datasets[0].data[index];
+                const pointData = chart.data.datasets[datasetIndex].data[index];
+                console.log(pointData);
                 if (window.confirm("Voulez-vous supprimer ce point ?")) {
                     removeDataPoint(chart, index, ear, pointData.id);
                 }
@@ -446,6 +545,19 @@ function setupClickListeners(chart, ear, legendSelector) {
         }
     });
 }
+/**
+ * Configure un écouteur d'événements pour afficher des infobulles lors du survol de la souris sur un graphique.
+ *
+ * Cette fonction crée un écouteur d'événements 'mousemove' sur le canvas du graphique. Lorsque la souris se déplace sur le graphique,
+ * elle calcule les coordonnées de la souris par rapport au graphique et affiche une infobulle personnalisée avec les informations
+ * de fréquence et de décibels correspondantes. L'infobulle est masquée lorsque la souris quitte le canvas.
+ *
+ * @param chart - L'instance de l'audiogramme Chart.js pour laquelle l'infobulle est configurée.
+ * @param tooltipId - L'identifiant de l'élément HTML qui servira d'infobulle.
+ *
+ * @example
+ * setupMouseHoverListener(audiogramChartLeft, 'tooltipLeft'); // Configure l'écouteur d'événements pour l'audiogramme de l'oreille gauche
+ */
 function setupMouseHoverListener(chart, tooltipId) {
     const canvas = chart.canvas;
     const tooltip = document.getElementById(tooltipId);
@@ -469,9 +581,7 @@ function setupMouseHoverListener(chart, tooltipId) {
         console.error(`Tooltip with id '${tooltipId}' not found.`);
     }
 }
-// Assurez-vous que cette fonction est appelée après que le DOM soit complètement chargé
 window.onload = function () {
-    // ... Votre code d'initialisation ici ...
     setupMouseHoverListener(audiogramChartLeft, 'tooltipLeft');
     setupMouseHoverListener(audiogramChartRight, 'tooltipRight');
 };
@@ -490,8 +600,14 @@ window.onload = function () {
  * removeDataPoint(audiogramChart, 2, 'gauche', '123456789'); // Supprime le point d'index 2 pour l'oreille gauche avec l'ID '123456789'
  */
 function removeDataPoint(chart, index, ear, pointId) {
-    // Supprimer le point du graphique
-    chart.data.datasets[0].data.splice(index, 1);
+    // Identifier le dataset contenant le point à supprimer
+    chart.data.datasets.forEach((dataset) => {
+        const pointIndex = dataset.data.findIndex((point) => point.id === pointId);
+        if (pointIndex !== -1) {
+            // Supprimer le point de ce dataset spécifique
+            dataset.data.splice(pointIndex, 1);
+        }
+    });
     chart.update();
     // Construire l'URL pour la requête DELETE
     const url = `/audiogram/${ear}/${pointId}`;
