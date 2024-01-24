@@ -24,7 +24,7 @@ if (toggleDeletionMode) {
         const status = isDeletionModeActive ? "activé" : "désactivé";
         console.log("Mode de suppression est maintenant " + status);
         // Afficher une notification avec le statut du mode de suppression
-        showNotification("Mode de suppression " + status, 3000); // 3000 millisecondes = 3 secondes
+        showNotification("Mode de suppression " + status, 3000);
     });
 }
 const deleteAllPointsButton = document.getElementById('deleteAllPoints');
@@ -191,11 +191,10 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
     }
     return null; // Retourne null si le canvas ou le contexte 2D n'existe pas
 }
-function isPointAlreadyPresent(chart, frequency) {
+function isPointAlreadyPresent(chart, frequency, style) {
     return chart.data.datasets.some((dataset) => {
         return dataset.data.some((point) => {
-            // Assurez-vous que la fréquence est comparée correctement
-            return Math.abs(point.x - frequency) < 0.1; // Tolérance pour les différences mineures
+            return Math.abs(point.x - frequency) < 0.1 && point.style === style;
         });
     });
 }
@@ -535,7 +534,8 @@ function setupClickListeners(chart, ear, legendSelector) {
             const y = event.clientY - rect.top;
             let { frequency, decibels } = convertClickToChartData(chart, x, y);
             frequency = findNearestFrequency(frequency, standardFrequencies);
-            if (!isPointAlreadyPresent(chart, frequency)) {
+            const pointStyle = legendSelector.value;
+            if (!isPointAlreadyPresent(chart, frequency, pointStyle)) {
                 decibels = snapToDecibelLevels(decibels); // Ajustement des décibels si nécessaire
                 const style = legendSelector.value;
                 const id = Date.now().toString(); // Générer un ID unique ici

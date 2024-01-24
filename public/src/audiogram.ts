@@ -225,11 +225,10 @@ function initAudiogram(canvasID: string, pointColor: string, borderColor: string
   return null; // Retourne null si le canvas ou le contexte 2D n'existe pas
 }
 
-function isPointAlreadyPresent(chart: any, frequency: number): boolean {
+function isPointAlreadyPresent(chart: any, frequency: number, style: string): boolean {
   return chart.data.datasets.some((dataset: any) => {
   return dataset.data.some((point:any) => {
-    // Assurez-vous que la fréquence est comparée correctement
-    return Math.abs(point.x - frequency) < 0.1; // Tolérance pour les différences mineures
+    return Math.abs(point.x - frequency) < 0.1 && point.style === style;
   });
 });
 }
@@ -605,7 +604,8 @@ function setupClickListeners(chart: any, ear: string, legendSelector: HTMLSelect
       
         let { frequency, decibels } = convertClickToChartData(chart, x, y);
         frequency = findNearestFrequency(frequency, standardFrequencies);
-        if (!isPointAlreadyPresent(chart, frequency)) {
+        const pointStyle = legendSelector.value;
+        if (!isPointAlreadyPresent(chart, frequency, pointStyle)) {
           decibels = snapToDecibelLevels(decibels); // Ajustement des décibels si nécessaire
           const style = legendSelector.value;
           const id = Date.now().toString(); // Générer un ID unique ici
