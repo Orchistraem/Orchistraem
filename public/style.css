@@ -22,23 +22,32 @@ body {
 .header {
     background: linear-gradient(#03045e, #0077b6);
     color: white;
-    padding: 10px 10px;
+    padding: 2% 2%;
     display: flex;
     align-items: center; /* Centre verticalement les éléments dans le header */
     justify-content:start; /* Alignement horizontal à gauche */
-    font-size: 24px;
-    height: 60px; /* Hauteur fixe pour le header */
+    font-size: 160%;
+    height: 9%; /* Hauteur fixe pour le header */
+}
+
+.tab1, .tab2{
+    display:contents;
 }
 
 .header a {
     text-decoration: none;
     color : white;
+    display: contents;
 }
 
 .tab2 img , .tab1 img{
-    width: 70px;
-    height: auto;
-    margin: 3px;
+    margin-right: 2%;
+    width: 3%;
+}
+
+.tab2 img:hover , .tab1 img:hover{
+    margin-right: 1%;
+    width:4%;
 }
 
 /* Style du titre au milieu du header */
@@ -53,7 +62,7 @@ body {
 /* Style des conteneurs de formulaires */
 .form-container {
     margin: 20px;
-    text-align: left;
+    text-align: center;
 }
 
 /* Style des graphiques (ne pas toucher le quadrillage) */
@@ -126,4 +135,11 @@ body {
     background-color: transparent;
     color: #03045e;
     border: 1px solid #03045e;
+    width: fit-content;
+    margin: 2%;
+
+}
+
+.edit button{
+    margin: 2%;
 }
