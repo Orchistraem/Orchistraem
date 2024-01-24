@@ -59,6 +59,7 @@ function displayAudioList(): void {
                     // Créer un bouton modifier à côté du nom du fichier
                     const modifyButton = document.createElement('button');
                     modifyButton.textContent = 'Modifier';
+                    modifyButton.classList.add('btn', 'btn-primary'); 
                     modifyButton.addEventListener('click', () => {
                         modifyName(file);
                     });
@@ -66,6 +67,7 @@ function displayAudioList(): void {
                     // Créer un bouton supprimer à côté du nom du fichier
                     const deleteButton = document.createElement('button');
                     deleteButton.textContent = 'Supprimer';
+                    deleteButton.classList.add('btn', 'btn-danger'); 
                     deleteButton.addEventListener('click', () => {
                         deleteSong(file);
                     });
@@ -103,13 +105,17 @@ function modifyName(currentFileName: string): void {
         const newFileNameInput = document.createElement('input');
         newFileNameInput.type = 'text';
         newFileNameInput.value = currentName;
+        newFileNameInput.classList.add('form-control');
+        newFileNameInput.placeholder = "Entrez le nouveau nom du fichier";
 
         // Créer le bouton de confirmation
         const confirmButton = document.createElement('button');
+        confirmButton.classList.add('btn', 'btn-success');
         confirmButton.textContent = 'Confirmer';
 
         // Créer le bouton d'annulation
         const cancelButton = document.createElement('button');
+        cancelButton.classList.add('btn', 'btn-danger'); 
         cancelButton.textContent = 'Annuler';
 
         // Créer un conteneur pour la zone de texte, le bouton de confirmation et le bouton d'annulation
@@ -182,8 +188,12 @@ function deleteSong(fileName: string): void {
 
         const confirmButton = document.createElement('button');
         confirmButton.textContent = 'Confirmer';
+        confirmButton.classList.add('btn', 'btn-success'); // Classes pour le bouton de confirmation
+
         const cancelButton = document.createElement('button');
         cancelButton.textContent = 'Annuler';
+        cancelButton.classList.add('btn', 'btn-danger'); // Correction : Classes pour le bouton d'annulation
+
 
         confirmContainer.appendChild(confirmButton);
         confirmContainer.appendChild(cancelButton);

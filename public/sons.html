@@ -8,6 +8,7 @@
     <script src="dist/sons.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
 </head>
 <body>
 
@@ -27,12 +28,22 @@
     </div>
   </div>
 
-    <div id="audioList"></div>
+    <h1>Pistes Audio Enregistrées</h1>
 
-    <form id="uploadAudioForm" enctype="multipart/form-data">
-        <input type="file" id="audioFile" name="audioFile" accept="audio/*" >
-        <button type="submit" class=" btn btn-outline-primary">Télécharger l'audio</button>
-    </form>
+    <div id="audioList">
+      
+    </div>
+
+    <form id="uploadAudioForm" enctype="multipart/form-data" class="my-3">
+      <h2>Ajouter un audio</h2>
+      <div class="input-group mb-3">
+        <div class="col-3">
+          <input type="file" class="form-control" id="audioFile" name="audioFile" accept="audio/*">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">Télécharger l'audio</button>
+  </form>
+  
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
