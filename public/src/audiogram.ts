@@ -348,6 +348,15 @@ function setupEventHandlers(chartLeft: any, chartRight: any, legendSelectorLeft:
   });
 }
 
+function addPointToLeftAudiogram(frequency:number, decibels:number, id:any, style:any) {
+  // Vérifiez que cette fonction ajoute des points seulement à l'audiogramme gauche
+  addDataPointAndSort(audiogramChartLeft, frequency, decibels, id, style);
+}
+
+function addPointToRightAudiogram(frequency:number, decibels:number, id:any, style:any)  {
+  // Vérifiez que cette fonction ajoute des points seulement à l'audiogramme droit
+  addDataPointAndSort(audiogramChartRight, frequency, decibels, id, style);
+}
 /**
  * Envoie les données d'audiogramme au serveur via une requête POST.
  * 
