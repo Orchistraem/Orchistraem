@@ -150,3 +150,10 @@ button {
     pointer-events: none; /* Empêcher le tooltip d'interférer avec les clics de la souris */
   }
 
+ 
+.chartBox canvas {
+    width: 800px;
+    border-radius: 20px;
+    border: solid 3px rgba(54, 162, 235, 1);
+    background: white;
+}
