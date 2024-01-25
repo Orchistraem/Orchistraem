@@ -385,6 +385,7 @@ function getAudiogramData(chart, ear, legendSelector) {
 }
 function updateAudiogramWithData(data, chart) {
     data.forEach((point) => {
+        console.log(point.ear);
         if (!isPointAlreadyPresentWithStyle(chart, point.frequency, point.decibels, point.style)) {
             if (point.ear === 'gauche' && audiogramChartLeft) {
                 if (!isPointAlreadyExist(audiogramChartLeft, point)) {
@@ -705,7 +706,7 @@ window.onload = function () {
         setupEventHandlers(audiogramChartLeft, audiogramChartRight, legendSelectorLeft, legendSelectorRight);
     }
     getAudiogramData(audiogramChartLeft, 'gauche', legendSelectorLeft);
-    getAudiogramData(audiogramChartRight, 'droit', legendSelectorRight);
+    getAudiogramData(audiogramChartRight, 'droite', legendSelectorRight);
     setupClickListeners(audiogramChartLeft, 'gauche', legendSelectorLeft);
     setupClickListeners(audiogramChartRight, 'droite', legendSelectorRight);
     initTabs();
