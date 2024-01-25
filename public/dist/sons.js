@@ -20,8 +20,15 @@ function setupUploadAudioForm() {
                     method: 'POST',
                     body: formData
                 })
-                    .then(response => response.text())
-                    .then(data => console.log(data))
+                    .then(response => {
+                    if (response.ok) {
+                        console.log('Fichier téléchargé avec succès');
+                        refreshAudioList(); // Rafraîchir la liste après le téléchargement réussi
+                    }
+                    else {
+                        throw new Error('Erreur lors du téléchargement du fichier');
+                    }
+                })
                     .catch(error => console.error('Erreur:', error));
             }
             else {
@@ -31,6 +38,23 @@ function setupUploadAudioForm() {
     }
     else {
         console.error('Élément(s) de formulaire introuvable(s).');
+    }
+}
+/**
+ * Rafraîchit et met à jour la liste des fichiers audio affichée sur la page.
+ *
+ * Cette fonction efface le contenu actuel du conteneur de la liste des fichiers audio,
+ * puis recharge et affiche la liste à jour. Elle est utile pour refléter les changements
+ * tels que l'ajout ou la suppression de fichiers audio sans avoir besoin de rafraîchir
+ * toute la page.
+ *
+ * @returns Aucune valeur n'est retournée.
+ */
+function refreshAudioList() {
+    const audioListContainer = document.getElementById('audioList');
+    if (audioListContainer) {
+        audioListContainer.innerHTML = ''; // Vider la liste existante
+        displayAudioList(); // Recharger la liste
     }
 }
 /**
@@ -136,6 +160,7 @@ function modifyName(currentFileName) {
                         fileNameDisplay.textContent = newFileName.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
                     }
                     audioContainer.setAttribute('data-file', newFileName);
+                    refreshAudioList();
                 }
                 else {
                     console.error('Erreur lors de la modification du nom du fichier');
@@ -171,7 +196,7 @@ function deleteSong(fileName) {
         confirmButton.classList.add('btn', 'btn-success'); // Classes pour le bouton de confirmation
         const cancelButton = document.createElement('button');
         cancelButton.textContent = 'Annuler';
-        cancelButton.classList.add('btn', 'btn-danger'); // Correction : Classes pour le bouton d'annulation
+        cancelButton.classList.add('btn', 'btn-danger');
         confirmContainer.appendChild(confirmButton);
         confirmContainer.appendChild(cancelButton);
         audioContainer.appendChild(confirmContainer);
