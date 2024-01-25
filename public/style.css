@@ -246,5 +246,13 @@ h1 {
     border-color: #0062cc; /* Couleur de bordure au survol pour le bouton */
 }
 
+.audio-container p{
+    color: white; 
+    font-size:100%;
+    margin-top: 20px; 
+    margin-bottom: 20px;  
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 4px #03045e; 
 
+}
 
