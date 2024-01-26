@@ -93,7 +93,7 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
             return new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: [125, 250, 500, 1000, 2000, 4000, 8000],
+                    labels: [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000],
                     datasets: [{
                             label: 'Oreille nue',
                             data: [],
@@ -154,7 +154,7 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
                                 }
                             },
                             afterBuildTicks: function (chart) {
-                                chart.ticks = [125, 250, 500, 1000, 2000, 4000, 8000];
+                                chart.ticks = [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000];
                                 chart.ticks.forEach(function (value, index, array) {
                                     array[index] = { value: value.toString() };
                                 });
@@ -301,7 +301,7 @@ function setupEventHandlers(chartLeft, chartRight, legendSelectorLeft, legendSel
             if (isValid) {
                 const uniqueId = Date.now().toString(); // Générer un ID unique ici
                 const pointStyle = legendSelectorRight.value;
-                addDataPointAndSort(chartLeft, frequency, decibel, uniqueId, pointStyle);
+                addDataPointAndSort(chartRight, frequency, decibel, uniqueId, pointStyle);
                 const audiogramDataRight = {
                     ear: 'droite',
                     frequency: frequency,
@@ -524,9 +524,7 @@ function setupClickListeners(chart, ear, legendSelector) {
                 const index = points[0].index;
                 const pointData = chart.data.datasets[datasetIndex].data[index];
                 console.log(pointData);
-                if (window.confirm("Voulez-vous supprimer ce point ?")) {
-                    removeDataPoint(chart, index, ear, pointData.id);
-                }
+                removeDataPoint(chart, index, ear, pointData.id);
             }
         }
         else {
@@ -698,8 +696,8 @@ function snapToDecibelLevels(decibels) {
  * Crée les graphiques d'audiogramme et configure les gestionnaires d'événements pour les formulaires d'ajout de points.
  */
 window.onload = function () {
-    audiogramChartLeft = initAudiogram('audiogramLeft', 'rgb(0, 123, 255)', 'rgba(0, 123, 255)', 'Oreille Gauche');
-    audiogramChartRight = initAudiogram('audiogramRight', 'rgb(220,20,60)', 'rgb(220,20,60)', 'Oreille Droite');
+    audiogramChartLeft = initAudiogram('audiogramLeft', 'rgb(0, 0, 0)', 'rgba(0, 1, 1)', 'Oreille Gauche');
+    audiogramChartRight = initAudiogram('audiogramRight', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Oreille Droite');
     const legendSelectorLeft = document.getElementById('legendSelectorLeft');
     const legendSelectorRight = document.getElementById('legendSelectorRight');
     if (audiogramChartLeft && audiogramChartRight) {
