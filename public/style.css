@@ -18,6 +18,12 @@ body {
     text-align: center;
 }
 
+.eraser-icon {
+    width: 24px; /* ou la taille que vous voulez */
+    height: 24px; /* ou la taille que vous voulez */
+    /* Ajouter d'autres styles si nécessaire */
+  }
+  
 /* Style du header */
 .header {
     background: linear-gradient(#03045e, #0077b6);
@@ -159,6 +165,18 @@ body {
     pointer-events: none; /* Empêcher le tooltip d'interférer avec les clics de la souris */
   }
 
+<<<<<<< Updated upstream
+=======
+ 
+.chartBox canvas {
+    width: 150%;
+    max-width: 745px;
+    border-radius: 20px;
+    border: solid 3px rgba(54, 162, 235, 1);
+    background: white;
+}
+
+>>>>>>> Stashed changes
 #addPointFormLeft {
     align-content:start;
 }

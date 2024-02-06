@@ -23,16 +23,22 @@ function showNotification(message: string, duration: number = 1500) {
     }, duration);
   }
 }
-
+const gomme = document.getElementById('cursorGomme');
 // Ajout de l'écouteur
 if (toggleDeletionMode) {
   toggleDeletionMode.addEventListener('click', function() {
     isDeletionModeActive = !isDeletionModeActive;
     const status = isDeletionModeActive ? "activé" : "désactivé";
     console.log("Mode de suppression est maintenant " + status);
-    
+    if(gomme){
+        // Afficher ou masquer l'image de la gomme
+        gomme.style.display = isDeletionModeActive ? "block" : "none";
+      }
     // Afficher une notification avec le statut du mode de suppression
     showNotification("Mode de suppression " + status, 3000);
+    
+    // Change le curseur
+    document.body.style.cursor = isDeletionModeActive ? 'url("./src/Images/gomme.png"), auto' : 'default';
   });
 }
 
