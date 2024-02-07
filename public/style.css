@@ -165,18 +165,6 @@ body {
     pointer-events: none; /* Empêcher le tooltip d'interférer avec les clics de la souris */
   }
 
-<<<<<<< Updated upstream
-=======
- 
-.chartBox canvas {
-    width: 150%;
-    max-width: 745px;
-    border-radius: 20px;
-    border: solid 3px rgba(54, 162, 235, 1);
-    background: white;
-}
-
->>>>>>> Stashed changes
 #addPointFormLeft {
     align-content:start;
 }
@@ -194,6 +182,7 @@ body {
 
 .legend{
     display: flex;
+    width: max-content;
 }
 
 .form-select{
@@ -201,8 +190,10 @@ body {
     color: #03045e;
     border: 1px solid #03045e;
     width: fit-content;
-    margin: 2%;
+}
 
+.edit{
+    width: min-content;
 }
 
 .edit button{
