@@ -111,6 +111,18 @@ function displayAudioList(): void {
 
                     // Ajouter le conteneur du fichier audio à la liste
                     audioListContainer.appendChild(audioContainer);
+
+                    //Ajouter le bouton d'analyse des sons
+                    const analyseButton = document.createElement('button');
+                    analyseButton.textContent = 'Analyser';
+                    analyseButton.classList.add('btn', 'btn-info');
+                    analyseButton.addEventListener('click', () => {
+                        const audioUrl = `/uploads/${file}`; // URL du fichier audio
+                        fetch(audioUrl)
+                        .then(response => response.blob())
+                        .then(blob => analyseAudio(blob));
+                    });
+                    audioContainer.appendChild(analyseButton);
                 });
             }
         })
@@ -252,6 +264,64 @@ function deleteSong(fileName: string): void {
         console.error(`Aucun élément audio correspondant à ${fileName} n'a été trouvé.`);
     }
 }
+
+async function setupAudioAnalysis(audioFile: Blob): Promise<AudioBuffer> {
+    const audioContext = new AudioContext();
+    const arrayBuffer = await audioFile.arrayBuffer();
+    return audioContext.decodeAudioData(arrayBuffer);
+}
+
+async function analyseAudio(audioFile: Blob): Promise<void> {
+    const audioContext = new AudioContext();
+    const arrayBuffer = await audioFile.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    const analyser = audioContext.createAnalyser();
+    const source = audioContext.createBufferSource();
+    
+    source.buffer = audioBuffer;
+    source.connect(analyser);
+    analyser.fftSize = 2048;
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArrayFrequency = new Uint8Array(bufferLength);
+    const dataArrayTime = new Uint8Array(bufferLength);
+
+    source.connect(audioContext.destination);
+    source.start(0);
+
+    const checkAudioProcessing = () => {
+        analyser.getByteFrequencyData(dataArrayFrequency);
+        let maxIndex = 0;
+        let maxValue = 0;
+        for (let i = 0; i < bufferLength; i++) {
+            if (dataArrayFrequency[i] > maxValue) {
+                maxValue = dataArrayFrequency[i];
+                maxIndex = i;
+            }
+        }
+        const dominantFrequency = maxIndex * audioContext.sampleRate / analyser.fftSize;
+
+        if (dominantFrequency > 0) {
+            console.log(`Fréquence dominante: ${dominantFrequency} Hz`);
+            
+            analyser.getByteTimeDomainData(dataArrayTime);
+            let sumSquares = 0.0;
+            for (let i = 0; i < bufferLength; i++) {
+                let normSample = (dataArrayTime[i] / 128.0) - 1.0; // Normaliser et centrer à 0
+                sumSquares += normSample * normSample;
+            }
+            let rms = Math.sqrt(sumSquares / bufferLength);
+            let volumeDb = 20 * Math.log10(rms);
+            console.log(`Volume: ${isNaN(volumeDb) ? 'N/A' : volumeDb.toFixed(2)} dB`);
+
+            source.stop();
+        } else {
+            requestAnimationFrame(checkAudioProcessing);
+        }
+    };
+
+    requestAnimationFrame(checkAudioProcessing);
+}
+
 
 window.onload = function (): void {
     displayAudioList();
