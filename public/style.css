@@ -165,6 +165,14 @@ body {
     pointer-events: none; /* Empêcher le tooltip d'interférer avec les clics de la souris */
   }
 
+.chartBox canvas {
+    width: 150%; /* prendra la totalité de la largeur de .chartBox */
+    max-width: 745px; 
+    border-radius: 20px;
+    border: solid 3px rgba(54, 162, 235, 1);
+    background: white;
+}
+
 #addPointFormLeft {
     align-content:start;
 }
