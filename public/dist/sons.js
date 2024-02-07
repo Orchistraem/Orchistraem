@@ -1,4 +1,5 @@
 "use strict";
+var _a;
 /**
  * Configure le formulaire pour le téléchargement de fichiers audio.
  *
@@ -57,6 +58,42 @@ function refreshAudioList() {
         displayAudioList(); // Recharger la liste
     }
 }
+function analyzeAudio(audioUrl, callback) {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    fetch(audioUrl)
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+        .then(audioBuffer => {
+        const analyser = audioContext.createAnalyser();
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(analyser);
+        analyser.connect(audioContext.destination);
+        source.start(0);
+        // Analyse simplifiée pour exemple
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(dataArray);
+        // Calcul de l'intensité et de la fréquence (approche très basique)
+        let intensity = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+        let frequency = 0; // Calcul de la fréquence principale à implémenter
+        callback(intensity, frequency);
+        // Arrêter l'audio context pour libérer des ressources
+        source.stop();
+        audioContext.close();
+    })
+        .catch(error => console.error('Erreur lors de l\'analyse de l\'audio:', error));
+}
+// Déclaration initiale de l'AudioContext à null pour vérifier s'il a été initié
+let audioContext = null;
+(_a = document.getElementById('startAudio')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => {
+    if (!audioContext) {
+        // Création de l'instance AudioContext lors du premier clic sur le bouton
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        console.log('AudioContext démarré avec succès !');
+        // Vous pouvez ici ajouter tout code nécessaire pour utiliser l'audioContext,
+        // comme charger et jouer un son, ou activer des fonctionnalités qui en dépendent.
+    }
+});
 /**
  * Affiche la liste des fichiers audio.
  * @returns aucune valeur n'est retourné
@@ -68,6 +105,11 @@ function displayAudioList() {
         const audioListContainer = document.getElementById('audioList');
         if (audioListContainer) {
             audioFiles.forEach((file) => {
+                const audioUrl = `/uploads/${file}`;
+                analyzeAudio(audioUrl, (intensity, frequency) => {
+                    console.log(intensity.toFixed(2));
+                    console.log(frequency.toFixed(2));
+                });
                 // Créer un conteneur div pour chaque fichier audio
                 const audioContainer = document.createElement('div');
                 audioContainer.classList.add('audio-container');

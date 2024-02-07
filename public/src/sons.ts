@@ -58,6 +58,58 @@ function refreshAudioList(): void {
     }
 }
 
+
+
+
+// Définition de types pour TypeScript
+type AnalyzeAudioCallback = (intensity: number, frequency: number) => void;
+
+function analyzeAudio(audioUrl: string, callback: AnalyzeAudioCallback): void {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    fetch(audioUrl)
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+        .then(audioBuffer => {
+            const analyser = audioContext.createAnalyser();
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+            source.start(0);
+
+            // Analyse simplifiée pour exemple
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteFrequencyData(dataArray);
+
+            // Calcul de l'intensité et de la fréquence (approche très basique)
+            let intensity = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+            let frequency = 0; // Calcul de la fréquence principale à implémenter
+
+            callback(intensity, frequency);
+
+            // Arrêter l'audio context pour libérer des ressources
+            source.stop();
+            audioContext.close();
+        })
+        .catch(error => console.error('Erreur lors de l\'analyse de l\'audio:', error));
+}
+
+function setupAudioAnalysis(audioElement: HTMLAudioElement, audioUrl: string): void {
+    // Assurez-vous qu'AudioContext est initié par une interaction utilisateur
+    const audioContext = new AudioContext();
+
+    // Utilisez l'élément audio comme source
+    const track = audioContext.createMediaElementSource(audioElement);
+    const analyser = audioContext.createAnalyser();
+
+    track.connect(analyser);
+    analyser.connect(audioContext.destination);
+
+    audioElement.onplay = () => analyzeAudio(analyser);
+}
+
+
+
 /**
  * Affiche la liste des fichiers audio.
  * @returns aucune valeur n'est retourné
@@ -69,6 +121,8 @@ function displayAudioList(): void {
             const audioListContainer = document.getElementById('audioList') as HTMLDivElement | null;
             if (audioListContainer) {
                 audioFiles.forEach((file: string) => {
+                    const audioElement = document.
+
                     // Créer un conteneur div pour chaque fichier audio
                     const audioContainer = document.createElement('div');
                     audioContainer.classList.add('audio-container');
