@@ -119,7 +119,7 @@ function displayAudioList() {
                     const audioUrl = `/uploads/${file}`; // URL du fichier audio
                     fetch(audioUrl)
                         .then(response => response.blob())
-                        .then(blob => analyseAudio(blob));
+                        .then(blob => analyseAudio(blob, audioContainer));
                 });
                 audioContainer.appendChild(analyseButton);
             });
@@ -254,7 +254,7 @@ function setupAudioAnalysis(audioFile) {
         return audioContext.decodeAudioData(arrayBuffer);
     });
 }
-function analyseAudio(audioFile) {
+function analyseAudio(audioFile, audioContainer) {
     return __awaiter(this, void 0, void 0, function* () {
         const audioContext = new AudioContext();
         const arrayBuffer = yield audioFile.arrayBuffer();
@@ -281,7 +281,13 @@ function analyseAudio(audioFile) {
             }
             const dominantFrequency = maxIndex * audioContext.sampleRate / analyser.fftSize;
             if (dominantFrequency > 0) {
-                console.log(`Fréquence dominante: ${dominantFrequency} Hz`);
+                let frequencyText = audioContainer.querySelector("#frequencyText");
+                if (!frequencyText) {
+                    frequencyText = document.createElement("p");
+                    frequencyText.id = "frequencyText";
+                    audioContainer.appendChild(frequencyText);
+                }
+                frequencyText.innerHTML = "Fréquence dominante: " + dominantFrequency.toFixed(2) + "Hz";
                 analyser.getByteTimeDomainData(dataArrayTime);
                 let sumSquares = 0.0;
                 for (let i = 0; i < bufferLength; i++) {
@@ -290,7 +296,13 @@ function analyseAudio(audioFile) {
                 }
                 let rms = Math.sqrt(sumSquares / bufferLength);
                 let volumeDb = 20 * Math.log10(rms);
-                console.log(`Volume: ${isNaN(volumeDb) ? 'N/A' : volumeDb.toFixed(2)} dB`);
+                let intensityText = audioContainer.querySelector("#intensityText");
+                if (!intensityText) {
+                    intensityText = document.createElement("p");
+                    intensityText.id = "intensityText";
+                    audioContainer.appendChild(intensityText);
+                }
+                intensityText.innerHTML = "Intensité: " + volumeDb.toFixed(2) + "dB";
                 source.stop();
             }
             else {
