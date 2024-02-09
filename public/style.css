@@ -18,6 +18,12 @@ body {
     text-align: center;
 }
 
+.eraser-icon {
+    width: 24px; /* ou la taille que vous voulez */
+    height: 24px; /* ou la taille que vous voulez */
+    /* Ajouter d'autres styles si nécessaire */
+  }
+  
 /* Style du header */
 .header {
     background: linear-gradient(#03045e, #0077b6);
@@ -159,7 +165,6 @@ body {
     pointer-events: none; /* Empêcher le tooltip d'interférer avec les clics de la souris */
   }
 
- 
 .chartBox canvas {
     width: 150%; /* prendra la totalité de la largeur de .chartBox */
     max-width: 745px; 
@@ -185,6 +190,7 @@ body {
 
 .legend{
     display: flex;
+    width: max-content;
 }
 
 .form-select{
@@ -192,8 +198,10 @@ body {
     color: #03045e;
     border: 1px solid #03045e;
     width: fit-content;
-    margin: 2%;
+}
 
+.edit{
+    width: min-content;
 }
 
 .edit button{
@@ -229,39 +237,48 @@ h1 {
 }
 
 #uploadAudioForm {
-    border:  #0077b6; /* Bordure de la bulle */
-    border-radius: 25px; /* Coins arrondis pour l'effet bulle */
-    padding: 10px; /* Espace intérieur */
-    margin-bottom: 10px; /* Espace entre les bulles */
-    background-color: #76b6ee; /* Couleur de fond */
-    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2); /* Ombre pour un effet 3D */
-    max-width: 600px; /* Largeur maximale */
-    text-align: left; /* Aligner le texte à gauche */
-}
-
-#uploadAudioForm .form-control {
-    border-radius: 0.25rem; /* Coins arrondis pour le champ de fichier */
-}
-
-#uploadAudioForm .btn-primary {
-    border-radius: 0.25rem; /* Coins arrondis pour le bouton */
-    background-color: #007bff; /* Couleur de fond pour le bouton */
-    border-color: #007bff; /* Couleur de bordure pour le bouton */
-    color: white; /* Couleur du texte pour le bouton */
-}
-
-#uploadAudioForm .btn-primary:hover {
-    background-color: #0069d9; /* Couleur de fond au survol pour le bouton */
-    border-color: #0062cc; /* Couleur de bordure au survol pour le bouton */
-}
-
-.audio-container p{
+    background-color: #4890b8; 
     color: white; 
-    font-size:100%;
-    margin-top: 20px; 
-    margin-bottom: 20px;  
-    letter-spacing: 1px;
-    text-shadow: 2px 2px 4px #03045e; 
-
+    border: 2px solid #187a92; 
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19); /* Ombre plus prononcée */
+    padding: 20px; /* Plus d'espace intérieur */
+    margin-top: 30px; /* Plus d'espace au-dessus du conteneur */
 }
 
+
+/* Style des conteneurs de fichiers audio existants */
+.audio-container {
+    background-color: #008CBA; /* Bleu différent pour les fichiers audio */
+    color: #FFF; /* Texte blanc pour le contraste */
+    border: 1px solid #0079a1; /* Bordure subtile */
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 3px 10px 0 rgba(0, 0, 0, 0.09); /* Ombre plus légère */
+    padding: 15px; /* Espacement intérieur */
+    margin-bottom: 20px; /* Espacement entre les conteneurs */
+}
+
+/* Ajustements pour les boutons dans les conteneurs de fichiers audio */
+.audio-container .btn {
+    margin-top: 10px; /* Espacement au-dessus des boutons */
+}
+
+.audio-container .btn-primary {
+    background-color: #449D44; /* Vert pour le bouton 'Modifier' */
+    border-color: #398439; /* Bordure du bouton 'Modifier' */
+}
+
+.audio-container .btn-danger {
+    background-color: #C9302C; /* Rouge pour le bouton 'Supprimer' */
+    border-color: #ac2925; /* Bordure du bouton 'Supprimer' */
+}
+
+/* Amélioration de la visibilité du texte */
+.audio-container p, #uploadAudioForm p {
+    font-size: 1.2rem; /* Taille de texte plus grande */
+    text-shadow: none; /* Retirer l'ombre du texte pour améliorer la lisibilité */
+}
+
+.audio-container:hover {
+    background-color: #007bb5; /* Sombre lors du survol */
+    border-color: #006699; /* Bordure plus sombre lors du survol */
+    cursor: pointer; /* Change le curseur pour indiquer la possibilité d'une action */
+}

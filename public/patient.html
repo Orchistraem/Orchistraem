@@ -6,6 +6,8 @@
     <title>Patient</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" sizes="64x64" href="src/Images/logo.png" type="image/png">
+    <script src="/dist/banque_son/afficher_list.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
@@ -37,7 +39,7 @@
     <div>
       <div class="chartBox">
       <canvas id="audiogramLeft" class="audiogram"></canvas>
-      </div>
+    </div>
       
       <div class="form-container">
         <form id="addPointFormLeft">
@@ -53,9 +55,9 @@
           <option value="circle">Cercle</option>
           <option value="A">A</option>
           <option value="I">I</option>
+          <img src="./src/Images/gomme.png" id="cursorGomme" class="eraser-icon" alt="Eraser Icon" style="display: none;">
         </select>
-    
-    
+
         <select id="legendSelectorRight" class="form-select">
           <option value="circle">Cercle</option>
           <option value="A">A</option>
@@ -63,13 +65,13 @@
         </select>
       </div>
   
-      <button id="toggleDeletionMode" class="btn btn-primary toggle-btn" data-toggle="button" aria-pressed="false" autocomplete="off">Activer/Désactiver Mode Suppression</button>
+      <button id="toggleDeletionMode" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off">Activer/Desactiver Mode Suppression</button>
       <button id="deleteAllPoints" class=" btn btn-outline-primary">Supprimer Tous les Points</button>
     </div>
 
     <div>
       <div class="chartBox">
-      <canvas id="audiogramRight" class="audiogram"></canvas>
+        <canvas id="audiogramRight" class="audiogram"></canvas>
       </div>
       <div id="tooltipLeft" class="tooltip" style="display: none;"></div>
       <div class="form-container">
