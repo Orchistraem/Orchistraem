@@ -241,9 +241,9 @@ h1 {
 }
 
 #uploadAudioForm {
-    background-color: #005f73; /* Couleur plus foncée pour le conteneur d'ajout de son */
+    background-color: #0d7b91; /* Couleur plus foncée pour le conteneur d'ajout de son */
     color: white; /* Texte blanc pour une meilleure lisibilité */
-    border: 1px solid #004a5f; /* Bordure légèrement plus foncée pour un meilleur contraste */
+    border: 1px solid #005f79; /* Bordure légèrement plus foncée pour un meilleur contraste */
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 3px 10px 0 rgba(0, 0, 0, 0.09); /* Ombre pour un effet de profondeur */
     padding: 15px; /* Alignement de l'espacement intérieur avec les autres conteneurs audio */
     margin-bottom: 20px; /* Assurer un espacement uniforme entre les éléments */
@@ -251,6 +251,8 @@ h1 {
     margin-left: auto; /* Centrage horizontal */
     margin-right: auto;
     text-align: left; /* Alignement du texte à gauche pour la cohérence */
+    border-radius: 25px; /* Coins arrondis pour l'effet bulle */
+
 }
 
 
