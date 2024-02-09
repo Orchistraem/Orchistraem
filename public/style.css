@@ -6,18 +6,22 @@
 html, body {
     height: 100%; /* Assure que l'élément html et le body occupent toute la hauteur de la fenêtre */
     margin: 0; /* Supprime les marges par défaut */
+    min-height: 100%;
+    height: auto;
   }
 
 /* Style général de la page */
 body {
-    background: linear-gradient(#0077b6, #caf0f8);
-    background-color: #f5deb3; /* Couleur de fond beige */
-    font-family: Arial, sans-serif; /* Police de caractère */
-    margin: 0; /* Supprime les marges par défaut */
-    padding: 0; /* Supprime les paddings par défaut */
+    background: linear-gradient(#0077b6, #caf0f8) no-repeat center center fixed; 
+    background-size: cover; /* Assure que le fond couvre toute la page, y compris quand le contenu s'étend */
+    font-family: Arial, sans-serif;
     text-align: center;
 }
 
+.content {
+    flex: 1; /* Permet au contenu de s'étendre et de prendre tout l'espace disponible */
+    padding: 20px; /* Ajoute un peu d'espace autour du contenu pour l'esthétique */
+}
 .eraser-icon {
     width: 24px; /* ou la taille que vous voulez */
     height: 24px; /* ou la taille que vous voulez */
@@ -237,13 +241,18 @@ h1 {
 }
 
 #uploadAudioForm {
-    background-color: #4890b8; 
-    color: white; 
-    border: 2px solid #187a92; 
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19); /* Ombre plus prononcée */
-    padding: 20px; /* Plus d'espace intérieur */
-    margin-top: 30px; /* Plus d'espace au-dessus du conteneur */
+    background-color: #005f73; /* Couleur plus foncée pour le conteneur d'ajout de son */
+    color: white; /* Texte blanc pour une meilleure lisibilité */
+    border: 1px solid #004a5f; /* Bordure légèrement plus foncée pour un meilleur contraste */
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 3px 10px 0 rgba(0, 0, 0, 0.09); /* Ombre pour un effet de profondeur */
+    padding: 15px; /* Alignement de l'espacement intérieur avec les autres conteneurs audio */
+    margin-bottom: 20px; /* Assurer un espacement uniforme entre les éléments */
+    max-width: 600px; /* Alignement de la largeur maximale avec les autres conteneurs audio */
+    margin-left: auto; /* Centrage horizontal */
+    margin-right: auto;
+    text-align: left; /* Alignement du texte à gauche pour la cohérence */
 }
+
 
 
 /* Style des conteneurs de fichiers audio existants */
