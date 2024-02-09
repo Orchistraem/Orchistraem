@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 /**
  * Configure le formulaire pour le téléchargement de fichiers audio.
  *
@@ -102,6 +111,17 @@ function displayAudioList() {
                 audioContainer.appendChild(audioElement);
                 // Ajouter le conteneur du fichier audio à la liste
                 audioListContainer.appendChild(audioContainer);
+                //Ajouter le bouton d'analyse des sons
+                const analyseButton = document.createElement('button');
+                analyseButton.textContent = 'Analyser';
+                analyseButton.classList.add('btn', 'btn-info');
+                analyseButton.addEventListener('click', () => {
+                    const audioUrl = `/uploads/${file}`; // URL du fichier audio
+                    fetch(audioUrl)
+                        .then(response => response.blob())
+                        .then(blob => analyseAudio(blob, audioContainer));
+                });
+                audioContainer.appendChild(analyseButton);
             });
         }
     })
@@ -226,6 +246,71 @@ function deleteSong(fileName) {
     else if (!audioContainer) {
         console.error(`Aucun élément audio correspondant à ${fileName} n'a été trouvé.`);
     }
+}
+function setupAudioAnalysis(audioFile) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const audioContext = new AudioContext();
+        const arrayBuffer = yield audioFile.arrayBuffer();
+        return audioContext.decodeAudioData(arrayBuffer);
+    });
+}
+function analyseAudio(audioFile, audioContainer) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const audioContext = new AudioContext();
+        const arrayBuffer = yield audioFile.arrayBuffer();
+        const audioBuffer = yield audioContext.decodeAudioData(arrayBuffer);
+        const analyser = audioContext.createAnalyser();
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(analyser);
+        analyser.fftSize = 2048;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArrayFrequency = new Uint8Array(bufferLength);
+        const dataArrayTime = new Uint8Array(bufferLength);
+        source.connect(audioContext.destination);
+        source.start(0);
+        const checkAudioProcessing = () => {
+            analyser.getByteFrequencyData(dataArrayFrequency);
+            let maxIndex = 0;
+            let maxValue = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                if (dataArrayFrequency[i] > maxValue) {
+                    maxValue = dataArrayFrequency[i];
+                    maxIndex = i;
+                }
+            }
+            const dominantFrequency = maxIndex * audioContext.sampleRate / analyser.fftSize;
+            if (dominantFrequency > 0) {
+                let frequencyText = audioContainer.querySelector("#frequencyText");
+                if (!frequencyText) {
+                    frequencyText = document.createElement("p");
+                    frequencyText.id = "frequencyText";
+                    audioContainer.appendChild(frequencyText);
+                }
+                frequencyText.innerHTML = "Fréquence dominante: " + dominantFrequency.toFixed(2) + "Hz";
+                analyser.getByteTimeDomainData(dataArrayTime);
+                let sumSquares = 0.0;
+                for (let i = 0; i < bufferLength; i++) {
+                    let normSample = (dataArrayTime[i] / 128.0) - 1.0; // Normaliser et centrer à 0
+                    sumSquares += normSample * normSample;
+                }
+                let rms = Math.sqrt(sumSquares / bufferLength);
+                let volumeDb = 20 * Math.log10(rms);
+                let intensityText = audioContainer.querySelector("#intensityText");
+                if (!intensityText) {
+                    intensityText = document.createElement("p");
+                    intensityText.id = "intensityText";
+                    audioContainer.appendChild(intensityText);
+                }
+                intensityText.innerHTML = "Intensité: " + volumeDb.toFixed(2) + "dB";
+                source.stop();
+            }
+            else {
+                requestAnimationFrame(checkAudioProcessing);
+            }
+        };
+        requestAnimationFrame(checkAudioProcessing);
+    });
 }
 window.onload = function () {
     displayAudioList();
