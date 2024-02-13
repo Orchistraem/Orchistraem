@@ -37,7 +37,8 @@ body {
     align-items: center; /* Centre verticalement les éléments dans le header */
     justify-content:start; /* Alignement horizontal à gauche */
     font-size: 160%;
-    height: 9%; /* Hauteur fixe pour le header */
+    height: 100%; /* Hauteur fixe pour le header */
+    min-height: 100%
 }
 
 .body-index{
@@ -171,10 +172,12 @@ body {
 
 .chartBox canvas {
     width: 150%; /* prendra la totalité de la largeur de .chartBox */
-    max-width: 745px; 
+    max-width: 950px; 
     border-radius: 20px;
     border: solid 3px rgba(54, 162, 235, 1);
     background: white;
+    margin-top: 15%;
+    position: center;
 }
 
 #addPointFormLeft {
@@ -196,6 +199,7 @@ body {
     display: flex;
     width: max-content;
 }
+
 
 .form-select{
     background-color: transparent;
@@ -292,4 +296,48 @@ h1 {
     background-color: #007bb5; /* Sombre lors du survol */
     border-color: #006699; /* Bordure plus sombre lors du survol */
     cursor: pointer; /* Change le curseur pour indiquer la possibilité d'une action */
+}
+.audiogram-navigation-container {
+    position: relative; /* Context for absolute positioning */
+    display: flex; /* Aligns children horizontally */
+    justify-content: center; /* Centers the audiogram container */
+    align-items: center; /* Vertically aligns children */
+    height: 400px; /* Adjust based on your audiogram's height */
+}
+
+.audiogram-navigation-container {
+    display: flex;
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0; /* Ajoutez de l'espace autour du conteneur */
+}
+
+.audiogram-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative; /* Nécessaire pour le positionnement absolu des boutons à l'intérieur */
+    margin-bottom: 2%;  
+}
+
+.audiogram-nav-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background-color: transparent; /* Example styling */
+    border: none; /* Example styling */
+}
+
+#prevAudiogram {
+    left: 0; /* Position to the left */
+    margin-left: -20px;
+    margin-top: 10%;
+}
+
+#nextAudiogram {
+    right: 0; /* Position to the right */
+    margin-right: -20px;
+    margin-top: 10%;
 }

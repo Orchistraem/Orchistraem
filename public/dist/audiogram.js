@@ -1,7 +1,44 @@
 "use strict";
 // Déclaration des instances de Chart.js pour les audiogrammes de chaque oreille.
-let audiogramChartLeft = null;
-let audiogramChartRight = null;
+let audiogramChartLeft;
+let audiogramChartRight;
+let audiogramFreeField;
+let currentAudiogram = 'left';
+function updateAudiogramDisplay(audiogramKey) {
+    const audiograms = {
+        left: document.getElementById('audiogramLeft'),
+        right: document.getElementById('audiogramRight'),
+        freeField: document.getElementById('audiogramFreeField'), // Ensure this ID matches your free field audiogram, if you have one
+    };
+    // Hide all audiograms
+    Object.values(audiograms).forEach(audiogram => {
+        if (audiogram)
+            audiogram.style.display = 'none';
+    });
+    // Show the selected audiogram
+    const selectedAudiogram = audiograms[audiogramKey];
+    if (selectedAudiogram) {
+        selectedAudiogram.style.display = 'block';
+    }
+    else {
+        console.error(`Audiogram '${audiogramKey}' not found.`);
+    }
+    currentAudiogram = audiogramKey; // Update the current audiogram variable
+}
+const prevAudiogramButton = document.getElementById('prevAudiogram');
+const nextAudiogramButton = document.getElementById('nextAudiogram');
+if (prevAudiogramButton) {
+    prevAudiogramButton.addEventListener('click', () => {
+        const prevAudiogram = currentAudiogram === 'left' ? 'freeField' : (currentAudiogram === 'right' ? 'left' : 'right');
+        updateAudiogramDisplay(prevAudiogram);
+    });
+}
+if (nextAudiogramButton) {
+    nextAudiogramButton.addEventListener('click', () => {
+        const nextAudiogram = currentAudiogram === 'left' ? 'right' : (currentAudiogram === 'right' ? 'freeField' : 'left');
+        updateAudiogramDisplay(nextAudiogram);
+    });
+}
 // Mode de suppression désactivé par défaut
 let isDeletionModeActive = false;
 // Recupération du bouton de suppression
@@ -705,6 +742,7 @@ function snapToDecibelLevels(decibels) {
 window.onload = function () {
     audiogramChartLeft = initAudiogram('audiogramLeft', 'rgb(0, 0, 0)', 'rgba(0, 1, 1)', 'Oreille Gauche');
     audiogramChartRight = initAudiogram('audiogramRight', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Oreille Droite');
+    audiogramFreeField = initAudiogram('audiogramFreeField', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Champ Libre');
     const legendSelectorLeft = document.getElementById('legendSelectorLeft');
     const legendSelectorRight = document.getElementById('legendSelectorRight');
     if (audiogramChartLeft && audiogramChartRight) {
@@ -715,6 +753,5 @@ window.onload = function () {
     setupClickListeners(audiogramChartLeft, 'gauche', legendSelectorLeft);
     setupClickListeners(audiogramChartRight, 'droite', legendSelectorRight);
     initTabs();
-    setupMouseHoverListener(audiogramChartLeft, 'tooltipLeft');
-    setupMouseHoverListener(audiogramChartRight, 'tooltipRight');
+    updateAudiogramDisplay('left');
 };
