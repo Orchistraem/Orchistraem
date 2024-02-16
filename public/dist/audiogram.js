@@ -190,7 +190,7 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
                             tension: 0 // Lignes droites sans courbure
                         }
                     },
-                    responsive: false,
+                    responsive: true,
                     maintainAspectRatio: true
                 }
             });

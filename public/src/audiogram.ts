@@ -222,7 +222,7 @@ function initAudiogram(canvasID: string, pointColor: string, borderColor: string
                           tension: 0 // Lignes droites sans courbure
                       }
                   },
-                  responsive: false,
+                  responsive: true,
                   maintainAspectRatio: true
               }
           });

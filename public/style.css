@@ -4,110 +4,25 @@
 }
 
 html, body {
-    height: 100%; /* Assure que l'élément html et le body occupent toute la hauteur de la fenêtre */
-    margin: 0; /* Supprime les marges par défaut */
-    min-height: 100%;
-    height: auto;
-  }
-
-/* Style général de la page */
-body {
+    height: 100%;
+    margin: 0;
     background: linear-gradient(#0077b6, #caf0f8) no-repeat center center fixed; 
-    background-size: cover; /* Assure que le fond couvre toute la page, y compris quand le contenu s'étend */
+    background-size: cover;
     font-family: Arial, sans-serif;
     text-align: center;
 }
 
-.content {
-    flex: 1; /* Permet au contenu de s'étendre et de prendre tout l'espace disponible */
-    padding: 20px; /* Ajoute un peu d'espace autour du contenu pour l'esthétique */
-}
-.eraser-icon {
-    width: 24px; /* ou la taille que vous voulez */
-    height: 24px; /* ou la taille que vous voulez */
-    /* Ajouter d'autres styles si nécessaire */
-  }
-  
-/* Style du header */
 .header {
     background: linear-gradient(#03045e, #0077b6);
     color: white;
     padding: 2% 2%;
     display: flex;
-    align-items: center; /* Centre verticalement les éléments dans le header */
-    justify-content:start; /* Alignement horizontal à gauche */
+    align-items: center;
+    justify-content: start;
     font-size: 160%;
-    height: 9%; /* Hauteur fixe pour le header */
+    height: 9%;
 }
 
-.body-index{
-    display: flex;
-    justify-content:space-between;
-    height: 100%;
-}
-
-.body-index .tab1{
-    align-items: center;
-    border-right: 2px solid white;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    background-color: linear-gradient(#0077B6,#03045e);
-
-}
-
-.body-index .tab2{
-    align-items: center;
-    border-left: 2px solid white;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    background-color: linear-gradient(#00B4D8,#90E0EF);
-}
-
-.body-index .tab1 img, .body-index .tab2 img{
-    width: 50%;
-    height:fit-content;
-    transition: all 0.1s ease;
-    animation: none;
-}
-
-
-@keyframes grow-shrink {
-    0% { transform: scale(1); }
-    100% { transform: scale(1.2); }
-}
-
-.body-index .tab1 img:hover, .body-index .tab2 img:hover{
-    width: 60%;
-    height:fit-content;
-    animation: grow-shrink 3s infinite alternate; 
-    transition: all 0.3s ease; 
-}
-
-.header .tab1,.header .tab2, .body-index a{
-    display:contents;
-}
-
-.header a {
-    text-decoration: none;
-    color : white;
-    display: contents;
-}
-
-.tab2 img , .tab1 img{
-    margin-right: 2%;
-    width: 3%;
-}
-
-.tab2 img:hover , .tab1 img:hover{
-    margin-right: 1%;
-    width:4%;
-}
-
-/* Style du titre au milieu du header */
 .header-title {
     position: absolute;
     left: 50%;
@@ -116,22 +31,20 @@ body {
     font-size: 250%;
 }
 
-/* Style des conteneurs de formulaires */
 .form-container {
     margin: 20px;
     text-align: center;
 }
 
-/* Style des graphiques (ne pas toucher le quadrillage) */
 .audiogram {
     width: 600px;
     height: 400px;
-    background-color: white; /* Définit le fond des graphiques en blanc */
+    background-color: white;
     border-radius: 1%;
 }
 
-.audiogram-container > div{
-    margin : 1%;
+.audiogram-container > div {
+    margin: 1%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -139,7 +52,7 @@ body {
 
 .audiogram-container {
     display: flex;
-    justify-content:center;
+    justify-content: center;
     align-items: center;
 }
 
@@ -151,11 +64,12 @@ body {
     width: 200px;
     height: 100%;
     background-color: white;
-    overflow-y: auto; /* Permet le défilement si la liste est longue */
+    overflow-y: auto;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     padding: 12px 16px;
     z-index: 1;
 }
+
 .show {
     display: block;
 }
@@ -166,63 +80,58 @@ body {
     border: 1px solid #000;
     padding: 5px;
     border-radius: 5px;
-    pointer-events: none; /* Empêcher le tooltip d'interférer avec les clics de la souris */
-  }
-
-.chartBox canvas {
-    width: 150%; /* prendra la totalité de la largeur de .chartBox */
-    max-width: 745px; 
-    border-radius: 20px;
-    border: solid 3px rgba(54, 162, 235, 1);
-    background: white;
+    pointer-events: none;
 }
 
-#addPointFormLeft {
-    align-content:start;
-}
-
-.btn.btn-outline-primary{
+.btn.btn-outline-primary {
     color: #03045e;
     border: 1px solid #03045e;
 }
 
-.btn.btn-outline-primary:hover{
+.btn.btn-outline-primary:hover {
     background-color: #03045e;
-    color:#caf0f8;
+    color: #caf0f8;
     border: 1px solid #03045e;
 }
 
-.legend{
+.legend {
     display: flex;
     width: max-content;
 }
 
-.form-select{
+.form-select {
     background-color: transparent;
     color: #03045e;
     border: 1px solid #03045e;
     width: fit-content;
 }
 
-.edit{
+.edit {
     width: min-content;
 }
 
-.edit button{
+.edit button {
     margin: 2%;
 }
 
-h1 {
-    color: #03045e; 
-    font-size: 2.5rem;
-    margin-top: 20px; 
-    margin-bottom: 20px;  
-    letter-spacing: 1px;
-    text-shadow: 2px 2px 4px #caf0f8; 
+.chartBox canvas {
+    width: 100%; /* Adapte la largeur au conteneur parent */
+    max-width: 900px; /* Largeur maximale pour éviter que le canvas devienne trop large sur les grands écrans */
+    height: auto; /* Hauteur automatique pour maintenir le ratio */
+    aspect-ratio: 16 / 9; /* Optionnel : Pour maintenir un ratio d'aspect spécifique */
+    border-radius: 20px;
+    border: solid 3px rgba(54, 162, 235, 1);
+    background: white;
 }
 
 
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        padding: 5% 2%;
+    }
 
+<<<<<<< Updated upstream
 .audio-group h2 {
     text-align: center; 
 }
@@ -292,4 +201,27 @@ h1 {
     background-color: #007bb5; /* Sombre lors du survol */
     border-color: #006699; /* Bordure plus sombre lors du survol */
     cursor: pointer; /* Change le curseur pour indiquer la possibilité d'une action */
+=======
+    .header-title {
+        font-size: 200%;
+        position: relative;
+        left: auto;
+        transform: translateX(0);
+    }
+
+    .audiogram, .chartBox canvas {
+        width: 90vw;
+        max-width: 100%;
+        height: auto;
+    }
+
+    .form-container, .edit, .legend {
+        width: 90%;
+        margin: 0 auto;
+    }
+
+    .tab2 img, .tab1 img {
+        width: 20%;
+    }
+>>>>>>> Stashed changes
 }
