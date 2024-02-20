@@ -265,12 +265,32 @@ function deleteSong(fileName: string): void {
     }
 }
 
+/**
+ * Prépare un fichier audio pour l'analyse en le convertissant en `AudioBuffer`.
+ * 
+ * Cette fonction charge un fichier audio à partir d'un objet `Blob` et utilise l'API Web Audio
+ * pour le décodage en `AudioBuffer`, permettant une analyse audio ultérieure.
+ * 
+ * @param audioFile - Le fichier audio sous forme de `Blob` à analyser.
+ * @returns Promesse résolue avec un `AudioBuffer` contenant les données audio décodées.
+ */
 async function setupAudioAnalysis(audioFile: Blob): Promise<AudioBuffer> {
     const audioContext = new AudioContext();
     const arrayBuffer = await audioFile.arrayBuffer();
     return audioContext.decodeAudioData(arrayBuffer);
 }
 
+
+/**
+ * Analyse le contenu audio d'un fichier et met à jour l'interface utilisateur avec la fréquence dominante et l'intensité.
+ * 
+ * Cette fonction utilise l'API Web Audio pour analyser le contenu audio d'un fichier. Elle détermine la fréquence dominante
+ * et l'intensité du signal audio et met à jour les éléments correspondants dans un conteneur HTML spécifié.
+ * 
+ * @param audioFile - Le fichier audio sous forme de `Blob` qui sera analysé.
+ * @param audioContainer - Le conteneur HTML (`HTMLDivElement`) où les résultats de l'analyse seront affichés.
+ * @returns Promesse résolue lorsque l'analyse est terminée et que l'interface utilisateur a été mise à jour.
+ */
 async function analyseAudio(audioFile: Blob, audioContainer: HTMLDivElement): Promise<void> {
     const audioContext = new AudioContext();
     const arrayBuffer = await audioFile.arrayBuffer();
