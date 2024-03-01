@@ -18,37 +18,85 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 function setupUploadAudioForm() {
     const uploadAudioForm = document.getElementById('uploadAudioForm');
     const audioFileInput = document.getElementById('audioFile');
-    if (uploadAudioForm && audioFileInput) {
+    const categorySelect = document.getElementById('categorySelect'); // Sélecteur de catégorie ajouté au formulaire HTML
+
+    if (uploadAudioForm && audioFileInput && categorySelect) {
         uploadAudioForm.addEventListener('submit', function (event) {
             event.preventDefault();
             const formData = new FormData();
             const audioFile = audioFileInput.files ? audioFileInput.files[0] : null;
-            if (audioFile) {
+            const category = categorySelect.value; // Récupère la catégorie sélectionnée
+            if (audioFile && category) {
                 formData.append('audioFile', audioFile);
+                formData.append('category', category); // Ajoute la catégorie au formData
                 fetch('/upload-audio', {
                     method: 'POST',
                     body: formData
                 })
-                    .then(response => {
+                .then(response => {
                     if (response.ok) {
                         console.log('Fichier téléchargé avec succès');
                         refreshAudioList(); // Rafraîchir la liste après le téléchargement réussi
-                    }
-                    else {
+                    } else {
                         throw new Error('Erreur lors du téléchargement du fichier');
                     }
                 })
-                    .catch(error => console.error('Erreur:', error));
-            }
-            else {
-                console.error('Aucun fichier n\'a été sélectionné.');
+                .catch(error => console.error('Erreur:', error));
+            } else {
+                console.error('Aucun fichier ou catégorie n\'a été sélectionné.');
             }
         });
-    }
-    else {
+    } else {
         console.error('Élément(s) de formulaire introuvable(s).');
     }
 }
+
+function setupCategoryForm() {
+    const categoryForm = document.getElementById('categoryForm');
+    const categoryNameInput = document.getElementById('categoryName');
+
+    if (categoryForm && categoryNameInput) {
+        categoryForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const categoryName = categoryNameInput.value;
+            addCategory(categoryName);
+        });
+    }
+}
+
+function addCategory(categoryName) {
+    fetch('/add-category', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: categoryName })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Catégorie ajoutée avec succès');
+            fetchCategories(); // Recharge les catégories après l'ajout
+        } else {
+            console.error('Erreur lors de l\'ajout de la catégorie');
+        }
+    })
+    .catch(error => console.error('Erreur:', error));
+}
+function fetchCategories() {
+    fetch('/get-categories')
+    .then(response => response.json())
+    .then(categories => {
+        const categorySelect = document.getElementById('categorySelect');
+        categorySelect.innerHTML = ''; // Vide le sélecteur
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id; // Suppose que chaque catégorie a un ID unique
+            option.textContent = category.name;
+            categorySelect.appendChild(option);
+        });
+    })
+    .catch(error => console.error('Erreur lors de la récupération des catégories:', error));
+}
+
 /**
  * Rafraîchit et met à jour la liste des fichiers audio affichée sur la page.
  *
@@ -313,6 +361,8 @@ function analyseAudio(audioFile, audioContainer) {
     });
 }
 window.onload = function () {
-    displayAudioList();
     setupUploadAudioForm();
+    setupCategoryForm(); // Initialise le formulaire de catégorie lors du chargement de la page
+    fetchCategories(); // Charge les catégories existantes pour les afficher dans le sélecteur
+    displayAudioList(); // Affiche la liste des fichiers audio existants
 };
