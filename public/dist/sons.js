@@ -119,7 +119,10 @@ function displayAudioList() {
                     const audioUrl = `/uploads/${file}`; // URL du fichier audio
                     fetch(audioUrl)
                         .then(response => response.blob())
-                        .then(blob => analyseAudio(blob, audioContainer));
+                        .then(blob => {
+                        // Supposant que `drawSonogram` a été adapté pour accepter un Blob comme paramètre
+                        drawSonogram(blob, audioContainer);
+                    });
                 });
                 audioContainer.appendChild(analyseButton);
             });
@@ -247,6 +250,15 @@ function deleteSong(fileName) {
         console.error(`Aucun élément audio correspondant à ${fileName} n'a été trouvé.`);
     }
 }
+/**
+ * Prépare un fichier audio pour l'analyse en le convertissant en `AudioBuffer`.
+ *
+ * Cette fonction charge un fichier audio à partir d'un objet `Blob` et utilise l'API Web Audio
+ * pour le décodage en `AudioBuffer`, permettant une analyse audio ultérieure.
+ *
+ * @param audioFile - Le fichier audio sous forme de `Blob` à analyser.
+ * @returns Promesse résolue avec un `AudioBuffer` contenant les données audio décodées.
+ */
 function setupAudioAnalysis(audioFile) {
     return __awaiter(this, void 0, void 0, function* () {
         const audioContext = new AudioContext();
@@ -254,6 +266,16 @@ function setupAudioAnalysis(audioFile) {
         return audioContext.decodeAudioData(arrayBuffer);
     });
 }
+/**
+ * Analyse le contenu audio d'un fichier et met à jour l'interface utilisateur avec la fréquence dominante et l'intensité.
+ *
+ * Cette fonction utilise l'API Web Audio pour analyser le contenu audio d'un fichier. Elle détermine la fréquence dominante
+ * et l'intensité du signal audio et met à jour les éléments correspondants dans un conteneur HTML spécifié.
+ *
+ * @param audioFile - Le fichier audio sous forme de `Blob` qui sera analysé.
+ * @param audioContainer - Le conteneur HTML (`HTMLDivElement`) où les résultats de l'analyse seront affichés.
+ * @returns Promesse résolue lorsque l'analyse est terminée et que l'interface utilisateur a été mise à jour.
+ */
 function analyseAudio(audioFile, audioContainer) {
     return __awaiter(this, void 0, void 0, function* () {
         const audioContext = new AudioContext();
@@ -311,6 +333,83 @@ function analyseAudio(audioFile, audioContainer) {
         };
         requestAnimationFrame(checkAudioProcessing);
     });
+}
+/**
+ * Initialise et dessine un sonogramme pour un fichier audio, avec des légendes pour les axes.
+ *
+ * @param audioFile Le fichier audio à analyser et visualiser.
+ * @param audioContainer Le conteneur HTML dans lequel le sonogramme sera affiché.
+ */
+function drawSonogram(audioFile, audioContainer) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const audioContext = new AudioContext();
+        const arrayBuffer = yield audioFile.arrayBuffer();
+        const audioBuffer = yield audioContext.decodeAudioData(arrayBuffer);
+        const canvas = document.createElement('canvas');
+        canvas.id = 'sonogramCanvas';
+        canvas.width = 600; // Largeur du canvas en pixels
+        canvas.height = 300; // Hauteur du canvas en pixels
+        audioContainer.appendChild(canvas);
+        const canvasContext = canvas.getContext('2d');
+        if (!canvasContext) {
+            console.error('Impossible de récupérer le contexte du canvas');
+            return;
+        }
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(analyser);
+        analyser.connect(audioContext.destination);
+        source.start(0);
+        const draw = () => {
+            requestAnimationFrame(draw);
+            // Efface le canvas avant de redessiner
+            canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+            analyser.getByteFrequencyData(dataArray);
+            // Largeur d'une colonne du sonogramme
+            const barWidth = (canvas.width / bufferLength) * 2.5;
+            let barHeight;
+            let x = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                barHeight = dataArray[i];
+                canvasContext.fillStyle = 'rgb(' + (barHeight + 100) + ',50,50)';
+                canvasContext.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight / 2);
+                x += barWidth + 1;
+            }
+            // Dessiner les légendes après le sonogramme pour éviter qu'elles soient recouvertes
+            drawLegends(canvasContext, canvas.width, canvas.height, audioBuffer.sampleRate, audioBuffer.duration);
+        };
+        draw();
+    });
+}
+/**
+ * Dessine les légendes sur le canvas.
+ *
+ * @param ctx Le contexte du canvas sur lequel dessiner.
+ * @param width La largeur du canvas.
+ * @param height La hauteur du canvas.
+ * @param sampleRate Le taux d'échantillonnage de l'audio analysé.
+ * @param duration La durée de l'audio analysé.
+ */
+function drawLegends(ctx, width, height, sampleRate, duration) {
+    ctx.fillStyle = 'black';
+    ctx.font = '12px Arial';
+    // Légende pour l'axe des fréquences (axe vertical)
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i <= height; i += 50) {
+        const frequency = Math.round((i / height) * (sampleRate / 2));
+        ctx.fillText(`${frequency} Hz`, 5, height - i);
+    }
+    // Légende pour l'axe du temps (axe horizontal)
+    ctx.textAlign = 'center';
+    for (let i = 0; i <= width; i += 100) {
+        const time = Math.round((i / width) * duration);
+        ctx.fillText(`${time}s`, i, height - 10);
+    }
 }
 window.onload = function () {
     displayAudioList();
