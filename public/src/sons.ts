@@ -112,7 +112,7 @@ function displayAudioList(): void {
                     // Ajouter le conteneur du fichier audio à la liste
                     audioListContainer.appendChild(audioContainer);
 
-                    //Ajouter le bouton d'analyse des sons
+                    // Ajouter le bouton d'analyse des sons
                     const analyseButton = document.createElement('button');
                     analyseButton.textContent = 'Analyser';
                     analyseButton.classList.add('btn', 'btn-info');
@@ -121,7 +121,6 @@ function displayAudioList(): void {
                         fetch(audioUrl)
                         .then(response => response.blob())
                         .then(blob => {
-                            // Supposant que `drawSonogram` a été adapté pour accepter un Blob comme paramètre
                             drawSonogram(blob, audioContainer);
                         });
                     });
@@ -359,96 +358,128 @@ async function analyseAudio(audioFile: Blob, audioContainer: HTMLDivElement): Pr
 }
 
 /**
- * Initialise et dessine un sonogramme pour un fichier audio, avec des légendes pour les axes.
+ * Dessine un sonogramme à partir d'un fichier audio Blob.
  * 
- * @param audioFile Le fichier audio à analyser et visualiser.
- * @param audioContainer Le conteneur HTML dans lequel le sonogramme sera affiché.
+ * @param audioFile Le Blob du fichier audio à analyser.
+ * @param audioContainer Le conteneur HTML où le sonogramme sera affiché.
  */
 async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement): Promise<void> {
-    const audioContext = new AudioContext();
+    const audioContext = new (window.AudioContext || window.AudioContext)();
     const arrayBuffer = await audioFile.arrayBuffer();
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
     
-    const canvas = document.createElement('canvas');
-    canvas.id = 'sonogramCanvas';
-    canvas.width = 600; // Largeur du canvas en pixels
-    canvas.height = 300; // Hauteur du canvas en pixels
-    audioContainer.appendChild(canvas);
+    audioContext.decodeAudioData(arrayBuffer, (audioBuffer) => {
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(analyser);
+        analyser.connect(audioContext.destination);
+        source.start();
 
-    const canvasContext = canvas.getContext('2d');
-    if (!canvasContext) {
-        console.error('Impossible de récupérer le contexte du canvas');
-        return;
-    }
-    
-    const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 2048;
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-
-    const source = audioContext.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(analyser);
-    analyser.connect(audioContext.destination);
-    source.start(0);
-
-    const draw = () => {
-        requestAnimationFrame(draw);
-
-        // Efface le canvas avant de redessiner
-        canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-
-        analyser.getByteFrequencyData(dataArray);
-
-        // Largeur d'une colonne du sonogramme
-        const barWidth = (canvas.width / bufferLength) * 2.5;
-        let barHeight;
-        let x = 0;
-
-        for(let i = 0; i < bufferLength; i++) {
-            barHeight = dataArray[i];
-
-            canvasContext.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
-            canvasContext.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight / 2);
-
-            x += barWidth + 1;
+        // Vérifier si un canvas existe déjà
+        let canvas = audioContainer.querySelector('#sonogramCanvas') as HTMLCanvasElement | null;
+        if (!canvas) {
+            // S'il n'existe pas, en créer un nouveau
+            canvas = document.createElement('canvas');
+            canvas.id = 'sonogramCanvas';
+            canvas.width = 600; // Largeur du canvas en pixels
+            canvas.height = 300; // Hauteur du canvas en pixels
+            audioContainer.appendChild(canvas);
         }
 
-        // Dessiner les légendes après le sonogramme pour éviter qu'elles soient recouvertes
-        drawLegends(canvasContext, canvas.width, canvas.height, audioBuffer.sampleRate, audioBuffer.duration);
-    };
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
 
-    draw();
+        // Initialisation des variables pour le dessin
+        let x = 0;
+        const sliceWidth = canvas.width * 1.0 / bufferLength;
+
+        function draw() {
+
+
+            if(ctx && canvas){
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawLegends(canvas);
+                requestAnimationFrame(draw);
+                x = 0;
+    
+                analyser.getByteFrequencyData(dataArray);
+    
+                ctx.fillStyle = 'rgb(0, 0, 0)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    
+                for(let i = 0; i < bufferLength; i++) {
+                    const barHeight = dataArray[i];
+                    
+                    const r = barHeight + (25 * (i/bufferLength));
+                    const g = 250 * (i/bufferLength);
+                    const b = 50;
+    
+                    ctx.fillStyle = `rgb(${r},${g},${b})`;
+                    ctx.fillRect(x, canvas.height - barHeight, sliceWidth, barHeight);
+    
+                    x += sliceWidth + 1;
+                }
+            }
+
+        }
+
+        draw();
+    }, (error) => console.error('Erreur de décodage audio', error));
 }
 
-/**
- * Dessine les légendes sur le canvas.
- * 
- * @param ctx Le contexte du canvas sur lequel dessiner.
- * @param width La largeur du canvas.
- * @param height La hauteur du canvas.
- * @param sampleRate Le taux d'échantillonnage de l'audio analysé.
- * @param duration La durée de l'audio analysé.
- */
-function drawLegends(ctx: CanvasRenderingContext2D, width: number, height: number, sampleRate: number, duration: number): void {
-    ctx.fillStyle = 'black';
+
+function drawLegends(canvas: HTMLCanvasElement): void {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        console.error('Impossible de récupérer le contexte 2D du canvas.');
+        return;
+    }
+
+    // Effacer un espace pour les légendes
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Dimensions et marges
+    const width = canvas.width;
+    const height = canvas.height;
+    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+
+    // Échelles pour les légendes
+    const maxFrequency = 20000; // 20kHz
+    const dBRange = [-100, 0]; // plage de décibels
+
+    // Définir la couleur du texte pour le contraste sur fond noir
+    ctx.fillStyle = 'white'; // Couleur claire pour le texte
+
+    // Fréquences (verticale)
     ctx.font = '12px Arial';
-
-    // Légende pour l'axe des fréquences (axe vertical)
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    for (let i = 0; i <= height; i += 50) {
-        const frequency = Math.round((i / height) * (sampleRate / 2));
-        ctx.fillText(`${frequency} Hz`, 5, height - i);
+    ctx.fillText('Fréquence (Hz)', margin.left, margin.top - 5);
+    const freqStep = maxFrequency / 5; // 5 étapes sur l'échelle de fréquence
+    for (let i = 0; i <= 5; i++) {
+        const freq = (i * freqStep) / 1000; // Conversion en kHz
+        ctx.fillText(`${freq}kHz`, 5, margin.top + (i * (height - margin.top - margin.bottom) / 5));
     }
 
-    // Légende pour l'axe du temps (axe horizontal)
-    ctx.textAlign = 'center';
-    for (let i = 0; i <= width; i += 100) {
-        const time = Math.round((i / width) * duration);
-        ctx.fillText(`${time}s`, i, height - 10);
+    // Niveaux de décibels (couleur)
+    const gradient = ctx.createLinearGradient(width - margin.right + 10, margin.top, width - margin.right + 10, height - margin.bottom);
+    gradient.addColorStop(0, 'rgb(255, 0, 0)'); // Plus intense
+    gradient.addColorStop(1, 'rgb(0, 0, 0)'); // Moins intense
+    ctx.fillStyle = gradient;
+    ctx.fillRect(width - margin.right + 10, margin.top, 10, height - margin.top - margin.bottom);
+
+    // Étiquettes de dB
+    ctx.fillStyle = 'white'; // Assurer que la couleur du texte est bien visible
+    const dBStep = (dBRange[1] - dBRange[0]) / 5; // 5 étapes sur l'échelle dB
+    for (let i = 0; i <= 5; i++) {
+        const dB = dBRange[0] + (i * dBStep);
+        ctx.fillText(`${dB}dB`, width - margin.right + 25, margin.top + (i * (height - margin.top - margin.bottom) / 5));
     }
 }
+
 
 
 
