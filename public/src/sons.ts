@@ -5,6 +5,14 @@
  * Elle définit un gestionnaire d'événements pour le formulaire et gère l'envoi du fichier audio sélectionné au serveur.
  * @returns aucune valeur n'est retourné
  */
+
+// Assurez-vous que les catégories sont correctement typées.
+interface Category {
+    name: string;
+}
+
+let categories: Category[] = []; // Initialisez les catégories, vous devrez les charger depuis le serveur.
+
 function setupUploadAudioForm(): void {
     const uploadAudioForm = document.getElementById('uploadAudioForm') as HTMLFormElement | null;
     const audioFileInput = document.getElementById('audioFile') as HTMLInputElement | null;
@@ -63,71 +71,83 @@ function refreshAudioList(): void {
  * @returns aucune valeur n'est retourné
  */
 function displayAudioList(): void {
-    fetch('/list-audios')
+    // D'abord, récupérez les catégories disponibles
+    fetch('/categories')
+    .then(response => response.json())
+    .then((categories) => {
+        // Ensuite, récupérez la liste des fichiers audio
+        fetch('/list-audios')
         .then(response => response.json())
         .then((audioFiles: string[]) => {
             const audioListContainer = document.getElementById('audioList') as HTMLDivElement | null;
             if (audioListContainer) {
+                audioListContainer.innerHTML = ''; // Vider la liste existante
                 audioFiles.forEach((file: string) => {
-                    // Créer un conteneur div pour chaque fichier audio
                     const audioContainer = document.createElement('div');
                     audioContainer.classList.add('audio-container');
                     audioContainer.setAttribute('data-file', file);
 
-                    // Extraire le nom du fichier sans l'extension .mp3 et remplacer '_' et '-' par des espaces
-                    const fileName = file.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
-
-                    // Ajouter le nom du fichier
                     const fileNameParagraph = document.createElement('p');
-                    fileNameParagraph.textContent = fileName;
+                    fileNameParagraph.textContent = file.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
 
-                    // Créer un bouton modifier à côté du nom du fichier
-                    const modifyButton = document.createElement('button');
-                    modifyButton.textContent = 'Modifier';
-                    modifyButton.classList.add('btn', 'btn-primary'); 
-                    modifyButton.addEventListener('click', () => {
-                        modifyName(file);
-
-                    });
-
-                    // Créer un bouton supprimer à côté du nom du fichier
-                    const deleteButton = document.createElement('button');
-                    deleteButton.textContent = 'Supprimer';
-                    deleteButton.classList.add('btn', 'btn-danger'); 
-                    deleteButton.addEventListener('click', () => {
-                        deleteSong(file);
-                    });
-
-                    // Créer l'élément audio
                     const audioElement = document.createElement('audio');
                     audioElement.setAttribute('controls', '');
                     audioElement.src = `/uploads/${file}`;
 
-                    // Ajouter les éléments au conteneur du fichier audio
-                    audioContainer.appendChild(fileNameParagraph);
-                    audioContainer.appendChild(modifyButton);
-                    audioContainer.appendChild(deleteButton);
-                    audioContainer.appendChild(audioElement);
+                    const modifyButton = document.createElement('button');
+                    modifyButton.textContent = 'Modifier';
+                    modifyButton.classList.add('btn', 'btn-primary');
+                    modifyButton.onclick = () => modifyName(file);
 
-                    // Ajouter le conteneur du fichier audio à la liste
-                    audioListContainer.appendChild(audioContainer);
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Supprimer';
+                    deleteButton.classList.add('btn', 'btn-danger');
+                    deleteButton.onclick = () => deleteSong(file);
 
-                    //Ajouter le bouton d'analyse des sons
                     const analyseButton = document.createElement('button');
                     analyseButton.textContent = 'Analyser';
                     analyseButton.classList.add('btn', 'btn-info');
-                    analyseButton.addEventListener('click', () => {
-                        const audioUrl = `/uploads/${file}`; // URL du fichier audio
+                    analyseButton.onclick = () => {
+                        const audioUrl = `/uploads/${file}`;
                         fetch(audioUrl)
                         .then(response => response.blob())
-                        .then(blob => analyseAudio(blob,audioContainer));
+                        .then(blob => analyseAudio(blob, audioContainer)); // Utilisation correcte du Blob
+                    };
+
+                    // Menu déroulant pour les catégories
+                    const categorySelect = document.createElement('select');
+                    categories.forEach((category: Category) => {
+                        const option = document.createElement('option');
+                        option.value = category.name;
+                        option.textContent = category.name;
+                        categorySelect.appendChild(option);
                     });
+
+                    // Bouton pour assigner la catégorie
+                    const assignCategoryButton = document.createElement('button');
+                    assignCategoryButton.textContent = 'Assigner Catégorie';
+                    assignCategoryButton.classList.add('btn', 'btn-secondary');
+                    assignCategoryButton.onclick = () => assignCategoryToFile(file, categorySelect.value);
+
+
+                    audioContainer.appendChild(fileNameParagraph);
+                    audioContainer.appendChild(audioElement);
+                    audioContainer.appendChild(modifyButton);
+                    audioContainer.appendChild(deleteButton);
                     audioContainer.appendChild(analyseButton);
+                    audioContainer.appendChild(categorySelect);
+                    audioContainer.appendChild(assignCategoryButton);
+
+                    audioListContainer.appendChild(audioContainer);
                 });
             }
         })
-        .catch(error => console.error('Erreur:', error));
+        .catch(error => console.error('Erreur lors de la récupération des fichiers audio:', error));
+    })
+    .catch(error => console.error('Erreur lors de la récupération des catégories:', error));
 }
+
+
 
 /**
  * Modifie le nom d'un fichier audio.
@@ -356,7 +376,84 @@ async function analyseAudio(audioFile: Blob, audioContainer: HTMLDivElement): Pr
 }
 
 
-window.onload = function (): void {
-    displayAudioList();
-    setupUploadAudioForm();
+
+
+async function loadAndDisplayCategories(): Promise<void> {
+    const categoriesListDiv = document.getElementById('categoriesList') as HTMLDivElement; // Assertion de type pour éviter les erreurs de nullabilité.
+    if (!categoriesListDiv) return;
+
+    const response = await fetch('/categories');
+    const categories: Category[] = await response.json(); // Assurez-vous que la réponse correspond à l'interface Category[].
+
+    categoriesListDiv.innerHTML = '';
+    categories.forEach((category: Category) => {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.textContent = category.name;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Supprimer';
+        deleteBtn.onclick = () => deleteCategory(category.name);
+
+        categoryDiv.appendChild(deleteBtn);
+        categoriesListDiv.appendChild(categoryDiv);
+    });
+}
+
+async function addCategory(): Promise<void> {
+    const newCategoryNameInput = document.getElementById('newCategoryName') as HTMLInputElement | null;
+    if (!newCategoryNameInput) return;
+
+    const newCategoryName = newCategoryNameInput.value;
+    const response = await fetch('/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newCategoryName })
+    });
+
+    if (response.ok) {
+        await loadAndDisplayCategories(); // Recharger la liste des catégories
+    } else {
+        alert('Erreur lors de l\'ajout de la catégorie');
+    }
+}
+
+async function deleteCategory(categoryName: string): Promise<void> {
+    const response = await fetch(`/categories/${categoryName}`, { method: 'DELETE' });
+    if (response.ok) {
+        await loadAndDisplayCategories(); // Recharger la liste des catégories
+    } else {
+        alert('Erreur lors de la suppression de la catégorie');
+    }
+}
+
+async function assignCategoryToFile(fileName: string, categoryName: string) {
+    try {
+        const response = await fetch('/assign-category', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fileName, categoryName })
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur lors de l\'affectation de la catégorie');
+        }
+
+        console.log(`Catégorie ${categoryName} affectée à ${fileName}`);
+        refreshAudioList(); // Optionnel: Rafraîchir la liste pour refléter les changements
+    } catch (error) {
+        console.error('Erreur:', error);
+    }
+}
+
+
+
+
+
+window.onload = async (): Promise<void> => {
+    await displayAudioList();
+    await loadAndDisplayCategories();
+    const addCategoryBtn = document.getElementById('addCategoryBtn');
+    if (addCategoryBtn) {
+        addCategoryBtn.onclick = addCategory;
+    }
 }
