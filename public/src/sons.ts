@@ -148,7 +148,7 @@ function displayAudioList(): void {
 function closeCanvas(audioContainer: HTMLDivElement) {
     const canvas = audioContainer.querySelector('#sonogramCanvas') as HTMLCanvasElement;
     if (canvas) {
-        canvas.remove(); // Supprimer le canvas
+        canvas.remove(); 
     }
 }
 
