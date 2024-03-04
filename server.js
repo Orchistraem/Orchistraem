@@ -9,11 +9,43 @@ const path = require('path');
 
 // Pour lire le corps des requêtes POST en JSON
 app.use(bodyParser.json());
-
 // Middleware pour servir les fichiers statiques (CSS, JS, images, etc.)
 app.use(express.static('public')); // Remplacez 'public' par le nom de votre dossier contenant les fichiers statiques
 app.use('/uploads', express.static('uploads')); // Pour rendre accessible le dossier des uploads
 
+const categoriesFilePath = path.join(__dirname, 'data', 'categories.json');
+
+// Vérifier et créer le fichier des catégories s'il n'existe pas
+if (!fs.existsSync(categoriesFilePath)) {
+    fs.writeFileSync(categoriesFilePath, JSON.stringify([]), 'utf-8');
+}
+
+app.post('/categories', (req, res) => {
+    const { name } = req.body;
+    const categories = JSON.parse(fs.readFileSync(categoriesFilePath, 'utf-8'));
+    if (!categories.find(category => category.name === name)) {
+        categories.push({ name });
+        fs.writeFileSync(categoriesFilePath, JSON.stringify(categories, null, 2), 'utf-8');
+        res.status(201).send('Catégorie ajoutée');
+    } else {
+        res.status(409).send('Catégorie déjà existante');
+    }
+});
+
+// Route pour lister toutes les catégories
+app.get('/categories', (req, res) => {
+    const categories = JSON.parse(fs.readFileSync(categoriesFilePath, 'utf-8'));
+    res.json(categories);
+});
+
+// Route pour supprimer une catégorie
+app.delete('/categories/:name', (req, res) => {
+    const { name } = req.params;
+    let categories = JSON.parse(fs.readFileSync(categoriesFilePath, 'utf-8'));
+    categories = categories.filter(category => category.name !== name);
+    fs.writeFileSync(categoriesFilePath, JSON.stringify(categories, null, 2), 'utf-8');
+    res.send('Catégorie supprimée');
+});
 // Route pour la racine qui répond aux requêtes GET
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html')); // Assurez-vous que le chemin est correct
@@ -184,8 +216,15 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+const audioMetadataPath = path.join(__dirname, 'data', 'audioMetadata.json');
+
 app.post('/upload-audio', upload.single('audioFile'), (req, res) => {
-    console.log('Fichier reçu:', req.file);
+    const { category } = req.body;
+    const audioMetadata = JSON.parse(fs.readFileSync(audioMetadataPath, 'utf-8'));
+
+    audioMetadata.push({ name: req.file.filename, category });
+    fs.writeFileSync(audioMetadataPath, JSON.stringify(audioMetadata, null, 2), 'utf-8');
+
     res.send("Fichier audio téléchargé avec succès");
 });
 

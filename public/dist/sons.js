@@ -1,4 +1,11 @@
 "use strict";
+/**
+ * Configure le formulaire pour le téléchargement de fichiers audio.
+ *
+ * Cette fonction prépare le formulaire pour télécharger des fichiers audio.
+ * Elle définit un gestionnaire d'événements pour le formulaire et gère l'envoi du fichier audio sélectionné au serveur.
+ * @returns aucune valeur n'est retourné
+ */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,13 +15,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-/**
- * Configure le formulaire pour le téléchargement de fichiers audio.
- *
- * Cette fonction prépare le formulaire pour télécharger des fichiers audio.
- * Elle définit un gestionnaire d'événements pour le formulaire et gère l'envoi du fichier audio sélectionné au serveur.
- * @returns aucune valeur n'est retourné
- */
 function setupUploadAudioForm() {
     const uploadAudioForm = document.getElementById('uploadAudioForm');
     const audioFileInput = document.getElementById('audioFile');
@@ -71,61 +71,58 @@ function refreshAudioList() {
  * @returns aucune valeur n'est retourné
  */
 function displayAudioList() {
-    fetch('/list-audios')
-        .then(response => response.json())
-        .then((audioFiles) => {
+    return __awaiter(this, void 0, void 0, function* () {
+        const audioMetadataResponse = yield fetch('/path-to-audio-metadata');
+        const audioMetadata = yield audioMetadataResponse.json();
+        const categoriesResponse = yield fetch('/categories');
+        const categories = yield categoriesResponse.json();
         const audioListContainer = document.getElementById('audioList');
-        if (audioListContainer) {
-            audioFiles.forEach((file) => {
-                // Créer un conteneur div pour chaque fichier audio
-                const audioContainer = document.createElement('div');
-                audioContainer.classList.add('audio-container');
-                audioContainer.setAttribute('data-file', file);
-                // Extraire le nom du fichier sans l'extension .mp3 et remplacer '_' et '-' par des espaces
-                const fileName = file.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
-                // Ajouter le nom du fichier
-                const fileNameParagraph = document.createElement('p');
-                fileNameParagraph.textContent = fileName;
-                // Créer un bouton modifier à côté du nom du fichier
-                const modifyButton = document.createElement('button');
-                modifyButton.textContent = 'Modifier';
-                modifyButton.classList.add('btn', 'btn-primary');
-                modifyButton.addEventListener('click', () => {
-                    modifyName(file);
-                });
-                // Créer un bouton supprimer à côté du nom du fichier
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Supprimer';
-                deleteButton.classList.add('btn', 'btn-danger');
-                deleteButton.addEventListener('click', () => {
-                    deleteSong(file);
-                });
-                // Créer l'élément audio
-                const audioElement = document.createElement('audio');
-                audioElement.setAttribute('controls', '');
-                audioElement.src = `/uploads/${file}`;
-                // Ajouter les éléments au conteneur du fichier audio
-                audioContainer.appendChild(fileNameParagraph);
-                audioContainer.appendChild(modifyButton);
-                audioContainer.appendChild(deleteButton);
-                audioContainer.appendChild(audioElement);
-                // Ajouter le conteneur du fichier audio à la liste
-                audioListContainer.appendChild(audioContainer);
-                //Ajouter le bouton d'analyse des sons
-                const analyseButton = document.createElement('button');
-                analyseButton.textContent = 'Analyser';
-                analyseButton.classList.add('btn', 'btn-info');
-                analyseButton.addEventListener('click', () => {
-                    const audioUrl = `/uploads/${file}`; // URL du fichier audio
-                    fetch(audioUrl)
-                        .then(response => response.blob())
-                        .then(blob => analyseAudio(blob, audioContainer));
-                });
-                audioContainer.appendChild(analyseButton);
+        audioListContainer.innerHTML = '';
+        audioMetadata.forEach(metadata => {
+            const audioContainer = document.createElement('div');
+            audioContainer.classList.add('audio-container');
+            // Créer et configurer l'élément <select> pour les catégories
+            const categorySelect = document.createElement('select');
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.name;
+                option.textContent = category.name;
+                option.selected = category.name === metadata.category;
+                categorySelect.appendChild(option);
             });
+            // Bouton pour mettre à jour la catégorie
+            const updateCategoryButton = document.createElement('button');
+            updateCategoryButton.textContent = 'Mettre à jour la catégorie';
+            updateCategoryButton.onclick = () => updateAudioCategory(metadata.name, categorySelect.value);
+            // Ajoutez ici les autres éléments comme l'élément <audio> et les boutons de modification/suppression
+            audioContainer.appendChild(categorySelect);
+            audioContainer.appendChild(updateCategoryButton);
+            audioListContainer.appendChild(audioContainer);
+        });
+    });
+}
+function updateAudioCategory(audioName, newCategory) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const response = yield fetch(`/audio-metadata/${audioName}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ newCategory }),
+            });
+            if (response.ok) {
+                console.log('Catégorie mise à jour avec succès.');
+                refreshAudioList(); // Rafraîchir la liste des fichiers audio pour afficher les changements
+            }
+            else {
+                console.error('Erreur lors de la mise à jour de la catégorie.');
+            }
         }
-    })
-        .catch(error => console.error('Erreur:', error));
+        catch (error) {
+            console.error('Erreur:', error);
+        }
+    });
 }
 /**
  * Modifie le nom d'un fichier audio.
@@ -247,6 +244,15 @@ function deleteSong(fileName) {
         console.error(`Aucun élément audio correspondant à ${fileName} n'a été trouvé.`);
     }
 }
+/**
+ * Prépare un fichier audio pour l'analyse en le convertissant en `AudioBuffer`.
+ *
+ * Cette fonction charge un fichier audio à partir d'un objet `Blob` et utilise l'API Web Audio
+ * pour le décodage en `AudioBuffer`, permettant une analyse audio ultérieure.
+ *
+ * @param audioFile - Le fichier audio sous forme de `Blob` à analyser.
+ * @returns Promesse résolue avec un `AudioBuffer` contenant les données audio décodées.
+ */
 function setupAudioAnalysis(audioFile) {
     return __awaiter(this, void 0, void 0, function* () {
         const audioContext = new AudioContext();
@@ -254,6 +260,16 @@ function setupAudioAnalysis(audioFile) {
         return audioContext.decodeAudioData(arrayBuffer);
     });
 }
+/**
+ * Analyse le contenu audio d'un fichier et met à jour l'interface utilisateur avec la fréquence dominante et l'intensité.
+ *
+ * Cette fonction utilise l'API Web Audio pour analyser le contenu audio d'un fichier. Elle détermine la fréquence dominante
+ * et l'intensité du signal audio et met à jour les éléments correspondants dans un conteneur HTML spécifié.
+ *
+ * @param audioFile - Le fichier audio sous forme de `Blob` qui sera analysé.
+ * @param audioContainer - Le conteneur HTML (`HTMLDivElement`) où les résultats de l'analyse seront affichés.
+ * @returns Promesse résolue lorsque l'analyse est terminée et que l'interface utilisateur a été mise à jour.
+ */
 function analyseAudio(audioFile, audioContainer) {
     return __awaiter(this, void 0, void 0, function* () {
         const audioContext = new AudioContext();
@@ -312,7 +328,62 @@ function analyseAudio(audioFile, audioContainer) {
         requestAnimationFrame(checkAudioProcessing);
     });
 }
+function initializeApp() {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield displayCategories();
+        setupUploadAudioForm();
+    });
+}
+// Afficher les catégories disponibles
+function displayCategories() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const categoriesResponse = yield fetch('/categories');
+        const categories = yield categoriesResponse.json();
+        const categoriesContainer = document.getElementById('categoriesContainer');
+        categoriesContainer.innerHTML = ''; // Nettoyer le conteneur des catégories
+        categories.forEach(category => {
+            const categoryElement = document.createElement('div');
+            categoryElement.innerText = category.name;
+            categoriesContainer.appendChild(categoryElement);
+        });
+    });
+}
+// Ajouter une catégorie
+function addCategory(categoryName) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield fetch('/categories', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: categoryName }),
+        });
+        if (response.ok) {
+            console.log('Catégorie ajoutée avec succès.');
+            displayCategories(); // Mettre à jour la liste des catégories
+        }
+        else {
+            alert('Erreur lors de l\'ajout de la catégorie.');
+        }
+    });
+}
+// Supprimer une catégorie
+function deleteCategory(categoryName) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield fetch(`/categories/${categoryName}`, {
+            method: 'DELETE',
+        });
+        if (response.ok) {
+            console.log('Catégorie supprimée avec succès.');
+            displayCategories(); // Mettre à jour la liste des catégories
+        }
+        else {
+            alert('Erreur lors de la suppression de la catégorie.');
+        }
+    });
+}
 window.onload = function () {
     displayAudioList();
     setupUploadAudioForm();
+    initializeApp().catch(console.error);
 };

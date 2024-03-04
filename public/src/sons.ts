@@ -5,6 +5,18 @@
  * Elle définit un gestionnaire d'événements pour le formulaire et gère l'envoi du fichier audio sélectionné au serveur.
  * @returns aucune valeur n'est retourné
  */
+
+// Définition des interfaces pour le typage strict
+interface Category {
+    name: string;
+}
+
+interface AudioFile {
+    name: string;
+    category?: string;
+}
+
+
 function setupUploadAudioForm(): void {
     const uploadAudioForm = document.getElementById('uploadAudioForm') as HTMLFormElement | null;
     const audioFileInput = document.getElementById('audioFile') as HTMLInputElement | null;
@@ -62,72 +74,63 @@ function refreshAudioList(): void {
  * Affiche la liste des fichiers audio.
  * @returns aucune valeur n'est retourné
  */
-function displayAudioList(): void {
-    fetch('/list-audios')
-        .then(response => response.json())
-        .then((audioFiles: string[]) => {
-            const audioListContainer = document.getElementById('audioList') as HTMLDivElement | null;
-            if (audioListContainer) {
-                audioFiles.forEach((file: string) => {
-                    // Créer un conteneur div pour chaque fichier audio
-                    const audioContainer = document.createElement('div');
-                    audioContainer.classList.add('audio-container');
-                    audioContainer.setAttribute('data-file', file);
+async function displayAudioList(): Promise<void> {
+    const audioMetadataResponse = await fetch('/path-to-audio-metadata');
+    const audioMetadata: { name: string; category: string }[] = await audioMetadataResponse.json();
+    const categoriesResponse = await fetch('/categories');
+    const categories: Category[] = await categoriesResponse.json();
 
-                    // Extraire le nom du fichier sans l'extension .mp3 et remplacer '_' et '-' par des espaces
-                    const fileName = file.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
+    const audioListContainer = document.getElementById('audioList') as HTMLDivElement;
+    audioListContainer.innerHTML = '';
 
-                    // Ajouter le nom du fichier
-                    const fileNameParagraph = document.createElement('p');
-                    fileNameParagraph.textContent = fileName;
+    audioMetadata.forEach(metadata => {
+        const audioContainer = document.createElement('div');
+        audioContainer.classList.add('audio-container');
 
-                    // Créer un bouton modifier à côté du nom du fichier
-                    const modifyButton = document.createElement('button');
-                    modifyButton.textContent = 'Modifier';
-                    modifyButton.classList.add('btn', 'btn-primary'); 
-                    modifyButton.addEventListener('click', () => {
-                        modifyName(file);
+        // Créer et configurer l'élément <select> pour les catégories
+        const categorySelect = document.createElement('select');
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.name;
+            option.textContent = category.name;
+            option.selected = category.name === metadata.category;
+            categorySelect.appendChild(option);
+        });
 
-                    });
+        // Bouton pour mettre à jour la catégorie
+        const updateCategoryButton = document.createElement('button');
+        updateCategoryButton.textContent = 'Mettre à jour la catégorie';
+        updateCategoryButton.onclick = () => updateAudioCategory(metadata.name, categorySelect.value);
 
-                    // Créer un bouton supprimer à côté du nom du fichier
-                    const deleteButton = document.createElement('button');
-                    deleteButton.textContent = 'Supprimer';
-                    deleteButton.classList.add('btn', 'btn-danger'); 
-                    deleteButton.addEventListener('click', () => {
-                        deleteSong(file);
-                    });
+        // Ajoutez ici les autres éléments comme l'élément <audio> et les boutons de modification/suppression
 
-                    // Créer l'élément audio
-                    const audioElement = document.createElement('audio');
-                    audioElement.setAttribute('controls', '');
-                    audioElement.src = `/uploads/${file}`;
-
-                    // Ajouter les éléments au conteneur du fichier audio
-                    audioContainer.appendChild(fileNameParagraph);
-                    audioContainer.appendChild(modifyButton);
-                    audioContainer.appendChild(deleteButton);
-                    audioContainer.appendChild(audioElement);
-
-                    // Ajouter le conteneur du fichier audio à la liste
-                    audioListContainer.appendChild(audioContainer);
-
-                    //Ajouter le bouton d'analyse des sons
-                    const analyseButton = document.createElement('button');
-                    analyseButton.textContent = 'Analyser';
-                    analyseButton.classList.add('btn', 'btn-info');
-                    analyseButton.addEventListener('click', () => {
-                        const audioUrl = `/uploads/${file}`; // URL du fichier audio
-                        fetch(audioUrl)
-                        .then(response => response.blob())
-                        .then(blob => analyseAudio(blob,audioContainer));
-                    });
-                    audioContainer.appendChild(analyseButton);
-                });
-            }
-        })
-        .catch(error => console.error('Erreur:', error));
+        audioContainer.appendChild(categorySelect);
+        audioContainer.appendChild(updateCategoryButton);
+        audioListContainer.appendChild(audioContainer);
+    });
 }
+
+async function updateAudioCategory(audioName: string, newCategory: string): Promise<void> {
+    try {
+        const response = await fetch(`/audio-metadata/${audioName}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ newCategory }),
+        });
+
+        if (response.ok) {
+            console.log('Catégorie mise à jour avec succès.');
+            refreshAudioList(); // Rafraîchir la liste des fichiers audio pour afficher les changements
+        } else {
+            console.error('Erreur lors de la mise à jour de la catégorie.');
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+    }
+}
+
 
 /**
  * Modifie le nom d'un fichier audio.
@@ -355,8 +358,61 @@ async function analyseAudio(audioFile: Blob, audioContainer: HTMLDivElement): Pr
     requestAnimationFrame(checkAudioProcessing);
 }
 
+async function initializeApp(): Promise<void> {
+    await displayCategories();
+    setupUploadAudioForm();
+}
+
+// Afficher les catégories disponibles
+async function displayCategories(): Promise<void> {
+    const categoriesResponse = await fetch('/categories');
+    const categories: Category[] = await categoriesResponse.json();
+
+    const categoriesContainer = document.getElementById('categoriesContainer') as HTMLDivElement;
+    categoriesContainer.innerHTML = ''; // Nettoyer le conteneur des catégories
+
+    categories.forEach(category => {
+        const categoryElement = document.createElement('div');
+        categoryElement.innerText = category.name;
+        categoriesContainer.appendChild(categoryElement);
+    });
+}
+// Ajouter une catégorie
+async function addCategory(categoryName: string): Promise<void> {
+    const response = await fetch('/categories', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: categoryName }),
+    });
+
+    if (response.ok) {
+        console.log('Catégorie ajoutée avec succès.');
+        displayCategories(); // Mettre à jour la liste des catégories
+    } else {
+        alert('Erreur lors de l\'ajout de la catégorie.');
+    }
+}
+
+// Supprimer une catégorie
+async function deleteCategory(categoryName: string): Promise<void> {
+    const response = await fetch(`/categories/${categoryName}`, {
+        method: 'DELETE',
+    });
+
+    if (response.ok) {
+        console.log('Catégorie supprimée avec succès.');
+        displayCategories(); // Mettre à jour la liste des catégories
+    } else {
+        alert('Erreur lors de la suppression de la catégorie.');
+    }
+}
+
+
 
 window.onload = function (): void {
     displayAudioList();
     setupUploadAudioForm();
+    initializeApp().catch(console.error);
 }
