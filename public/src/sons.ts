@@ -16,6 +16,10 @@ interface AudioFile {
     category?: string;
 }
 
+interface AudioMetadata {
+    name: string;
+    category?: string;
+}
 
 function setupUploadAudioForm(): void {
     const uploadAudioForm = document.getElementById('uploadAudioForm') as HTMLFormElement | null;
@@ -62,11 +66,13 @@ function setupUploadAudioForm(): void {
  * 
  * @returns Aucune valeur n'est retournée.
  */
-function refreshAudioList(): void {
-    const audioListContainer = document.getElementById('audioList') as HTMLDivElement | null;
+function refreshAudioList() {
+    const audioListContainer = document.getElementById('audioList');
     if (audioListContainer) {
         audioListContainer.innerHTML = ''; // Vider la liste existante
         displayAudioList(); // Recharger la liste
+    } else {
+        console.error('audioListContainer not found');
     }
 }
 
@@ -75,40 +81,45 @@ function refreshAudioList(): void {
  * @returns aucune valeur n'est retourné
  */
 async function displayAudioList(): Promise<void> {
-    const audioMetadataResponse = await fetch('/path-to-audio-metadata');
-    const audioMetadata: { name: string; category: string }[] = await audioMetadataResponse.json();
+    const audioMetadataResponse = await fetch('/audio-metadata');
+    // Utilisez l'interface AudioMetadata pour le type de votre variable
+    const audioMetadata: AudioMetadata[] = await audioMetadataResponse.json();
     const categoriesResponse = await fetch('/categories');
     const categories: Category[] = await categoriesResponse.json();
 
-    const audioListContainer = document.getElementById('audioList') as HTMLDivElement;
-    audioListContainer.innerHTML = '';
+    const audioListContainer = document.getElementById('audioList');
+    if (!audioListContainer) {
+        console.error('audioListContainer not found');
+        return;
+    }
+    audioListContainer.innerHTML = ''; // Efface la liste existante pour la recharger
 
-    audioMetadata.forEach(metadata => {
+    audioMetadata.forEach((metadata: AudioMetadata) => {
         const audioContainer = document.createElement('div');
         audioContainer.classList.add('audio-container');
 
-        // Créer et configurer l'élément <select> pour les catégories
+
+        const audioPlayer = document.createElement('audio');
+        audioPlayer.controls = true;
+        audioPlayer.src = `/uploads/${metadata.name}`;
+        audioContainer.appendChild(audioPlayer);
+
         const categorySelect = document.createElement('select');
-        categories.forEach(category => {
+        categories.forEach((category: Category) => {
             const option = document.createElement('option');
             option.value = category.name;
             option.textContent = category.name;
             option.selected = category.name === metadata.category;
             categorySelect.appendChild(option);
         });
-
-        // Bouton pour mettre à jour la catégorie
-        const updateCategoryButton = document.createElement('button');
-        updateCategoryButton.textContent = 'Mettre à jour la catégorie';
-        updateCategoryButton.onclick = () => updateAudioCategory(metadata.name, categorySelect.value);
-
-        // Ajoutez ici les autres éléments comme l'élément <audio> et les boutons de modification/suppression
-
         audioContainer.appendChild(categorySelect);
-        audioContainer.appendChild(updateCategoryButton);
+
+        // Boutons et autres éléments ici...
+
         audioListContainer.appendChild(audioContainer);
     });
 }
+
 
 async function updateAudioCategory(audioName: string, newCategory: string): Promise<void> {
     try {
@@ -409,6 +420,11 @@ async function deleteCategory(categoryName: string): Promise<void> {
     }
 }
 
+document.addEventListener('DOMContentLoaded', function() {
+    
+    displayAudioList();
+    setupUploadAudioForm();
+});
 
 
 window.onload = function (): void {

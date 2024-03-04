@@ -259,12 +259,17 @@ h1 {
 
 /* Style des conteneurs de fichiers audio existants */
 .audio-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 50px;
     background-color: #008CBA; /* Bleu différent pour les fichiers audio */
     color: #FFF; /* Texte blanc pour le contraste */
     border: 1px solid #0079a1; /* Bordure subtile */
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 3px 10px 0 rgba(0, 0, 0, 0.09); /* Ombre plus légère */
     padding: 15px; /* Espacement intérieur */
     margin-bottom: 20px; /* Espacement entre les conteneurs */
+    border-bottom: 1px solid #ccc;
 }
 
 /* Ajustements pour les boutons dans les conteneurs de fichiers audio */
@@ -292,4 +297,27 @@ h1 {
     background-color: #007bb5; /* Sombre lors du survol */
     border-color: #006699; /* Bordure plus sombre lors du survol */
     cursor: pointer; /* Change le curseur pour indiquer la possibilité d'une action */
+}
+
+button {
+    padding: 5px 10px; /* Ajustez selon vos besoins */
+    font-size: 16px; /* Rend le texte plus lisible */
+    cursor: pointer; /* Indique que l'élément est cliquable */
+    margin-right: 5px; /* Espacement entre les boutons */
+}
+
+#addCategoryContainer {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    gap: 10px; /* Espacement entre les éléments du formulaire */
+}
+
+#addCategoryContainer input[type="text"] {
+    flex-grow: 1; /* Permet à l'input de prendre l'espace disponible */
+    margin-right: 10px; /* Espacement entre l'input et le bouton */
+}
+
+#addCategoryContainer button {
+    padding: 5px 15px; /* Ajustements similaires aux autres boutons */
 }

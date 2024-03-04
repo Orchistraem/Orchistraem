@@ -218,6 +218,15 @@ const upload = multer({ storage: storage });
 
 const audioMetadataPath = path.join(__dirname, 'data', 'audioMetadata.json');
 
+app.get('/audio-metadata', (req, res) => {
+  if (fs.existsSync(audioMetadataPath)) {
+      const metadata = fs.readFileSync(audioMetadataPath, 'utf-8');
+      res.json(JSON.parse(metadata));
+  } else {
+      res.status(404).send({ error: "Métadonnées audio non trouvées." });
+  }
+});
+
 app.post('/upload-audio', upload.single('audioFile'), (req, res) => {
     const { category } = req.body;
     const audioMetadata = JSON.parse(fs.readFileSync(audioMetadataPath, 'utf-8'));

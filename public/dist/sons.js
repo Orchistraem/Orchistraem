@@ -65,6 +65,9 @@ function refreshAudioList() {
         audioListContainer.innerHTML = ''; // Vider la liste existante
         displayAudioList(); // Recharger la liste
     }
+    else {
+        console.error('audioListContainer not found');
+    }
 }
 /**
  * Affiche la liste des fichiers audio.
@@ -72,31 +75,34 @@ function refreshAudioList() {
  */
 function displayAudioList() {
     return __awaiter(this, void 0, void 0, function* () {
-        const audioMetadataResponse = yield fetch('/path-to-audio-metadata');
+        const audioMetadataResponse = yield fetch('/audio-metadata');
+        // Utilisez l'interface AudioMetadata pour le type de votre variable
         const audioMetadata = yield audioMetadataResponse.json();
         const categoriesResponse = yield fetch('/categories');
         const categories = yield categoriesResponse.json();
         const audioListContainer = document.getElementById('audioList');
-        audioListContainer.innerHTML = '';
-        audioMetadata.forEach(metadata => {
+        if (!audioListContainer) {
+            console.error('audioListContainer not found');
+            return;
+        }
+        audioListContainer.innerHTML = ''; // Efface la liste existante pour la recharger
+        audioMetadata.forEach((metadata) => {
             const audioContainer = document.createElement('div');
             audioContainer.classList.add('audio-container');
-            // Créer et configurer l'élément <select> pour les catégories
+            const audioPlayer = document.createElement('audio');
+            audioPlayer.controls = true;
+            audioPlayer.src = `/uploads/${metadata.name}`;
+            audioContainer.appendChild(audioPlayer);
             const categorySelect = document.createElement('select');
-            categories.forEach(category => {
+            categories.forEach((category) => {
                 const option = document.createElement('option');
                 option.value = category.name;
                 option.textContent = category.name;
                 option.selected = category.name === metadata.category;
                 categorySelect.appendChild(option);
             });
-            // Bouton pour mettre à jour la catégorie
-            const updateCategoryButton = document.createElement('button');
-            updateCategoryButton.textContent = 'Mettre à jour la catégorie';
-            updateCategoryButton.onclick = () => updateAudioCategory(metadata.name, categorySelect.value);
-            // Ajoutez ici les autres éléments comme l'élément <audio> et les boutons de modification/suppression
             audioContainer.appendChild(categorySelect);
-            audioContainer.appendChild(updateCategoryButton);
+            // Boutons et autres éléments ici...
             audioListContainer.appendChild(audioContainer);
         });
     });
@@ -382,6 +388,10 @@ function deleteCategory(categoryName) {
         }
     });
 }
+document.addEventListener('DOMContentLoaded', function () {
+    displayAudioList();
+    setupUploadAudioForm();
+});
 window.onload = function () {
     displayAudioList();
     setupUploadAudioForm();
