@@ -457,6 +457,7 @@ async function assignCategoryToFile(fileName: string, categoryName: string) {
 window.onload = async (): Promise<void> => {
     await displayAudioList();
     await loadAndDisplayCategories();
+    setupUploadAudioForm()
     const addCategoryBtn = document.getElementById('addCategoryBtn');
     if (addCategoryBtn) {
         addCategoryBtn.onclick = addCategory;

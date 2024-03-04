@@ -416,6 +416,7 @@ function assignCategoryToFile(fileName, categoryName) {
 window.onload = () => __awaiter(void 0, void 0, void 0, function* () {
     yield displayAudioList();
     yield loadAndDisplayCategories();
+    setupUploadAudioForm();
     const addCategoryBtn = document.getElementById('addCategoryBtn');
     if (addCategoryBtn) {
         addCategoryBtn.onclick = addCategory;

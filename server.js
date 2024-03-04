@@ -137,6 +137,7 @@ app.post('/audiogram', (req, res) => {
   }
 });
 
+
 app.get('/list-audios', (req, res) => {
   const UPLOADS_DIR = './uploads';
 
@@ -275,7 +276,6 @@ app.post('/upload-audio', upload.single('audioFile'), (req, res) => {
     res.status(409).send("Le fichier existe déjà");
   }
 });
-
 
 // Route pour renommer un fichier audio
 app.post('/rename-audio', (req, res) => {
