@@ -393,13 +393,17 @@ function deleteCategory(categoryName) {
 function assignCategoryToFile(fileName, categoryName) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const response = yield fetch('/assign-category', {
+            // Utilisez l'URL complète, incluant le nom de domaine et le port, pour éviter les problèmes de résolution d'URL.
+            const url = `http://localhost:3000/assign-category`;
+            const response = yield fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ fileName, categoryName })
             });
             if (!response.ok) {
-                throw new Error('Erreur lors de l\'affectation de la catégorie');
+                // Utilisez response.text() ou response.json() pour obtenir plus de détails sur l'erreur
+                const errorText = yield response.text(); // ou response.json() si le serveur renvoie du JSON
+                throw new Error(`Erreur lors de l'affectation de la catégorie : ${errorText}`);
             }
             console.log(`Catégorie ${categoryName} affectée à ${fileName}`);
             refreshAudioList(); // Optionnel: Rafraîchir la liste pour refléter les changements
