@@ -15,23 +15,30 @@ const audioMetadataPath = path.join(__dirname, 'data', 'audioMetadata.json');
 app.post('/assign-category', (req, res) => {
   const { fileName, categoryName } = req.body;
 
-  // Assurez-vous que le fichier audioMetadata.json existe.
-  if (!fs.existsSync(audioMetadataPath)) {
-    return res.status(404).send({ error: "Fichier de métadonnées audio non trouvé." });
+  // Vérifie l'existence du fichier dans le dossier uploads/
+  const filePath = path.join(__dirname, 'uploads', fileName);
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).send({ error: 'Fichier non trouvé dans les uploads', fileName });
   }
 
-  let audioMetadata = JSON.parse(fs.readFileSync(audioMetadataPath, 'utf-8'));
+  let audioMetadata = [];
+  if (fs.existsSync(audioMetadataPath)) {
+    audioMetadata = JSON.parse(fs.readFileSync(audioMetadataPath, 'utf-8'));
+  }
+
   const fileIndex = audioMetadata.findIndex(meta => meta.name === fileName);
 
+  // Si le fichier est trouvé dans les métadonnées, mettez à jour la catégorie
   if (fileIndex !== -1) {
-      audioMetadata[fileIndex].category = categoryName;
-      fs.writeFileSync(audioMetadataPath, JSON.stringify(audioMetadata, null, 2), 'utf-8');
-      res.send({ message: 'Catégorie mise à jour avec succès', metadata: audioMetadata[fileIndex] });
+    audioMetadata[fileIndex].category = categoryName;
   } else {
-      res.status(404).send({ error: 'Fichier non trouvé', fileName: fileName });
+    // Sinon, ajoutez une nouvelle entrée de métadonnées
+    audioMetadata.push({ name: fileName, category: categoryName });
   }
-});
 
+  fs.writeFileSync(audioMetadataPath, JSON.stringify(audioMetadata, null, 2), 'utf-8');
+  res.send({ message: 'Catégorie mise à jour avec succès', fileName, categoryName });
+});
 
 // Middleware pour servir les fichiers statiques (CSS, JS, images, etc.)
 app.use(express.static('public')); // Remplacez 'public' par le nom de votre dossier contenant les fichiers statiques
