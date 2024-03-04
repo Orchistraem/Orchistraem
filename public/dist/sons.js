@@ -116,6 +116,19 @@ function displayAudioList() {
                 analyseButton.textContent = 'Analyser';
                 analyseButton.classList.add('btn', 'btn-info');
                 analyseButton.addEventListener('click', () => {
+                    let closeButton = audioContainer.querySelector('#closeButtonAnalyse');
+                    if (!closeButton) {
+                        closeButton = document.createElement('button');
+                        closeButton.textContent = 'Fermer';
+                        closeButton.classList.add('btn', 'btn-secondary');
+                        closeButton.id = 'closeButtonAnalyse';
+                        closeButton.addEventListener('click', () => {
+                            closeCanvas(audioContainer);
+                            if (closeButton)
+                                closeButton.remove();
+                        });
+                        audioContainer.appendChild(closeButton);
+                    }
                     const audioUrl = `/uploads/${file}`; // URL du fichier audio
                     fetch(audioUrl)
                         .then(response => response.blob())
@@ -128,6 +141,12 @@ function displayAudioList() {
         }
     })
         .catch(error => console.error('Erreur:', error));
+}
+function closeCanvas(audioContainer) {
+    const canvas = audioContainer.querySelector('#sonogramCanvas');
+    if (canvas) {
+        canvas.remove(); // Supprimer le canvas
+    }
 }
 /**
  * Modifie le nom d'un fichier audio.
