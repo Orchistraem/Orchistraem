@@ -234,7 +234,8 @@ h1 {
     margin-bottom: 10px; /* Espace entre les bulles */
     background-color: #76b6ee; /* Couleur de fond */
     box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2); /* Ombre pour un effet 3D */
-    max-width: 800px; /* Largeur maximale */
+    max-width: 900px; /* Largeur maximale */
+    max-height: 800px;
     margin-left: auto; /* Centrer la bulle */
     margin-right: auto;
     text-align: left; /* Aligner le texte à gauche */
