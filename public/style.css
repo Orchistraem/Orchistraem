@@ -241,7 +241,7 @@ h1 {
     text-align: left; /* Aligner le texte à gauche */
 }
 
-#uploadAudioForm {
+#uploadAudioForm , #categoriesManagement {
     background-color: #0d7b91; /* Couleur plus foncée pour le conteneur d'ajout de son */
     color: white; /* Texte blanc pour une meilleure lisibilité */
     border: 1px solid #005f79; /* Bordure légèrement plus foncée pour un meilleur contraste */
@@ -293,4 +293,8 @@ h1 {
     background-color: #007bb5; /* Sombre lors du survol */
     border-color: #006699; /* Bordure plus sombre lors du survol */
     cursor: pointer; /* Change le curseur pour indiquer la possibilité d'une action */
+}
+
+#ajout {
+    display: flex;
 }
