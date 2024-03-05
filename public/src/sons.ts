@@ -5,13 +5,24 @@
  * Elle définit un gestionnaire d'événements pour le formulaire et gère l'envoi du fichier audio sélectionné au serveur.
  * @returns aucune valeur n'est retourné
  */
+let lastModifiedCategory: string = '';
 
 // Assurez-vous que les catégories sont correctement typées.
 interface Category {
     name: string;
 }
 
+interface AudioFile {
+    // Définir les propriétés attendues pour un fichier audio, par exemple :
+    name: string; // Cette propriété est utilisée comme exemple
+}
+
+
 let categories: Category[] = []; // Initialisez les catégories, vous devrez les charger depuis le serveur.
+
+let lastModifiedAudioFile: string = '';
+
+
 
 function setupUploadAudioForm(): void {
     const uploadAudioForm = document.getElementById('uploadAudioForm') as HTMLFormElement | null;
@@ -74,14 +85,21 @@ function displayAudioList(): void {
     // D'abord, récupérez les catégories disponibles
     fetch('/categories')
     .then(response => response.json())
-    .then((categories) => {
+    .then((categories: Category[]) => {
+        categories.sort((a: Category, b: Category) => {
+            if (a.name === lastModifiedCategory) return -1;
+            if (b.name === lastModifiedCategory) return 1;
+            return 0;
+        });
+
         // Ensuite, récupérez la liste des fichiers audio
         fetch('/list-audios')
         .then(response => response.json())
-        .then((audioFiles: string[]) => {
-            const audioListContainer = document.getElementById('audioList') as HTMLDivElement | null;
+        .then((audioFiles) => {
+            const audioListContainer = document.getElementById('audioList');
             if (audioListContainer) {
                 audioListContainer.innerHTML = ''; // Vider la liste existante
+                
                 audioFiles.forEach((file: string) => {
                     const audioContainer = document.createElement('div');
                     audioContainer.classList.add('audio-container');
@@ -111,12 +129,12 @@ function displayAudioList(): void {
                         const audioUrl = `/uploads/${file}`;
                         fetch(audioUrl)
                         .then(response => response.blob())
-                        .then(blob => analyseAudio(blob, audioContainer)); // Utilisation correcte du Blob
+                        .then(blob => analyseAudio(blob, audioContainer));
                     };
 
                     // Menu déroulant pour les catégories
                     const categorySelect = document.createElement('select');
-                    categories.forEach((category: Category) => {
+                    categories.forEach((category) => {
                         const option = document.createElement('option');
                         option.value = category.name;
                         option.textContent = category.name;
@@ -128,7 +146,6 @@ function displayAudioList(): void {
                     assignCategoryButton.textContent = 'Assigner Catégorie';
                     assignCategoryButton.classList.add('btn', 'btn-secondary');
                     assignCategoryButton.onclick = () => assignCategoryToFile(file, categorySelect.value);
-
 
                     audioContainer.appendChild(fileNameParagraph);
                     audioContainer.appendChild(audioElement);
@@ -146,6 +163,7 @@ function displayAudioList(): void {
     })
     .catch(error => console.error('Erreur lors de la récupération des catégories:', error));
 }
+
 
 
 
@@ -400,22 +418,28 @@ async function loadAndDisplayCategories(): Promise<void> {
 }
 
 async function addCategory(): Promise<void> {
+    // Assurez-vous que 'newCategoryNameInput' est traité comme un HTMLInputElement
     const newCategoryNameInput = document.getElementById('newCategoryName') as HTMLInputElement | null;
-    if (!newCategoryNameInput) return;
+    
+    if (newCategoryNameInput) {
+        const newCategoryName = newCategoryNameInput.value;
+        const response = await fetch('/categories', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: newCategoryName })
+        });
 
-    const newCategoryName = newCategoryNameInput.value;
-    const response = await fetch('/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newCategoryName })
-    });
-
-    if (response.ok) {
-        await loadAndDisplayCategories(); // Recharger la liste des catégories
+        if (response.ok) {
+            lastModifiedCategory = newCategoryName; // Met à jour la variable globale ou le mécanisme de suivi
+            await loadAndDisplayCategories(); // Cela va maintenant trier et afficher la catégorie ajoutée en premier
+        } else {
+            alert('Erreur lors de l\'ajout de la catégorie');
+        }
     } else {
-        alert('Erreur lors de l\'ajout de la catégorie');
+        console.error('Élément de saisie pour le nom de la nouvelle catégorie introuvable.');
     }
 }
+
 
 async function deleteCategory(categoryName: string): Promise<void> {
     const response = await fetch(`/categories/${categoryName}`, { method: 'DELETE' });
@@ -426,28 +450,27 @@ async function deleteCategory(categoryName: string): Promise<void> {
     }
 }
 
-async function assignCategoryToFile(fileName: string, categoryName: string) {
+async function assignCategoryToFile(fileName: string, categoryName: string): Promise<void> {
     try {
-        // Utilisez l'URL complète, incluant le nom de domaine et le port, pour éviter les problèmes de résolution d'URL.
-        const url = `http://localhost:3000/assign-category`;
-        const response = await fetch(url, {
+        const response = await fetch('/assign-category', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fileName, categoryName })
         });
 
         if (!response.ok) {
-            // Utilisez response.text() ou response.json() pour obtenir plus de détails sur l'erreur
-            const errorText = await response.text(); // ou response.json() si le serveur renvoie du JSON
+            const errorText = await response.text();
             throw new Error(`Erreur lors de l'affectation de la catégorie : ${errorText}`);
         }
 
         console.log(`Catégorie ${categoryName} affectée à ${fileName}`);
-        refreshAudioList(); // Optionnel: Rafraîchir la liste pour refléter les changements
+        lastModifiedCategory = categoryName; // Assurez-vous que cette catégorie soit affichée en premier lors du prochain chargement
+        refreshAudioList(); // Cela va rafraîchir la liste et le menu déroulant avec la bonne commande
     } catch (error) {
         console.error('Erreur:', error);
     }
 }
+
 
 
 

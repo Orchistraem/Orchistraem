@@ -1,11 +1,4 @@
 "use strict";
-/**
- * Configure le formulaire pour le téléchargement de fichiers audio.
- *
- * Cette fonction prépare le formulaire pour télécharger des fichiers audio.
- * Elle définit un gestionnaire d'événements pour le formulaire et gère l'envoi du fichier audio sélectionné au serveur.
- * @returns aucune valeur n'est retourné
- */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -15,6 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+/**
+ * Configure le formulaire pour le téléchargement de fichiers audio.
+ *
+ * Cette fonction prépare le formulaire pour télécharger des fichiers audio.
+ * Elle définit un gestionnaire d'événements pour le formulaire et gère l'envoi du fichier audio sélectionné au serveur.
+ * @returns aucune valeur n'est retourné
+ */
+let lastModifiedCategory = '';
 let categories = []; // Initialisez les catégories, vous devrez les charger depuis le serveur.
 function setupUploadAudioForm() {
     const uploadAudioForm = document.getElementById('uploadAudioForm');
@@ -76,6 +77,13 @@ function displayAudioList() {
     fetch('/categories')
         .then(response => response.json())
         .then((categories) => {
+        categories.sort((a, b) => {
+            if (a.name === lastModifiedCategory)
+                return -1;
+            if (b.name === lastModifiedCategory)
+                return 1;
+            return 0;
+        });
         // Ensuite, récupérez la liste des fichiers audio
         fetch('/list-audios')
             .then(response => response.json())
@@ -107,7 +115,7 @@ function displayAudioList() {
                         const audioUrl = `/uploads/${file}`;
                         fetch(audioUrl)
                             .then(response => response.blob())
-                            .then(blob => analyseAudio(blob, audioContainer)); // Utilisation correcte du Blob
+                            .then(blob => analyseAudio(blob, audioContainer));
                     };
                     // Menu déroulant pour les catégories
                     const categorySelect = document.createElement('select');
@@ -362,20 +370,25 @@ function loadAndDisplayCategories() {
 }
 function addCategory() {
     return __awaiter(this, void 0, void 0, function* () {
+        // Assurez-vous que 'newCategoryNameInput' est traité comme un HTMLInputElement
         const newCategoryNameInput = document.getElementById('newCategoryName');
-        if (!newCategoryNameInput)
-            return;
-        const newCategoryName = newCategoryNameInput.value;
-        const response = yield fetch('/categories', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: newCategoryName })
-        });
-        if (response.ok) {
-            yield loadAndDisplayCategories(); // Recharger la liste des catégories
+        if (newCategoryNameInput) {
+            const newCategoryName = newCategoryNameInput.value;
+            const response = yield fetch('/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newCategoryName })
+            });
+            if (response.ok) {
+                lastModifiedCategory = newCategoryName; // Met à jour la variable globale ou le mécanisme de suivi
+                yield loadAndDisplayCategories(); // Cela va maintenant trier et afficher la catégorie ajoutée en premier
+            }
+            else {
+                alert('Erreur lors de l\'ajout de la catégorie');
+            }
         }
         else {
-            alert('Erreur lors de l\'ajout de la catégorie');
+            console.error('Élément de saisie pour le nom de la nouvelle catégorie introuvable.');
         }
     });
 }
@@ -393,20 +406,18 @@ function deleteCategory(categoryName) {
 function assignCategoryToFile(fileName, categoryName) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            // Utilisez l'URL complète, incluant le nom de domaine et le port, pour éviter les problèmes de résolution d'URL.
-            const url = `http://localhost:3000/assign-category`;
-            const response = yield fetch(url, {
+            const response = yield fetch('/assign-category', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ fileName, categoryName })
             });
             if (!response.ok) {
-                // Utilisez response.text() ou response.json() pour obtenir plus de détails sur l'erreur
-                const errorText = yield response.text(); // ou response.json() si le serveur renvoie du JSON
+                const errorText = yield response.text();
                 throw new Error(`Erreur lors de l'affectation de la catégorie : ${errorText}`);
             }
             console.log(`Catégorie ${categoryName} affectée à ${fileName}`);
-            refreshAudioList(); // Optionnel: Rafraîchir la liste pour refléter les changements
+            lastModifiedCategory = categoryName; // Assurez-vous que cette catégorie soit affichée en premier lors du prochain chargement
+            refreshAudioList(); // Cela va rafraîchir la liste et le menu déroulant avec la bonne commande
         }
         catch (error) {
             console.error('Erreur:', error);
