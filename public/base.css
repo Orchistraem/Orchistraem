@@ -1,0 +1,13 @@
+html, body {
+    height: 100%; /* Assure que l'élément html et le body occupent toute la hauteur de la fenêtre */
+    margin: 0; /* Supprime les marges par défaut */
+    min-height: 100%;
+    height: auto;
+}
+
+body {
+    background: linear-gradient(#0077b6, #caf0f8) no-repeat center center fixed; 
+    background-size: cover; /* Assure que le fond couvre toute la page, y compris quand le contenu s'étend */
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
