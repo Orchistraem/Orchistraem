@@ -392,6 +392,7 @@ async function loadAndDisplayCategories(): Promise<void> {
 
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'Supprimer';
+        deleteBtn.classList.add('btn', 'btn-danger');
         deleteBtn.onclick = () => deleteCategory(category.name);
 
         categoryDiv.appendChild(deleteBtn);
