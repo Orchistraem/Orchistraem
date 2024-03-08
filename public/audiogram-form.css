@@ -1,40 +1,53 @@
+.audiogram-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* Centre les éléments horizontalement */
+    gap: 20px; /* Espace entre les éléments */
+    padding: 20px;
+}
+
+.audiogram-container .chartBox {
+    display: flex; /* Permet un meilleur contrôle sur les éléments canvas */
+    justify-content: center; /* Centre le canvas dans le .chartBox */
+    flex-basis: 45%; /* Réduit la base flexible pour avoir deux éléments par ligne sur écrans larges */
+    max-width: 800px; /* Augmente la largeur maximale pour un plus grand affichage */
+}
+
+.audiogram-container .chartBox canvas {
+    width: 100% !important; /* Assurez-vous que le canvas occupe 100% de la largeur de .chartBox */
+    height: auto !important; /* Ajuste automatiquement la hauteur pour maintenir le ratio */
+    max-height: 600px !important; /* Augmente la hauteur maximale des canvas */
+    aspect-ratio: 16 / 9 !important; /* Maintient un aspect ratio de 16:9 */
+    border-radius: 20px !important;
+    border: 3px solid rgba(54, 162, 235, 1) !important;
+    background: white !important;
+}
+
+
+@media (max-width: 768px) {
+    .audiogram-container .chartBox {
+        flex-basis: 100%; /* Permet aux éléments de prendre toute la largeur sur petits écrans */
+    }
+}
+
 /* Style des conteneurs de formulaires */
 .form-container {
     margin: 20px;
     text-align: center;
 }
 
-/* Style des graphiques (ne pas toucher le quadrillage) */
-.audiogram {
-    width: 600px;
-    height: 400px;
-    background-color: white; /* Définit le fond des graphiques en blanc */
-    border-radius: 1%;
-}
-
-.audiogram-container > div {
-    margin : 1%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.audiogram-container {
-    display: flex;
-    justify-content:center;
-    align-items: center;
-}
-
+  
+/* Style pour le dropdown (ne change pas pour la réactivité) */
 .dropdown-menu {
     display: none;
-    position: fixed; 
+    position: fixed;
     left: 0;
     top: 60px;
     width: 200px;
     height: 100%;
     background-color: white;
-    overflow-y: auto; /* Permet le défilement si la liste est longue */
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    overflow-y: auto;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
     padding: 12px 16px;
     z-index: 1;
 }
@@ -43,27 +56,8 @@
     display: block;
 }
 
-.tooltip {
-    position: absolute;
-    background-color: #fff;
-    border: 1px solid #000;
-    padding: 5px;
-    border-radius: 5px;
-    pointer-events: none; /* Empêcher le tooltip d'interférer avec les clics de la souris */
-}
 
-.chartBox canvas {
-    width: 140%; /* prendra la totalité de la largeur de .chartBox */
-    max-width: 745px; 
-    border-radius: 20px;
-    border: solid 3px rgba(54, 162, 235, 1);
-    background: white;
-}
-
-#addPointFormLeft {
-    align-content:start;
-}
-
+/* Style des boutons et des sélecteurs (ne change pas pour la réactivité) */
 .btn.btn-outline-primary {
     color: #03045e;
     border: 1px solid #03045e;
