@@ -13,9 +13,27 @@
     max-width: 800px; /* Augmente la largeur maximale pour un plus grand affichage */
 }
 
+.audiogram {
+    width: calc(70vw); /* Increases width based on the viewport width to make it larger */
+    height: calc(70vw * (2 / 3)); /* Adjusts height to maintain a 3:2 aspect ratio */
+    max-width: 100%; /* Ensures the audiogram does not exceed the container's width */
+    max-height: calc(100% * (2 / 3)); /* Adjusts max height to maintain aspect ratio */
+    background-color: white;
+    border-radius: 1%;
+    margin: auto; /* Centers the audiogram horizontally */
+}
+
+@media (max-width: 768px) {
+    .audiogram {
+        width: 95vw; /* Further increases width for smaller screens */
+        height: calc(95vw * (2 / 3)); /* Adjusts height to maintain aspect ratio */
+        max-width: 100%; /* Allows the audiogram to fill the container on smaller screens */
+        max-height: calc(100% * (2 / 3)); /* Ensures aspect ratio is maintained */
+    }
+}
+
 .audiogram-container .chartBox canvas {
     width: 100% !important; /* Assurez-vous que le canvas occupe 100% de la largeur de .chartBox */
-    height: auto !important; /* Ajuste automatiquement la hauteur pour maintenir le ratio */
     max-height: 600px !important; /* Augmente la hauteur maximale des canvas */
     aspect-ratio: 16 / 9 !important; /* Maintient un aspect ratio de 16:9 */
     border-radius: 20px !important;
@@ -23,19 +41,13 @@
     background: white !important;
 }
 
-
-@media (max-width: 768px) {
-    .audiogram-container .chartBox {
-        flex-basis: 100%; /* Permet aux éléments de prendre toute la largeur sur petits écrans */
-    }
-}
-
 /* Style des conteneurs de formulaires */
 .form-container {
-    margin: 20px;
+    margin: 20px auto; /* Centers the form container horizontally */
     text-align: center;
+    width: 100%; /* Allows the form to take the full width of its container */
+    max-width: 200px; /* Ensures the form does not become too wide on larger screens */
 }
-
   
 /* Style pour le dropdown (ne change pas pour la réactivité) */
 .dropdown-menu {
@@ -55,7 +67,6 @@
 .show {
     display: block;
 }
-
 
 /* Style des boutons et des sélecteurs (ne change pas pour la réactivité) */
 .btn.btn-outline-primary {
@@ -83,6 +94,7 @@
 
 .edit {
     width: min-content;
+    margin-top: 10%;
 }
 
 .edit button {

@@ -539,7 +539,7 @@ function setupClickListeners(chart, ear, legendSelector) {
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
             let { frequency, decibels } = convertClickToChartData(chart, x, y);
-            frequency = findNearestFrequency(frequency, standardFrequencies);
+            frequency = snapToStandardFrequencies(frequency);
             const pointStyle = legendSelector.value;
             if (!isPointAlreadyPresent(chart, frequency, pointStyle)) {
                 decibels = snapToDecibelLevels(decibels); // Ajustement des décibels si nécessaire
@@ -643,7 +643,8 @@ function removeDataPoint(chart, index, ear, pointId) {
 function convertClickToChartData(chart, clickX, clickY) {
     const xAxis = chart.scales.x;
     const yAxis = chart.scales.y;
-    const frequency = xAxis.getValueForPixel(clickX);
+    const rawFrequency = xAxis.getValueForPixel(clickX);
+    const frequency = snapToStandardFrequencies(rawFrequency);
     const decibels = yAxis.getValueForPixel(clickY);
     return { frequency, decibels };
 }
@@ -657,29 +658,27 @@ function convertClickToChartData(chart, clickX, clickY) {
  * @returns La fréquence standard la plus proche de la fréquence donnée.
  */
 function findNearestFrequency(frequency, standardFrequencies) {
-    if (frequency <= standardFrequencies[0])
+    // If the frequency is lower than the first standard frequency, return the first one.
+    if (frequency < standardFrequencies[0]) {
         return standardFrequencies[0];
-    if (frequency >= standardFrequencies[standardFrequencies.length - 1])
-        return standardFrequencies[standardFrequencies.length - 1];
-    for (let i = 0; i < standardFrequencies.length - 1; i++) {
-        const lower = standardFrequencies[i];
-        const upper = standardFrequencies[i + 1];
-        const middle = (lower + upper) / 2;
-        if (frequency === middle) {
-            // Si la fréquence est exactement au milieu, on la retourne
-            return frequency;
-        }
-        else if (frequency > lower && frequency < middle) {
-            // Si la fréquence est plus proche de la borne inférieure, on retourne la borne inférieure
-            return lower;
-        }
-        else if (frequency > middle && frequency < upper) {
-            // Si la fréquence est plus proche de la borne supérieure, on retourne le milieu
-            return middle;
-        }
     }
-    // Par sécurité, si aucune condition n'est remplie, on retourne la fréquence la plus basse
-    return standardFrequencies[0];
+    // If the frequency is higher than the last standard frequency, return the last one.
+    if (frequency > standardFrequencies[standardFrequencies.length - 1]) {
+        return standardFrequencies[standardFrequencies.length - 1];
+    }
+    // Find the closest standard frequency.
+    let closest = standardFrequencies.reduce((prev, curr) => {
+        if (Math.abs(curr - frequency) < Math.abs(prev - frequency)) {
+            return curr;
+        }
+        else if (Math.abs(curr - frequency) === Math.abs(prev - frequency)) {
+            return prev < curr ? prev : curr; // If equidistant, choose the lower frequency.
+        }
+        else {
+            return prev;
+        }
+    });
+    return closest;
 }
 /**
  * Ajuste un niveau de décibels pour qu'il corresponde au niveau le plus proche dans une gamme prédéfinie.
@@ -697,6 +696,21 @@ function snapToDecibelLevels(decibels) {
     });
     console.log(`Décibels ajustés: ${snappedDecibels}`); // Ajouter pour le débogage
     return snappedDecibels;
+}
+function snapToStandardFrequencies(frequency) {
+    const standardFrequencies = [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000];
+    let closest = standardFrequencies[0];
+    let smallestDifference = Infinity;
+    for (let i = 0; i < standardFrequencies.length; i++) {
+        // Calculate the difference on a logarithmic scale
+        let difference = Math.abs(Math.log10(frequency) - Math.log10(standardFrequencies[i]));
+        if (difference < smallestDifference) {
+            smallestDifference = difference;
+            closest = standardFrequencies[i];
+        }
+        console.log(`Comparing: ${frequency} with standard frequency: ${standardFrequencies[i]} - Difference: ${difference}`);
+    }
+    return closest;
 }
 /**
  * Initialise les audiogrammes lorsque la fenêtre se charge.
