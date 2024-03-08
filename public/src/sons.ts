@@ -5,24 +5,13 @@
  * Elle définit un gestionnaire d'événements pour le formulaire et gère l'envoi du fichier audio sélectionné au serveur.
  * @returns aucune valeur n'est retourné
  */
-let lastModifiedCategory: string = '';
 
 // Assurez-vous que les catégories sont correctement typées.
 interface Category {
     name: string;
 }
 
-interface AudioFile {
-    // Définir les propriétés attendues pour un fichier audio, par exemple :
-    name: string; // Cette propriété est utilisée comme exemple
-}
-
-
 let categories: Category[] = []; // Initialisez les catégories, vous devrez les charger depuis le serveur.
-
-let lastModifiedAudioFile: string = '';
-
-
 
 function setupUploadAudioForm(): void {
     const uploadAudioForm = document.getElementById('uploadAudioForm') as HTMLFormElement | null;
@@ -81,91 +70,113 @@ function refreshAudioList(): void {
  * Affiche la liste des fichiers audio.
  * @returns aucune valeur n'est retourné
  */
-function displayAudioList(): void {
-    // D'abord, récupérez les catégories disponibles
+function displayAudioList() {
+    // Récupérez les catégories disponibles
     fetch('/categories')
-    .then(response => response.json())
-    .then((categories: Category[]) => {
-        categories.sort((a: Category, b: Category) => {
-            if (a.name === lastModifiedCategory) return -1;
-            if (b.name === lastModifiedCategory) return 1;
-            return 0;
-        });
-
-        // Ensuite, récupérez la liste des fichiers audio
-        fetch('/list-audios')
-        .then(response => response.json())
-        .then((audioFiles) => {
-            const audioListContainer = document.getElementById('audioList');
-            if (audioListContainer) {
-                audioListContainer.innerHTML = ''; // Vider la liste existante
-                
-                audioFiles.forEach((file: string) => {
+      .then(response => response.json())
+      .then(categories => {
+        // Récupérez ensuite les métadonnées audio pour connaître les catégories assignées à chaque fichier
+        fetch('/audio-metadata')
+          .then(response => response.json())
+          .then(audioMetadata => {
+            // Ensuite, récupérez la liste des fichiers audio
+            fetch('/list-audios')
+              .then(response => response.json())
+              .then(audioFiles => {
+                const audioListContainer = document.getElementById('audioList');
+                if (audioListContainer) {
+                  audioListContainer.innerHTML = ''; // Vider la liste existante
+                  
+                  audioFiles.forEach((file : any) => {
                     const audioContainer = document.createElement('div');
                     audioContainer.classList.add('audio-container');
                     audioContainer.setAttribute('data-file', file);
-
+                    
                     const fileNameParagraph = document.createElement('p');
                     fileNameParagraph.textContent = file.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
-
+                    audioContainer.appendChild(fileNameParagraph);
+  
+                    const fileMetadata = audioMetadata.find((meta : any) => meta.name === file);
+                    const fileCategory = fileMetadata ? fileMetadata.category : 'Non catégorisé';
+                    const fileCategoryParagraph = document.createElement('p');
+                    fileCategoryParagraph.textContent = `Catégorie: ${fileCategory}`;
+                    audioContainer.appendChild(fileCategoryParagraph);
+  
                     const audioElement = document.createElement('audio');
                     audioElement.setAttribute('controls', '');
                     audioElement.src = `/uploads/${file}`;
-
+                    audioContainer.appendChild(audioElement);
+  
+                    // Bouton Modifier
                     const modifyButton = document.createElement('button');
                     modifyButton.textContent = 'Modifier';
                     modifyButton.classList.add('btn', 'btn-primary');
                     modifyButton.onclick = () => modifyName(file);
-
+                    audioContainer.appendChild(modifyButton);
+  
+                    // Bouton Supprimer
                     const deleteButton = document.createElement('button');
                     deleteButton.textContent = 'Supprimer';
                     deleteButton.classList.add('btn', 'btn-danger');
                     deleteButton.onclick = () => deleteSong(file);
-
+                    audioContainer.appendChild(deleteButton);
+  
+                    // Bouton Analyser (implémentation dépend de vos fonctions d'analyse)
                     const analyseButton = document.createElement('button');
                     analyseButton.textContent = 'Analyser';
                     analyseButton.classList.add('btn', 'btn-info');
-                    analyseButton.onclick = () => {
-                        const audioUrl = `/uploads/${file}`;
-                        fetch(audioUrl)
-                        .then(response => response.blob())
-                        .then(blob => analyseAudio(blob, audioContainer));
-                    };
+                    analyseButton.addEventListener('click', async () => {
+                    const audioUrl = `/uploads/${file}`; // Assurez-vous que cette URL est correcte pour accéder au fichier audio
+                    try {
+                        const response = await fetch(audioUrl);
+                        const audioBlob = await response.blob(); // Récupérer le fichier audio comme un Blob
+                        await analyseAudio(audioBlob, audioContainer); // Appeler analyseAudio avec le Blob et le conteneur
+                    } catch (error) {
+                        console.error('Erreur lors de la récupération du fichier audio:', error);
+                    }
+                });
 
+                    audioContainer.appendChild(analyseButton);
+  
                     // Menu déroulant pour les catégories
                     const categorySelect = document.createElement('select');
-                    categories.forEach((category) => {
-                        const option = document.createElement('option');
-                        option.value = category.name;
-                        option.textContent = category.name;
-                        categorySelect.appendChild(option);
+                    categories.forEach((category : any) => {
+                      const option = document.createElement('option');
+                      option.value = category.name;
+                      option.textContent = category.name;
+                      categorySelect.appendChild(option);
                     });
-
+                    categorySelect.value = fileCategory; // Sélectionner la catégorie actuelle
+                    audioContainer.appendChild(categorySelect);
+  
                     // Bouton pour assigner la catégorie
                     const assignCategoryButton = document.createElement('button');
                     assignCategoryButton.textContent = 'Assigner Catégorie';
                     assignCategoryButton.classList.add('btn', 'btn-secondary');
-                    assignCategoryButton.onclick = () => assignCategoryToFile(file, categorySelect.value);
-
-                    audioContainer.appendChild(fileNameParagraph);
-                    audioContainer.appendChild(audioElement);
-                    audioContainer.appendChild(modifyButton);
-                    audioContainer.appendChild(deleteButton);
-                    audioContainer.appendChild(analyseButton);
-                    audioContainer.appendChild(categorySelect);
+                    assignCategoryButton.onclick = () => {
+                      assignCategoryToFile(file, categorySelect.value);
+                      fileCategoryParagraph.textContent = `Catégorie: ${categorySelect.value}`; // Mise à jour immédiate de l'affichage de la catégorie
+                    };
                     audioContainer.appendChild(assignCategoryButton);
-
+  
                     audioListContainer.appendChild(audioContainer);
-                });
-            }
-        })
-        .catch(error => console.error('Erreur lors de la récupération des fichiers audio:', error));
-    })
-    .catch(error => console.error('Erreur lors de la récupération des catégories:', error));
+                  });
+                }
+              })
+              .catch(error => console.error('Erreur lors de la récupération des fichiers audio:', error));
+          })
+          .catch(error => console.error('Erreur lors de la récupération des métadonnées audio:', error));
+      })
+      .catch(error => console.error('Erreur lors de la récupération des catégories:', error));
+  }
+  
+
+function closeCanvas(audioContainer: HTMLDivElement) {
+    const canvas = audioContainer.querySelector('#sonogramCanvas') as HTMLCanvasElement;
+    if (canvas) {
+        canvas.remove(); 
+    }
 }
-
-
-
 
 /**
  * Modifie le nom d'un fichier audio.
@@ -393,6 +404,134 @@ async function analyseAudio(audioFile: Blob, audioContainer: HTMLDivElement): Pr
     requestAnimationFrame(checkAudioProcessing);
 }
 
+/**
+ * Dessine un sonogramme à partir d'un fichier audio Blob.
+ * 
+ * @param audioFile Le Blob du fichier audio à analyser.
+ * @param audioContainer Le conteneur HTML où le sonogramme sera affiché.
+ */
+async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement): Promise<void> {
+    const audioContext = new (window.AudioContext || window.AudioContext)();
+    const arrayBuffer = await audioFile.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+    const analyser = audioContext.createAnalyser();
+    analyser.fftSize = 2048;
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    const source = audioContext.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(analyser);
+    analyser.connect(audioContext.destination);
+    source.start();
+
+    let canvas = audioContainer.querySelector('#sonogramCanvas') as HTMLCanvasElement;
+    if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.id = 'sonogramCanvas';
+        canvas.width = 600;
+        canvas.height = 300;
+        canvas.style.backgroundColor = "rgb(0, 0, 0)";
+        audioContainer.appendChild(canvas);
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        console.error('Impossible de récupérer le contexte 2D du canvas.');
+        return;
+    }
+
+    // Dessinez les légendes une seule fois si elles ne changent pas
+    drawLegends(canvas);
+
+    const sliceWidth = canvas.width / bufferLength;
+    let x = 0;
+
+    function draw() {
+        requestAnimationFrame(draw);
+        
+        analyser.getByteFrequencyData(dataArray);
+
+        if(ctx){
+
+            ctx.fillStyle = 'rgb(0, 0, 0)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawLegends(canvas);
+
+
+            for (let i = 0; i < bufferLength; i++) {
+                const barHeight = dataArray[i];
+                ctx.fillStyle = `rgb(${barHeight + 100},50,50)`;
+                ctx.fillRect(x, canvas.height - barHeight / 2, sliceWidth, barHeight / 2);
+                x += sliceWidth + 1;
+            }
+
+        }
+
+
+        // Réinitialiser x pour la prochaine frame
+        x = 0;
+    }
+
+    // Commencez à dessiner le sonogramme
+    draw();
+}
+
+
+/**
+ * Dessine les légendes sur le canvas.
+ * 
+ * @param ctx Le contexte du canvas sur lequel dessiner.
+ */
+function drawLegends(canvas: HTMLCanvasElement): void {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        console.error('Impossible de récupérer le contexte 2D du canvas.');
+        return;
+    }
+
+    // Effacer un espace pour les légendes
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Dimensions et marges
+    const width = canvas.width;
+    const height = canvas.height;
+    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+
+    // Échelles pour les légendes
+    const maxFrequency = 20000; // 20kHz
+    const dBRange = [-100, 50]; // plage de décibels
+
+    // Définir la couleur du texte pour le contraste sur fond noir
+    ctx.fillStyle = 'white'; // Couleur claire pour le texte
+
+    // Fréquences (verticale)
+    ctx.font = '12px Arial';
+    ctx.fillText('Fréquence (Hz)', margin.left, height - margin.bottom + 15); // Modifier la position du texte de l'axe des fréquences
+    const freqStep = maxFrequency / 5; // 5 étapes sur l'échelle de fréquence
+    for (let i = 0; i <= 5; i++) {
+        const freq = maxFrequency - (i * freqStep);
+        ctx.fillText(`${freq / 1000}kHz`, 5, margin.top + (i * (height - margin.top - margin.bottom) / 5));
+    }
+
+    // Niveaux de décibels (couleur)
+    const gradient = ctx.createLinearGradient(width - margin.right + 10, margin.top, width - margin.right + 10, height - margin.bottom);
+    gradient.addColorStop(0, 'rgb(255, 0, 0)'); // Plus intense
+    gradient.addColorStop(1, 'rgb(0, 0, 0)'); // Moins intense
+    ctx.fillStyle = gradient;
+    ctx.fillRect(width - margin.right + 10, margin.top, 10, height - margin.top - margin.bottom);
+
+    // Étiquettes de dB
+    ctx.fillStyle = 'white'; // Assurer que la couleur du texte est bien visible
+    const dBStep = (dBRange[1] - dBRange[0]) / 5; // 5 étapes sur l'échelle dB
+    for (let i = 0; i <= 5; i++) {
+        const dB = dBRange[0] + (i * dBStep);
+        ctx.fillText(`${dB}dB`, width - margin.right - 25, margin.top + (i * (height - margin.top - margin.bottom) / 5));
+    }
+}
+
 
 
 
@@ -419,28 +558,22 @@ async function loadAndDisplayCategories(): Promise<void> {
 }
 
 async function addCategory(): Promise<void> {
-    // Assurez-vous que 'newCategoryNameInput' est traité comme un HTMLInputElement
     const newCategoryNameInput = document.getElementById('newCategoryName') as HTMLInputElement | null;
-    
-    if (newCategoryNameInput) {
-        const newCategoryName = newCategoryNameInput.value;
-        const response = await fetch('/categories', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: newCategoryName })
-        });
+    if (!newCategoryNameInput) return;
 
-        if (response.ok) {
-            lastModifiedCategory = newCategoryName; // Met à jour la variable globale ou le mécanisme de suivi
-            await loadAndDisplayCategories(); // Cela va maintenant trier et afficher la catégorie ajoutée en premier
-        } else {
-            alert('Erreur lors de l\'ajout de la catégorie');
-        }
+    const newCategoryName = newCategoryNameInput.value;
+    const response = await fetch('/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newCategoryName })
+    });
+
+    if (response.ok) {
+        await loadAndDisplayCategories(); // Recharger la liste des catégories
     } else {
-        console.error('Élément de saisie pour le nom de la nouvelle catégorie introuvable.');
+        alert('Erreur lors de l\'ajout de la catégorie');
     }
 }
-
 
 async function deleteCategory(categoryName: string): Promise<void> {
     const response = await fetch(`/categories/${categoryName}`, { method: 'DELETE' });
@@ -451,9 +584,10 @@ async function deleteCategory(categoryName: string): Promise<void> {
     }
 }
 
-async function assignCategoryToFile(fileName: string, categoryName: string): Promise<void> {
+async function assignCategoryToFile(fileName: string, categoryName: string) {
     try {
-        const response = await fetch('/assign-category', {
+        const url = `http://localhost:3000/assign-category`;
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fileName, categoryName })
@@ -465,8 +599,10 @@ async function assignCategoryToFile(fileName: string, categoryName: string): Pro
         }
 
         console.log(`Catégorie ${categoryName} affectée à ${fileName}`);
-        lastModifiedCategory = categoryName; // Assurez-vous que cette catégorie soit affichée en premier lors du prochain chargement
-        refreshAudioList(); // Cela va rafraîchir la liste et le menu déroulant avec la bonne commande
+        const categoryParagraph = document.getElementById(`category-${fileName}`) as HTMLParagraphElement;
+        if (categoryParagraph) {
+            categoryParagraph.textContent = `Catégorie : ${categoryName}`; // Mise à jour de la catégorie affichée sans recharger toute la liste
+        }
     } catch (error) {
         console.error('Erreur:', error);
     }

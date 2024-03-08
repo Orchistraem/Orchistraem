@@ -1,22 +1,14 @@
 [
   {
-    "name": "melodical_flute.mp3",
-    "category": "Basse Frequence"
-  },
-  {
-    "name": "arcade_retro_game_over.mp3",
+    "name": "deep_strange.mp3",
     "category": "Haute Frequence"
-  },
-  {
-    "name": "tambourin_a_perles.mp3",
-    "category": "Basse Frequence"
   },
   {
     "name": "cliquets.mp3",
     "category": "Haute Frequence"
   },
   {
-    "name": "mon_audio.mp3",
+    "name": "tambourin Ã  perles.mp3",
     "category": "Haute Frequence"
   }
 ]
