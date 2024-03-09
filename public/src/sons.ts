@@ -107,36 +107,42 @@ function displayAudioList() {
                     audioElement.src = `/uploads/${file}`;
                     audioContainer.appendChild(audioElement);
   
+                    // Créer le div "editSon"
+                    const editSon = document.createElement('div');
+                    editSon.classList.add('editSon');
+
                     // Bouton Modifier
                     const modifyButton = document.createElement('button');
                     modifyButton.textContent = 'Modifier';
                     modifyButton.classList.add('btn', 'btn-primary');
                     modifyButton.onclick = () => modifyName(file);
-                    audioContainer.appendChild(modifyButton);
-  
+                    editSon.appendChild(modifyButton);
+
                     // Bouton Supprimer
                     const deleteButton = document.createElement('button');
                     deleteButton.textContent = 'Supprimer';
                     deleteButton.classList.add('btn', 'btn-danger');
                     deleteButton.onclick = () => deleteSong(file);
-                    audioContainer.appendChild(deleteButton);
-  
-                    // Bouton Analyser (implémentation dépend de vos fonctions d'analyse)
+                    editSon.appendChild(deleteButton);
+
+                    // Bouton Analyser
                     const analyseButton = document.createElement('button');
                     analyseButton.textContent = 'Analyser';
                     analyseButton.classList.add('btn', 'btn-info');
                     analyseButton.addEventListener('click', async () => {
-                    const audioUrl = `/uploads/${file}`; // Assurez-vous que cette URL est correcte pour accéder au fichier audio
+                    const audioUrl = `/uploads/${file}`;
                     try {
                         const response = await fetch(audioUrl);
-                        const audioBlob = await response.blob(); // Récupérer le fichier audio comme un Blob
-                        await analyseAudio(audioBlob, audioContainer); // Appeler analyseAudio avec le Blob et le conteneur
+                        const audioBlob = await response.blob();
+                        await analyseAudio(audioBlob, audioContainer);
                     } catch (error) {
                         console.error('Erreur lors de la récupération du fichier audio:', error);
                     }
-                });
+                    });
+                    editSon.appendChild(analyseButton);
 
-                    audioContainer.appendChild(analyseButton);
+                    // Ajouter le div "editSon" au conteneur principal
+                    audioContainer.appendChild(editSon);
   
                     // Menu déroulant pour les catégories
                     const categorySelect = document.createElement('select');
