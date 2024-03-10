@@ -70,39 +70,60 @@ function refreshAudioList(): void {
  * Affiche la liste des fichiers audio.
  * @returns aucune valeur n'est retourné
  */
-function displayAudioList(): void {
-    // D'abord, récupérez les catégories disponibles
+function displayAudioList() {
+    // Récupérez les catégories disponibles
     fetch('/categories')
-    .then(response => response.json())
-    .then((categories) => {
-        // Ensuite, récupérez la liste des fichiers audio
-        fetch('/list-audios')
-        .then(response => response.json())
-        .then((audioFiles: string[]) => {
-            const audioListContainer = document.getElementById('audioList') as HTMLDivElement | null;
-            if (audioListContainer) {
-                audioListContainer.innerHTML = ''; // Vider la liste existante
-                audioFiles.forEach((file: string) => {
+      .then(response => response.json())
+      .then(categories => {
+        // Récupérez ensuite les métadonnées audio pour connaître les catégories assignées à chaque fichier
+        fetch('/audio-metadata')
+          .then(response => response.json())
+          .then(audioMetadata => {
+            // Ensuite, récupérez la liste des fichiers audio
+            fetch('/list-audios')
+              .then(response => response.json())
+              .then(audioFiles => {
+                const audioListContainer = document.getElementById('audioList');
+                if (audioListContainer) {
+                  audioListContainer.innerHTML = ''; // Vider la liste existante
+                  
+                  audioFiles.forEach((file : any) => {
                     const audioContainer = document.createElement('div');
                     audioContainer.classList.add('audio-container');
                     audioContainer.setAttribute('data-file', file);
-
+                    
                     const fileNameParagraph = document.createElement('p');
                     fileNameParagraph.textContent = file.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
-
+                    audioContainer.appendChild(fileNameParagraph);
+  
+                    const fileMetadata = audioMetadata.find((meta : any) => meta.name === file);
+                    const fileCategory = fileMetadata ? fileMetadata.category : 'Non catégorisé';
+                    const fileCategoryParagraph = document.createElement('p');
+                    fileCategoryParagraph.textContent = `Catégorie: ${fileCategory}`;
+                    audioContainer.appendChild(fileCategoryParagraph);
+  
                     const audioElement = document.createElement('audio');
                     audioElement.setAttribute('controls', '');
                     audioElement.src = `/uploads/${file}`;
+                    audioContainer.appendChild(audioElement);
+  
+                    // Créer le div "editSon"
+                    const editSon = document.createElement('div');
+                    editSon.classList.add('editSon');
 
+                    // Bouton Modifier
                     const modifyButton = document.createElement('button');
                     modifyButton.textContent = 'Modifier';
                     modifyButton.classList.add('btn', 'btn-primary');
                     modifyButton.onclick = () => modifyName(file);
+                    editSon.appendChild(modifyButton);
 
+                    // Bouton Supprimer
                     const deleteButton = document.createElement('button');
                     deleteButton.textContent = 'Supprimer';
                     deleteButton.classList.add('btn', 'btn-danger');
                     deleteButton.onclick = () => deleteSong(file);
+                    editSon.appendChild(deleteButton);
 
                     // Ajouter le bouton d'analyse des sons
                     const analyseButton = document.createElement('button');
@@ -131,38 +152,41 @@ function displayAudioList(): void {
                             });
                     });
 
+                    // Ajouter le div "editSon" au conteneur principal
+                    audioContainer.appendChild(editSon);
+  
                     // Menu déroulant pour les catégories
                     const categorySelect = document.createElement('select');
-                    categories.forEach((category: any) => {
-                        const option = document.createElement('option');
-                        option.value = category.name;
-                        option.textContent = category.name;
-                        categorySelect.appendChild(option);
+                    categories.forEach((category : any) => {
+                      const option = document.createElement('option');
+                      option.value = category.name;
+                      option.textContent = category.name;
+                      categorySelect.appendChild(option);
                     });
-
+                    categorySelect.value = fileCategory; // Sélectionner la catégorie actuelle
+                    audioContainer.appendChild(categorySelect);
+  
                     // Bouton pour assigner la catégorie
                     const assignCategoryButton = document.createElement('button');
                     assignCategoryButton.textContent = 'Assigner Catégorie';
                     assignCategoryButton.classList.add('btn', 'btn-secondary');
-                    assignCategoryButton.onclick = () => assignCategoryToFile(file, categorySelect.value);
-
-
-                    audioContainer.appendChild(fileNameParagraph);
-                    audioContainer.appendChild(audioElement);
-                    audioContainer.appendChild(modifyButton);
-                    audioContainer.appendChild(deleteButton);
-                    audioContainer.appendChild(analyseButton);
-                    audioContainer.appendChild(categorySelect);
+                    assignCategoryButton.onclick = () => {
+                      assignCategoryToFile(file, categorySelect.value);
+                      fileCategoryParagraph.textContent = `Catégorie: ${categorySelect.value}`; // Mise à jour immédiate de l'affichage de la catégorie
+                    };
                     audioContainer.appendChild(assignCategoryButton);
-
+  
                     audioListContainer.appendChild(audioContainer);
-                });
-            }
-        })
-        .catch(error => console.error('Erreur lors de la récupération des fichiers audio:', error));
-    })
-    .catch(error => console.error('Erreur lors de la récupération des catégories:', error));
-}
+                  });
+                }
+              })
+              .catch(error => console.error('Erreur lors de la récupération des fichiers audio:', error));
+          })
+          .catch(error => console.error('Erreur lors de la récupération des métadonnées audio:', error));
+      })
+      .catch(error => console.error('Erreur lors de la récupération des catégories:', error));
+  }
+  
 
 function closeCanvas(audioContainer: HTMLDivElement) {
     const canvas = audioContainer.querySelector('#sonogramCanvas') as HTMLCanvasElement;
@@ -579,7 +603,6 @@ async function deleteCategory(categoryName: string): Promise<void> {
 
 async function assignCategoryToFile(fileName: string, categoryName: string) {
     try {
-        // Utilisez l'URL complète, incluant le nom de domaine et le port, pour éviter les problèmes de résolution d'URL.
         const url = `http://localhost:3000/assign-category`;
         const response = await fetch(url, {
             method: 'POST',
@@ -588,17 +611,20 @@ async function assignCategoryToFile(fileName: string, categoryName: string) {
         });
 
         if (!response.ok) {
-            // Utilisez response.text() ou response.json() pour obtenir plus de détails sur l'erreur
-            const errorText = await response.text(); // ou response.json() si le serveur renvoie du JSON
+            const errorText = await response.text();
             throw new Error(`Erreur lors de l'affectation de la catégorie : ${errorText}`);
         }
 
         console.log(`Catégorie ${categoryName} affectée à ${fileName}`);
-        refreshAudioList(); // Optionnel: Rafraîchir la liste pour refléter les changements
+        const categoryParagraph = document.getElementById(`category-${fileName}`) as HTMLParagraphElement;
+        if (categoryParagraph) {
+            categoryParagraph.textContent = `Catégorie : ${categoryName}`; // Mise à jour de la catégorie affichée sans recharger toute la liste
+        }
     } catch (error) {
         console.error('Erreur:', error);
     }
 }
+
 
 
 
