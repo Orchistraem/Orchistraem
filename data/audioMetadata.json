@@ -10,5 +10,17 @@
   {
     "name": "tambourin Ã  perles.mp3",
     "category": "Haute Frequence"
+  },
+  {
+    "name": "arcade_retro_game_over.mp3",
+    "category": "Haute Frequence"
+  },
+  {
+    "name": "tambourin_a_perles.mp3",
+    "category": "Basse Frequence"
+  },
+  {
+    "name": "mon_audio.mp3",
+    "category": "Cuivre"
   }
 ]

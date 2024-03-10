@@ -141,7 +141,7 @@ function displayAudioList() {
                                 if(closeButton)
                                 closeButton.remove();
                             });
-                            audioContainer.appendChild(closeButton);
+                            editSon.appendChild(closeButton);
                         }
                         
                         const audioUrl = `/uploads/${file}`; // URL du fichier audio
@@ -151,6 +151,8 @@ function displayAudioList() {
                                 drawSonogram(blob, audioContainer);
                             });
                     });
+
+                    editSon.appendChild(analyseButton);
 
                     // Ajouter le div "editSon" au conteneur principal
                     audioContainer.appendChild(editSon);
