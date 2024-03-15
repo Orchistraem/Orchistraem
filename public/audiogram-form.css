@@ -6,8 +6,8 @@
 
 /* Style des graphiques (ne pas toucher le quadrillage) */
 .audiogram {
-    width: 600px;
-    height: 400px;
+    width: 720px !important;
+    height: 380px ;
     background-color: white; /* Définit le fond des graphiques en blanc */
     border-radius: 1%;
 }

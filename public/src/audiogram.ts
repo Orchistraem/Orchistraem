@@ -4,6 +4,7 @@ declare var Chart: any;
 // Déclaration des instances de Chart.js pour les audiogrammes de chaque oreille.
 let audiogramChartLeft: any = null;
 let audiogramChartRight: any = null;
+let audiogramChampLibre: any = null;
 
 // Mode de suppression désactivé par défaut
 let isDeletionModeActive = false;
@@ -57,6 +58,8 @@ function deleteAllPointsFromCharts() {
   // Supprimer tous les points des graphiques
   audiogramChartLeft.data.datasets.forEach((dataset: any) => dataset.data = []);
   audiogramChartRight.data.datasets.forEach((dataset: any) => dataset.data = []);
+  audiogramChampLibre.data.datasets.forEach((dataset: any) => dataset.data = []);
+  audiogramChampLibre.update();
   audiogramChartLeft.update();
   audiogramChartRight.update();
 }
@@ -69,6 +72,10 @@ function deleteAllPointsFromServer() {
 
   fetch('/delete-all-points/droite', { method: 'DELETE' })
       .then(response => console.log('Tous les points de l\'oreille droite supprimés'))
+      .catch(error => console.error('Erreur:', error));
+
+  fetch('/delete-all-points/champLibre', { method: 'DELETE' })
+      .then(response => console.log('Tous les points du champ libre supprimés'))
       .catch(error => console.error('Erreur:', error));
 }
 
@@ -379,6 +386,11 @@ function addPointToRightAudiogram(frequency:number, decibels:number, id:any, sty
   // Vérifiez que cette fonction ajoute des points seulement à l'audiogramme droit
   addDataPointAndSort(audiogramChartRight, frequency, decibels, id, style);
 }
+
+function addPointToChampLibre(frequency:number, decibels:number, id:any, style:any)  {
+  // Vérifiez que cette fonction ajoute des points seulement à l'audiogramme droit
+  addDataPointAndSort(audiogramChampLibre, frequency, decibels, id, style);
+}
 /**
  * Envoie les données d'audiogramme au serveur via une requête POST.
  * 
@@ -452,6 +464,8 @@ function updateAudiogramWithData(data: AudiogramData[], chart: any) {
           addDataPointAndSort(audiogramChartLeft, point.frequency, point.decibels, point.id, point.style);
         }
       } else if (point.ear === 'droite' && audiogramChartRight) {
+        addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id, point.style);
+      } else if (point.ear === 'champLibre' && audiogramChampLibre) {
         addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id, point.style);
       }
     }
@@ -794,13 +808,15 @@ function snapToDecibelLevels(decibels: number): number {
 window.onload = function () {
   audiogramChartLeft = initAudiogram('audiogramLeft', 'rgb(0, 0, 0)', 'rgba(0, 1, 1)', 'Oreille Gauche');
   audiogramChartRight = initAudiogram('audiogramRight', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Oreille Droite');
+  audiogramChampLibre = initAudiogram('audiogramChampLibre', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Champ Libre');
   const legendSelectorLeft = document.getElementById('legendSelectorLeft') as HTMLSelectElement;
   const legendSelectorRight = document.getElementById('legendSelectorRight') as HTMLSelectElement;
-  if (audiogramChartLeft && audiogramChartRight) {
+  if (audiogramChartLeft && audiogramChartRight && audiogramChampLibre) {
     setupEventHandlers(audiogramChartLeft, audiogramChartRight, legendSelectorLeft, legendSelectorRight);
   }
   getAudiogramData(audiogramChartLeft, 'gauche', legendSelectorLeft);
   getAudiogramData(audiogramChartRight, 'droite', legendSelectorRight);
+  getAudiogramData(audiogramChampLibre, 'champLibre', legendSelectorLeft)
   setupClickListeners(audiogramChartLeft, 'gauche', legendSelectorLeft);
   setupClickListeners(audiogramChartRight, 'droite', legendSelectorRight);
   initTabs();
