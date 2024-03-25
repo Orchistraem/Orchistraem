@@ -238,6 +238,114 @@ function initAudiogram(canvasID: string, pointColor: string, borderColor: string
   return null; // Retourne null si le canvas ou le contexte 2D n'existe pas
 }
 
+/**
+ * Initialise un audiogramme.
+ * 
+ * Cette fonction crée et configure un audiogramme à l'aide de Chart.js. 
+ * 
+ * @param canvasID - L'identifiant de l'élément canvas HTML où afficher l'audiogramme.
+ * @param pointColor - Couleur des points de l'audiogramme.
+ * @param borderColor - Couleur de la bordure de l'audiogramme.
+ * @param earSide - Côté de l'oreille (gauche ou droite) associé à l'audiogramme.
+ * @returns L'instance de Chart créée ou null en cas d'échec.
+ */
+function initAudiogramChampLibre(canvasID: string, pointColor: string, borderColor: string, earSide: string) {
+  const canvas = document.getElementById(canvasID) as HTMLCanvasElement | null;
+  if (canvas && canvas.getContext) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+          return new Chart(ctx, {
+              type: 'line',
+              data: {
+                  labels: [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000],
+                  datasets: [{
+                      label: 'Oreille nue',
+                      data: [],
+                      showLine: true,
+                      backgroundColor: pointColor,
+                      borderColor: borderColor,
+                      borderWidth: 1,
+                      pointRadius: 5,
+                      pointStyle: 'circle',
+                  },
+                  {
+                    label: 'Oreille apareillé',
+                    data: [],
+                    showLine: true,
+                    backgroundColor:'rgb(255,0,0)',
+                    borderColor: 'rgb(255,0,0)',
+                    borderWidth: 1,
+                    pointRadius: 5,
+                    pointStyle: createPointStyle('A'),
+                }
+              ]
+              },
+              options: {
+                  scales: {
+                      y: {
+                          beginAtZero: false,
+                          reverse: true,
+                          min: -10,
+                          max: 120,
+                          ticks: {
+                              stepSize: 10
+                          },
+                          title: {
+                            display: true,
+                            text: 'Seuil Auditif (db)'
+                          }
+                      },
+                      x: {
+                        type: 'logarithmic',
+                        position: 'bottom',
+                        min: 100, 
+                        max: 8000,
+                        ticks: {
+                          min: 100,
+                          max: 8000,
+                          callback: function(value: number, index: number, ticks: any[]) {
+                            return value.toString();
+                          }
+                        },
+                        afterBuildTicks: function(chart: any) {
+                          chart.ticks = [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000];
+                          chart.ticks.forEach(function(value: number, index: number, array: any[]) {
+                            array[index] = { value: value.toString() }; 
+                          });
+                        },
+                        title: {
+                          display: true,
+                          text: 'Fréquence (Hz)'
+                        }
+                      } 
+                  },
+                  plugins: {
+                    title: {
+                      display: true,
+                      text: earSide, 
+                      font: {
+                        size: 18
+                      },
+                      padding: {
+                        top: 10,
+                        bottom: 30
+                      }
+                  },
+                },
+                  elements: {
+                      line: {
+                          tension: 0 // Lignes droites sans courbure
+                      }
+                  },
+                  responsive: false,
+                  maintainAspectRatio: true
+              }
+          });
+      }
+  }
+  return null; // Retourne null si le canvas ou le contexte 2D n'existe pas
+}
+
 function isPointAlreadyPresent(chart: any, frequency: number, style: string): boolean {
   return chart.data.datasets.some((dataset: any) => {
   return dataset.data.some((point:any) => {
@@ -635,53 +743,6 @@ function setupClickListeners(chart: any, ear: string, legendSelector: HTMLSelect
   });  
 }
 
-
-/**
- * Configure un écouteur d'événements pour afficher des infobulles lors du survol de la souris sur un graphique.
- * 
- * Cette fonction crée un écouteur d'événements 'mousemove' sur le canvas du graphique. Lorsque la souris se déplace sur le graphique,
- * elle calcule les coordonnées de la souris par rapport au graphique et affiche une infobulle personnalisée avec les informations
- * de fréquence et de décibels correspondantes. L'infobulle est masquée lorsque la souris quitte le canvas.
- * 
- * @param chart - L'instance de l'audiogramme Chart.js pour laquelle l'infobulle est configurée.
- * @param tooltipId - L'identifiant de l'élément HTML qui servira d'infobulle.
- * 
- * @example
- * setupMouseHoverListener(audiogramChartLeft, 'tooltipLeft'); // Configure l'écouteur d'événements pour l'audiogramme de l'oreille gauche
- */
-function setupMouseHoverListener(chart:any, tooltipId:any) {
-  const canvas = chart.canvas;
-  const tooltip = document.getElementById(tooltipId);
-
-  if (tooltip) { // Ajouter cette vérification
-    canvas.addEventListener('mousemove', (event:MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-
-      let { frequency, decibels } = convertClickToChartData(chart, x, y);
-
-      // Mettez à jour et affichez le tooltip
-      tooltip.style.display = 'block';
-      tooltip.style.left = event.clientX + 'px';
-      tooltip.style.top = event.clientY + 'px';
-      tooltip.innerHTML = `Fréquence: ${frequency.toFixed(0)} Hz, dB: ${decibels.toFixed(0)}`;
-    });
-
-    canvas.addEventListener('mouseout', () => {
-      tooltip.style.display = 'none';
-    });
-  } else {
-    console.error(`Tooltip with id '${tooltipId}' not found.`);
-  }
-}
-
-window.onload = function () {
-
-  setupMouseHoverListener(audiogramChartLeft, 'tooltipLeft');
-  setupMouseHoverListener(audiogramChartRight, 'tooltipRight');
-};
-
 /**
  * Supprime un point de l'audiogramme et met à jour le graphique.
  * 
@@ -808,7 +869,7 @@ function snapToDecibelLevels(decibels: number): number {
 window.onload = function () {
   audiogramChartLeft = initAudiogram('audiogramLeft', 'rgb(0, 0, 0)', 'rgba(0, 1, 1)', 'Oreille Gauche');
   audiogramChartRight = initAudiogram('audiogramRight', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Oreille Droite');
-  audiogramChampLibre = initAudiogram('audiogramChampLibre', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Champ Libre');
+  audiogramChampLibre = initAudiogramChampLibre('audiogramChampLibre', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Champ Libre');
   const legendSelectorLeft = document.getElementById('legendSelectorLeft') as HTMLSelectElement;
   const legendSelectorRight = document.getElementById('legendSelectorRight') as HTMLSelectElement;
   if (audiogramChartLeft && audiogramChartRight && audiogramChampLibre) {
@@ -820,8 +881,6 @@ window.onload = function () {
   setupClickListeners(audiogramChartLeft, 'gauche', legendSelectorLeft);
   setupClickListeners(audiogramChartRight, 'droite', legendSelectorRight);
   initTabs();
-  setupMouseHoverListener(audiogramChartLeft, 'tooltipLeft');
-  setupMouseHoverListener(audiogramChartRight, 'tooltipRight');
 };
 
 

@@ -98,6 +98,42 @@
         <button id="deleteAllPoints" class="btn btn-outline-primary">
           Supprimer Tous les Points
         </button>
+
+        <script>
+          function toggleAudiogramVisibility() {
+            const toggleChampLibre =
+              document.getElementById("toggleChampLibre");
+            const audiogramChampLibre = document.getElementById(
+              "audiogramChampLibre"
+            );
+            const formThird = document.getElementById("addPointFormThird");
+
+            if (toggleChampLibre.checked) {
+              audiogramChampLibre.style.display = "block";
+              formThird.style.display = "block";
+            } else {
+              audiogramChampLibre.style.display = "none";
+              formThird.style.display = "none";
+            }
+          }
+          document.addEventListener(
+            "DOMContentLoaded",
+            toggleAudiogramVisibility
+          );
+        </script>
+        <div class="AfficherAudioLibre">
+          <label class="form-check-label" for="toggleChampLibre">
+            Afficher l'Audiogramme Champ Libre
+          </label>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="toggleChampLibre"
+              onclick="toggleAudiogramVisibility()"
+            />
+          </div>
+        </div>
       </div>
 
       <!-- Right Audiogram -->
@@ -110,9 +146,13 @@
     <!-- Third Audiogram on a new line -->
     <div class="audiogram-container">
       <div class="chartBox">
-        <canvas id="audiogramChampLibre" class="audiogram"></canvas>
-        <div class="form-container">
-          <form id="addPointFormThird">
+        <canvas
+          id="audiogramChampLibre"
+          class="audiogram"
+          style="display: none"
+        ></canvas>
+        <div class="form-container" id="test">
+          <form id="addPointFormThird" style="display: none">
             <input
               type="text"
               id="frequenciesThird"

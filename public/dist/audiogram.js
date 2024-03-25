@@ -204,6 +204,113 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
     }
     return null; // Retourne null si le canvas ou le contexte 2D n'existe pas
 }
+/**
+ * Initialise un audiogramme.
+ *
+ * Cette fonction crée et configure un audiogramme à l'aide de Chart.js.
+ *
+ * @param canvasID - L'identifiant de l'élément canvas HTML où afficher l'audiogramme.
+ * @param pointColor - Couleur des points de l'audiogramme.
+ * @param borderColor - Couleur de la bordure de l'audiogramme.
+ * @param earSide - Côté de l'oreille (gauche ou droite) associé à l'audiogramme.
+ * @returns L'instance de Chart créée ou null en cas d'échec.
+ */
+function initAudiogramChampLibre(canvasID, pointColor, borderColor, earSide) {
+    const canvas = document.getElementById(canvasID);
+    if (canvas && canvas.getContext) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000],
+                    datasets: [{
+                            label: 'Oreille nue',
+                            data: [],
+                            showLine: true,
+                            backgroundColor: pointColor,
+                            borderColor: borderColor,
+                            borderWidth: 1,
+                            pointRadius: 5,
+                            pointStyle: 'circle',
+                        },
+                        {
+                            label: 'Oreille apareillé',
+                            data: [],
+                            showLine: true,
+                            backgroundColor: 'rgb(255,0,0)',
+                            borderColor: 'rgb(255,0,0)',
+                            borderWidth: 1,
+                            pointRadius: 5,
+                            pointStyle: createPointStyle('A'),
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            reverse: true,
+                            min: -10,
+                            max: 120,
+                            ticks: {
+                                stepSize: 10
+                            },
+                            title: {
+                                display: true,
+                                text: 'Seuil Auditif (db)'
+                            }
+                        },
+                        x: {
+                            type: 'logarithmic',
+                            position: 'bottom',
+                            min: 100,
+                            max: 8000,
+                            ticks: {
+                                min: 100,
+                                max: 8000,
+                                callback: function (value, index, ticks) {
+                                    return value.toString();
+                                }
+                            },
+                            afterBuildTicks: function (chart) {
+                                chart.ticks = [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000];
+                                chart.ticks.forEach(function (value, index, array) {
+                                    array[index] = { value: value.toString() };
+                                });
+                            },
+                            title: {
+                                display: true,
+                                text: 'Fréquence (Hz)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: earSide,
+                            font: {
+                                size: 18
+                            },
+                            padding: {
+                                top: 10,
+                                bottom: 30
+                            }
+                        },
+                    },
+                    elements: {
+                        line: {
+                            tension: 0 // Lignes droites sans courbure
+                        }
+                    },
+                    responsive: false,
+                    maintainAspectRatio: true
+                }
+            });
+        }
+    }
+    return null; // Retourne null si le canvas ou le contexte 2D n'existe pas
+}
 function isPointAlreadyPresent(chart, frequency, style) {
     return chart.data.datasets.some((dataset) => {
         return dataset.data.some((point) => {
@@ -718,7 +825,7 @@ function snapToDecibelLevels(decibels) {
 window.onload = function () {
     audiogramChartLeft = initAudiogram('audiogramLeft', 'rgb(0, 0, 0)', 'rgba(0, 1, 1)', 'Oreille Gauche');
     audiogramChartRight = initAudiogram('audiogramRight', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Oreille Droite');
-    audiogramChampLibre = initAudiogram('audiogramChampLibre', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Champ Libre');
+    audiogramChampLibre = initAudiogramChampLibre('audiogramChampLibre', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Champ Libre');
     const legendSelectorLeft = document.getElementById('legendSelectorLeft');
     const legendSelectorRight = document.getElementById('legendSelectorRight');
     if (audiogramChartLeft && audiogramChartRight && audiogramChampLibre) {
