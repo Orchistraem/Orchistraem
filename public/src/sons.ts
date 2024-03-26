@@ -112,24 +112,44 @@ function displayAudioList(): void {
                     // Ajouter le conteneur du fichier audio à la liste
                     audioListContainer.appendChild(audioContainer);
 
-                    //Ajouter le bouton d'analyse des sons
+                    // Ajouter le bouton d'analyse des sons
                     const analyseButton = document.createElement('button');
                     analyseButton.textContent = 'Analyser';
                     analyseButton.classList.add('btn', 'btn-info');
                     analyseButton.addEventListener('click', () => {
+                        let closeButton = audioContainer.querySelector('#closeButtonAnalyse');
+                        if (!closeButton) {
+                            closeButton = document.createElement('button');
+                            closeButton.textContent = 'Fermer';
+                            closeButton.classList.add('btn', 'btn-secondary');
+                            closeButton.id = 'closeButtonAnalyse';
+                            closeButton.addEventListener('click', () => {
+                                closeCanvas(audioContainer);
+                                if(closeButton)
+                                closeButton.remove();
+                            });
+                            audioContainer.appendChild(closeButton);
+                        }
+                        
                         const audioUrl = `/uploads/${file}`; // URL du fichier audio
                         fetch(audioUrl)
-                        .then(response => response.blob())
-                        .then(blob => {
-                            // Supposant que `drawSonogram` a été adapté pour accepter un Blob comme paramètre
-                            drawSonogram(blob, audioContainer);
-                        });
+                            .then(response => response.blob())
+                            .then(blob => {
+                                drawSonogram(blob, audioContainer);
+                            });
                     });
                     audioContainer.appendChild(analyseButton);
                 });
             }
         })
         .catch(error => console.error('Erreur:', error));
+}
+
+function closeCanvas(audioContainer: HTMLDivElement) {
+    const canvas = audioContainer.querySelector('#sonogramCanvas') as HTMLCanvasElement;
+    if (canvas) {
+        canvas.remove(); 
+    }
 }
 
 /**
@@ -358,6 +378,12 @@ async function analyseAudio(audioFile: Blob, audioContainer: HTMLDivElement): Pr
     requestAnimationFrame(checkAudioProcessing);
 }
 
+/**
+ * Dessine un sonogramme à partir d'un fichier audio Blob.
+ * 
+ * @param audioFile Le Blob du fichier audio à analyser.
+ * @param audioContainer Le conteneur HTML où le sonogramme sera affiché.
+ */
 async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement): Promise<void> {
     const audioContext = new AudioContext();
     const arrayBuffer = await audioFile.arrayBuffer();
@@ -365,7 +391,7 @@ async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement): Pr
 
     const canvas = document.createElement('canvas');
     canvas.id = 'sonogramCanvas';
-    canvas.width = 600; // Largeur du canvas en pixels
+    canvas.width = 800; // Largeur du canvas en pixels
     canvas.height = 300; // Hauteur du canvas en pixels
     audioContainer.appendChild(canvas);
 
@@ -386,28 +412,37 @@ async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement): Pr
     analyser.connect(audioContext.destination);
     source.start(0);
 
-    function drawLegends(ctx: CanvasRenderingContext2D, width: number, height: number, sampleRate: number, duration: number) {
+    function drawLegends(ctx: CanvasRenderingContext2D, width: number, height: number, sampleRate: number) {
         const specificFrequencies = [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000];
-        const maxFreq = sampleRate / 2; // La fréquence maximale représentable est la moitié du taux d'échantillonnage
-        const freqPerPixel = maxFreq / width; // Fréquence représentée par chaque pixel
+        const maxFreq = sampleRate / 2;
     
         ctx.font = '12px Arial';
         ctx.fillStyle = 'black';
     
-        // Légendes de fréquence spécifiques (axe X)
+        // Assurez-vous que la première fréquence et la dernière sont entièrement visibles
+        const offset = ctx.measureText('125 Hz').width / 2; // Calculez l'offset basé sur la largeur du texte
+        const effectiveWidth = width - offset * 2; // Largeur effective du canvas pour le placement des légendes
+    
         specificFrequencies.forEach(freq => {
-            const x = (freq / freqPerPixel);
-            ctx.fillText(`${freq} Hz`, x, height - 10);
+            const logFreq = Math.log10(freq);
+            const logMax = Math.log10(maxFreq);
+            const logMin = Math.log10(specificFrequencies[0]);
+            const x = ((logFreq - logMin) / (logMax - logMin)) * effectiveWidth + offset;
+    
+            ctx.textAlign = 'center';
+            ctx.fillText(`${freq}`, x, height - 10);
         });
     
         // Légendes d'intensité (axe Y) - Simplifié pour l'exemple
         ctx.textAlign = 'right';
-        for(let i = 0; i <= 5; i++) {
+        for (let i = 0; i <= 5; i++) {
             const intensity = i * 20; // Exemple d'échelle
             const y = height - (i * (height / 5));
             ctx.fillText(`${intensity} dB`, width - 10, y);
         }
     }
+    
+    
     
 
     const draw = () => {
@@ -430,11 +465,12 @@ async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement): Pr
             x += barWidth + 1;
         }
 
-        drawLegends(canvasContext, canvas.width, canvas.height, audioBuffer.sampleRate, audioBuffer.duration);
+        drawLegends(canvasContext, canvas.width, canvas.height, audioBuffer.sampleRate);
     };
 
     draw();
 }
+
 
 
 
