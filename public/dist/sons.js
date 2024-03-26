@@ -422,24 +422,26 @@ function analyseAudioAndExtractFeatures(audioFile) {
     });
 }
 function calculateMinFrequency(frequencyData, sampleRate) {
+    var res = -1;
     const threshold = 5; // Seuil d'amplitude pour considérer une fréquence comme significative
     for (let i = 0; i < frequencyData.length; i++) {
         if (frequencyData[i] > threshold) {
             // Convertir l'indice de la fréquence en Hz
-            return i * (sampleRate / 2) / frequencyData.length;
+            res = i * (sampleRate / 2) / frequencyData.length;
         }
     }
-    return -1; // Aucune fréquence significative trouvée
+    return res; // Aucune fréquence significative trouvée
 }
 function calculateMaxFrequency(frequencyData, sampleRate) {
+    var res = -1;
     const threshold = 5; // Seuil d'amplitude pour considérer une fréquence comme significative
     for (let i = frequencyData.length - 1; i >= 0; i--) {
         if (frequencyData[i] > threshold) {
             // Convertir l'indice de la fréquence en Hz
-            return i * (sampleRate / 2) / frequencyData.length;
+            res = i * (sampleRate / 2) / frequencyData.length;
         }
     }
-    return -1; // Aucune fréquence significative trouvée
+    return res; // Aucune fréquence significative trouvée
 }
 function calculateIntensityRange(timeData) {
     let minRms = Infinity;
