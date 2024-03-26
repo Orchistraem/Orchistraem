@@ -123,6 +123,14 @@ html, body {
     border: solid 3px rgba(54, 162, 235, 1);
     background: white;
 }
+h1 {
+    color: #caf0f8; 
+    font-size: 2.5rem;
+    margin-top: 20px; 
+    margin-bottom: 20px;  
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 4px #03045e; 
+}
 
 
 @media (max-width: 768px) {
@@ -130,60 +138,52 @@ html, body {
         flex-direction: column;
         padding: 5% 2%;
     }
+}
 
-<<<<<<< Updated upstream
 .audio-group h2 {
     text-align: center; 
 }
 
 .audio-container {
-    border:  #0077b6; /* Bordure de la bulle */
+    color: #FFF; /* Texte blanc pour le contraste */
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 3px 10px 0 rgba(0, 0, 0, 0.09); /* Ombre plus légère */
     border-radius: 25px; /* Coins arrondis pour l'effet bulle */
     padding: 10px; /* Espace intérieur */
     margin-bottom: 10px; /* Espace entre les bulles */
-    background-color: #76b6ee; /* Couleur de fond */
+    background-color: rgb(45, 142, 207); /* Couleur de fond */
     box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2); /* Ombre pour un effet 3D */
-    max-width: 600px; /* Largeur maximale */
+    max-width: 800px; /* Largeur maximale */
+    max-height: 800px;
     margin-left: auto; /* Centrer la bulle */
     margin-right: auto;
-    text-align: left; /* Aligner le texte à gauche */
+    text-align: center; /* Aligner le texte à gauche */
 }
 
-#uploadAudioForm {
+#uploadAudioForm , #categoriesManagement {
     background-color: #0d7b91; /* Couleur plus foncée pour le conteneur d'ajout de son */
     color: white; /* Texte blanc pour une meilleure lisibilité */
     border: 1px solid #005f79; /* Bordure légèrement plus foncée pour un meilleur contraste */
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 3px 10px 0 rgba(0, 0, 0, 0.09); /* Ombre pour un effet de profondeur */
-    padding: 15px; /* Alignement de l'espacement intérieur avec les autres conteneurs audio */
+    padding: 20px; /* Alignement de l'espacement intérieur avec les autres conteneurs audio */
+    padding-right: 40px; 
     margin-bottom: 20px; /* Assurer un espacement uniforme entre les éléments */
     max-width: 600px; /* Alignement de la largeur maximale avec les autres conteneurs audio */
     margin-left: auto; /* Centrage horizontal */
     margin-right: auto;
     text-align: left; /* Alignement du texte à gauche pour la cohérence */
     border-radius: 25px; /* Coins arrondis pour l'effet bulle */
-
-}
-
-
-
-/* Style des conteneurs de fichiers audio existants */
-.audio-container {
-    background-color: #008CBA; /* Bleu différent pour les fichiers audio */
-    color: #FFF; /* Texte blanc pour le contraste */
-    border: 1px solid #0079a1; /* Bordure subtile */
-    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 3px 10px 0 rgba(0, 0, 0, 0.09); /* Ombre plus légère */
-    padding: 15px; /* Espacement intérieur */
-    margin-bottom: 20px; /* Espacement entre les conteneurs */
-}
-
-/* Ajustements pour les boutons dans les conteneurs de fichiers audio */
-.audio-container .btn {
-    margin-top: 10px; /* Espacement au-dessus des boutons */
 }
 
 .audio-container .btn-primary {
     background-color: #449D44; /* Vert pour le bouton 'Modifier' */
     border-color: #398439; /* Bordure du bouton 'Modifier' */
+    --bs-btn-hover-bg: #3d8a3d;
+    --bs-btn-hover-border-color:#337733;
+}
+
+.audio-container .btn-primary:hover {
+    background-color: #3d8a3d; /* Vert pour le bouton 'Modifier' */
+    border-color: #337733; /* Bordure du bouton 'Modifier' */
 }
 
 .audio-container .btn-danger {
@@ -201,7 +201,6 @@ html, body {
     background-color: #007bb5; /* Sombre lors du survol */
     border-color: #006699; /* Bordure plus sombre lors du survol */
     cursor: pointer; /* Change le curseur pour indiquer la possibilité d'une action */
-=======
     .header-title {
         font-size: 200%;
         position: relative;
@@ -223,5 +222,30 @@ html, body {
     .tab2 img, .tab1 img {
         width: 20%;
     }
->>>>>>> Stashed changes
+}
+
+#ajout {
+    padding: 20px;
+    display: flex;
+}
+
+#categoriesList {
+    display: flex;
+    flex-direction: column;
+    align-items:stretch;
+  }
+
+#categoriesList div{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+  }
+
+div .col-3{
+    width: 100%;
+}
+
+.editSon button{
+    margin-right: 10px;
 }

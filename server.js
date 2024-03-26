@@ -10,10 +10,74 @@ const path = require('path');
 // Pour lire le corps des requêtes POST en JSON
 app.use(bodyParser.json());
 
+const audioMetadataPath = path.join(__dirname, 'data', 'audioMetadata.json');
+
+app.post('/assign-category', (req, res) => {
+  const { fileName, categoryName } = req.body;
+
+  // Vérifie l'existence du fichier dans le dossier uploads/
+  const filePath = path.join(__dirname, 'uploads', fileName);
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).send({ error: 'Fichier non trouvé dans les uploads', fileName });
+  }
+
+  let audioMetadata = [];
+  if (fs.existsSync(audioMetadataPath)) {
+    audioMetadata = JSON.parse(fs.readFileSync(audioMetadataPath, 'utf-8'));
+  }
+
+  const fileIndex = audioMetadata.findIndex(meta => meta.name === fileName);
+
+  // Si le fichier est trouvé dans les métadonnées, mettez à jour la catégorie
+  if (fileIndex !== -1) {
+    audioMetadata[fileIndex].category = categoryName;
+  } else {
+    // Sinon, ajoutez une nouvelle entrée de métadonnées
+    audioMetadata.push({ name: fileName, category: categoryName });
+  }
+
+  fs.writeFileSync(audioMetadataPath, JSON.stringify(audioMetadata, null, 2), 'utf-8');
+  res.send({ message: 'Catégorie mise à jour avec succès', fileName, categoryName });
+});
+
 // Middleware pour servir les fichiers statiques (CSS, JS, images, etc.)
 app.use(express.static('public')); // Remplacez 'public' par le nom de votre dossier contenant les fichiers statiques
 app.use('/uploads', express.static('uploads')); // Pour rendre accessible le dossier des uploads
 
+const categoriesFilePath = path.join(__dirname, 'data', 'categories.json');
+
+// Vérifier et créer le fichier des catégories s'il n'existe pas
+if (!fs.existsSync(categoriesFilePath)) {
+    fs.writeFileSync(categoriesFilePath, JSON.stringify([]), 'utf-8');
+}
+
+
+app.post('/categories', (req, res) => {
+    const { name } = req.body;
+    const categories = JSON.parse(fs.readFileSync(categoriesFilePath, 'utf-8'));
+    if (!categories.find(category => category.name === name)) {
+        categories.push({ name });
+        fs.writeFileSync(categoriesFilePath, JSON.stringify(categories, null, 2), 'utf-8');
+        res.status(201).send('Catégorie ajoutée');
+    } else {
+        res.status(409).send('Catégorie déjà existante');
+    }
+});
+
+// Route pour lister toutes les catégories
+app.get('/categories', (req, res) => {
+    const categories = JSON.parse(fs.readFileSync(categoriesFilePath, 'utf-8'));
+    res.json(categories);
+});
+
+// Route pour supprimer une catégorie
+app.delete('/categories/:name', (req, res) => {
+    const { name } = req.params;
+    let categories = JSON.parse(fs.readFileSync(categoriesFilePath, 'utf-8'));
+    categories = categories.filter(category => category.name !== name);
+    fs.writeFileSync(categoriesFilePath, JSON.stringify(categories, null, 2), 'utf-8');
+    res.send('Catégorie supprimée');
+});
 // Route pour la racine qui répond aux requêtes GET
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html')); // Assurez-vous que le chemin est correct
@@ -72,6 +136,7 @@ app.post('/audiogram', (req, res) => {
     res.status(500).send('Erreur interne du serveur');
   }
 });
+
 
 app.get('/list-audios', (req, res) => {
   const UPLOADS_DIR = './uploads';
@@ -184,9 +249,32 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+
+app.get('/audio-metadata', (req, res) => {
+  if (fs.existsSync(audioMetadataPath)) {
+      const metadata = fs.readFileSync(audioMetadataPath, 'utf-8');
+      res.json(JSON.parse(metadata));
+  } else {
+      res.status(404).send({ error: "Métadonnées audio non trouvées." });
+  }
+});
+
 app.post('/upload-audio', upload.single('audioFile'), (req, res) => {
-    console.log('Fichier reçu:', req.file);
-    res.send("Fichier audio téléchargé avec succès");
+  const category = req.body.category || 'Non catégorisé'; // Fallback si aucune catégorie n'est fournie
+  if (!fs.existsSync(audioMetadataPath)) {
+    fs.writeFileSync(audioMetadataPath, JSON.stringify([]), 'utf-8');
+  }
+  const audioMetadata = JSON.parse(fs.readFileSync(audioMetadataPath, 'utf-8'));
+
+  // Vérifiez si le fichier existe déjà pour éviter les doublons
+  const existingFileIndex = audioMetadata.findIndex(meta => meta.name === req.file.filename);
+  if (existingFileIndex === -1) {
+    audioMetadata.push({ name: req.file.filename, category });
+    fs.writeFileSync(audioMetadataPath, JSON.stringify(audioMetadata, null, 2), 'utf-8');
+    res.send("Fichier audio téléchargé et métadonnées enregistrées avec succès");
+  } else {
+    res.status(409).send("Le fichier existe déjà");
+  }
 });
 
 // Route pour renommer un fichier audio
@@ -217,6 +305,11 @@ app.post('/delete-audio', (req, res) => {
       res.send(`Fichier ${fileName} supprimé`);
   });
 });
+
+
+
+
+
 
 app.listen(port, () => {
   console.log(`Serveur démarré sur http://localhost:${port}/index.html`);
