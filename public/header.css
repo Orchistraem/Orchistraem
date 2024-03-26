@@ -34,12 +34,7 @@
     font-size: 250%;
 }
 
-.tab2 img, .tab1 img {
+.header .tab2 img, .header .tab1 img {
     margin-right: 2%;
     width: 3%;
-}
-
-.tab2 img:hover, .tab1 img:hover {
-    margin-right: 1%;
-    width:4%;
 }

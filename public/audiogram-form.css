@@ -53,7 +53,6 @@
 }
 
 .chartBox canvas {
-    width: 140%; /* prendra la totalité de la largeur de .chartBox */
     max-width: 745px; 
     border-radius: 20px;
     border: solid 3px rgba(54, 162, 235, 1);
