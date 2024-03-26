@@ -478,7 +478,7 @@ function calculateMinFrequency(frequencyData: Uint8Array, sampleRate: number): n
             return i * (sampleRate / 2) / frequencyData.length;
         }
     }
-    return 0; // Aucune fréquence significative trouvée
+    return -1; // Aucune fréquence significative trouvée
 }
 
 function calculateMaxFrequency(frequencyData: Uint8Array, sampleRate: number): number {
@@ -489,7 +489,7 @@ function calculateMaxFrequency(frequencyData: Uint8Array, sampleRate: number): n
             return i * (sampleRate / 2) / frequencyData.length;
         }
     }
-    return 0; // Aucune fréquence significative trouvée
+    return -1; // Aucune fréquence significative trouvée
 }
 
 function calculateIntensityRange(timeData: Uint8Array): { minIntensity: number, maxIntensity: number } {
@@ -549,7 +549,6 @@ testAudioAnalysis('../uploads/deep_strange.mp3');
 testAudioAnalysis('../uploads/melodical_flute.mp3');
 testAudioAnalysis('../uploads/mon_audio.mp3');
 testAudioAnalysis('../uploads/tambourin_a_perles.mp3');
-console.log('test');
 
 /**
  * Dessine un sonogramme à partir d'un fichier audio Blob.

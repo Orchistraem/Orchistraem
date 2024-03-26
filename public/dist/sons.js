@@ -140,14 +140,18 @@ function displayAudioList() {
                             fetch(audioUrl)
                                 .then(response => response.blob())
                                 .then(blob => {
-                                drawSonogram(blob, audioContainer);
+                                drawSonogram(blob, editSon);
                             });
                         });
                         editSon.appendChild(analyseButton);
                         // Ajouter le div "editSon" au conteneur principal
                         audioContainer.appendChild(editSon);
+                        // Créer le div "categSon"
+                        const categSon = document.createElement('div');
+                        categSon.classList.add('categSon');
                         // Menu déroulant pour les catégories
                         const categorySelect = document.createElement('select');
+                        categorySelect.classList.add('categSelect');
                         categories.forEach((category) => {
                             const option = document.createElement('option');
                             option.value = category.name;
@@ -155,7 +159,7 @@ function displayAudioList() {
                             categorySelect.appendChild(option);
                         });
                         categorySelect.value = fileCategory; // Sélectionner la catégorie actuelle
-                        audioContainer.appendChild(categorySelect);
+                        categSon.appendChild(categorySelect);
                         // Bouton pour assigner la catégorie
                         const assignCategoryButton = document.createElement('button');
                         assignCategoryButton.textContent = 'Assigner Catégorie';
@@ -164,7 +168,8 @@ function displayAudioList() {
                             assignCategoryToFile(file, categorySelect.value);
                             fileCategoryParagraph.textContent = `Catégorie: ${categorySelect.value}`; // Mise à jour immédiate de l'affichage de la catégorie
                         };
-                        audioContainer.appendChild(assignCategoryButton);
+                        categSon.appendChild(assignCategoryButton);
+                        audioContainer.appendChild(categSon);
                         audioListContainer.appendChild(audioContainer);
                     });
                 }
@@ -385,6 +390,114 @@ function analyseAudio(audioFile, audioContainer) {
         requestAnimationFrame(checkAudioProcessing);
     });
 }
+/**
+ * Analyse le contenu audio d'un fichier et et renvoie les valeurs extremes de la freq et de l'intensité.
+ *
+ * Cette fonction utilise l'API Web Audio pour analyser le contenu audio d'un fichier. Elle détermine la fréquence dominante
+ * et l'intensité du signal audio et met à jour les éléments correspondants dans un conteneur HTML spécifié.
+ *
+ * @param audioFile - Le fichier audio sous forme de `Blob` qui sera analysé.
+ * @returns 4 floats représentant les valeurs seuils du son.
+ */
+function analyseAudioAndExtractFeatures(audioFile) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const audioContext = new OfflineAudioContext(1, 44100 * 40, 44100);
+        const arrayBuffer = yield audioFile.arrayBuffer();
+        const audioBuffer = yield audioContext.decodeAudioData(arrayBuffer);
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048;
+        source.connect(analyser);
+        source.start();
+        yield audioContext.startRendering();
+        const frequencyData = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(frequencyData);
+        const timeData = new Uint8Array(analyser.fftSize);
+        analyser.getByteTimeDomainData(timeData);
+        const minFrequency = calculateMinFrequency(frequencyData, audioContext.sampleRate);
+        const maxFrequency = calculateMaxFrequency(frequencyData, audioContext.sampleRate);
+        const { minIntensity, maxIntensity } = calculateIntensityRange(timeData);
+        return { minFrequency, maxFrequency, minIntensity, maxIntensity };
+    });
+}
+function calculateMinFrequency(frequencyData, sampleRate) {
+    const threshold = 5; // Seuil d'amplitude pour considérer une fréquence comme significative
+    for (let i = 0; i < frequencyData.length; i++) {
+        if (frequencyData[i] > threshold) {
+            // Convertir l'indice de la fréquence en Hz
+            return i * (sampleRate / 2) / frequencyData.length;
+        }
+    }
+    return -1; // Aucune fréquence significative trouvée
+}
+function calculateMaxFrequency(frequencyData, sampleRate) {
+    const threshold = 5; // Seuil d'amplitude pour considérer une fréquence comme significative
+    for (let i = frequencyData.length - 1; i >= 0; i--) {
+        if (frequencyData[i] > threshold) {
+            // Convertir l'indice de la fréquence en Hz
+            return i * (sampleRate / 2) / frequencyData.length;
+        }
+    }
+    return -1; // Aucune fréquence significative trouvée
+}
+function calculateIntensityRange(timeData) {
+    let minRms = Infinity;
+    let maxRms = -Infinity;
+    const frameSize = 1024; // Taille de la fenêtre pour le calcul du RMS
+    for (let i = 0; i < timeData.length - frameSize; i += frameSize) {
+        let sumSquares = 0;
+        for (let j = i; j < i + frameSize; j++) {
+            let sample = (timeData[j] / 128.0) - 1.0; // Normaliser
+            sumSquares += sample * sample;
+        }
+        let rms = Math.sqrt(sumSquares / frameSize);
+        if (rms < minRms)
+            minRms = rms;
+        if (rms > maxRms)
+            maxRms = rms;
+    }
+    // Convertir RMS en décibels
+    const minIntensity = 20 * Math.log10(minRms);
+    const maxIntensity = 20 * Math.log10(maxRms);
+    return { minIntensity: isFinite(minIntensity) ? minIntensity : 0, maxIntensity: isFinite(maxIntensity) ? maxIntensity : 0 };
+}
+//////////////TEST/////////////////////
+// Fonction pour charger un fichier audio et renvoyer un Blob
+// Remarque : Cette fonction est un placeholder et doit être ajustée selon votre environnement de test
+function loadAudioFile(filePath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield fetch(filePath);
+        if (!response.ok)
+            throw new Error('Failed to load the audio file');
+        return response.blob();
+    });
+}
+// Fonction de test pour analyser le fichier audio et afficher les résultats
+function testAudioAnalysis(filePath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const audioBlob = yield loadAudioFile(filePath);
+            const features = yield analyseAudioAndExtractFeatures(audioBlob);
+            console.log(`Résultats de l'analyse audio de `);
+            console.log(filePath);
+            console.log(`Fréquence Minimale: ${features.minFrequency} Hz`);
+            console.log(`Fréquence Maximale: ${features.maxFrequency} Hz`);
+            console.log(`Intensité Minimale: ${features.minIntensity} dB`);
+            console.log(`Intensité Maximale: ${features.maxIntensity} dB`);
+        }
+        catch (error) {
+            console.error('Erreur lors de l\'analyse audio:', error);
+        }
+    });
+}
+// Exemple d'utilisation de la fonction de test
+testAudioAnalysis('../uploads/arcade_retro_game_over.mp3');
+testAudioAnalysis('../uploads/cliquets.mp3');
+testAudioAnalysis('../uploads/deep_strange.mp3');
+testAudioAnalysis('../uploads/melodical_flute.mp3');
+testAudioAnalysis('../uploads/mon_audio.mp3');
+testAudioAnalysis('../uploads/tambourin_a_perles.mp3');
 /**
  * Dessine un sonogramme à partir d'un fichier audio Blob.
  *
