@@ -1,0 +1,45 @@
+@font-face {
+    font-family: Colagraph;
+    src: url('ressources/Colagraph8-Regular.ttf');
+}
+
+/* Style du header */
+.header {
+    background: linear-gradient(#03045e, #0077b6);
+    color: white;
+    padding: 2% 2%;
+    display: flex;
+    align-items: center; /* Centre verticalement les éléments dans le header */
+    justify-content:start; /* Alignement horizontal à gauche */
+    font-size: 160%;
+    height: 9%; /* Hauteur fixe pour le header */
+}
+
+.header .tab1, .header .tab2, .header a {
+    display: contents;
+}
+
+.header a {
+    text-decoration: none;
+    color : white;
+    display: contents;
+}
+
+/* Style du titre au milieu du header */
+.header-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: Colagraph;
+    font-size: 250%;
+}
+
+.tab2 img, .tab1 img {
+    margin-right: 2%;
+    width: 3%;
+}
+
+.tab2 img:hover, .tab1 img:hover {
+    margin-right: 1%;
+    width:4%;
+}
