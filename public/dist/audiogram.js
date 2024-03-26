@@ -361,9 +361,11 @@ function addDataPointAndSort(chart, frequency, decibels, id, style) {
  * @param chartLeft - L'instance de l'audiogramme pour l'oreille gauche.
  * @param chartRight - L'instance de l'audiogramme pour l'oreille droite.
  */
-function setupEventHandlers(chartLeft, chartRight, legendSelectorLeft, legendSelectorRight) {
+function setupEventHandlers(chartLeft, chartRight, chartChampLibre, legendSelectorLeft, legendSelectorRight, legendSelectorChampLibre) {
     const addPointFormLeft = document.getElementById('addPointFormLeft');
     const addPointFormRight = document.getElementById('addPointFormRight');
+    const addPointFormChampLibre = document.getElementById('addPointFormThird'); // Assurez-vous que l'ID est correct
+    // Gestionnaire pour l'audiogramme de gauche
     addPointFormLeft === null || addPointFormLeft === void 0 ? void 0 : addPointFormLeft.addEventListener('submit', function (event) {
         event.preventDefault();
         const frequenciesInput = document.getElementById('frequenciesLeft');
@@ -400,6 +402,7 @@ function setupEventHandlers(chartLeft, chartRight, legendSelectorLeft, legendSel
             }
         });
     });
+    // Gestionnaire pour l'audiogramme de droite
     addPointFormRight === null || addPointFormRight === void 0 ? void 0 : addPointFormRight.addEventListener('submit', function (event) {
         event.preventDefault();
         const frequenciesInput = document.getElementById('frequenciesRight');
@@ -433,6 +436,31 @@ function setupEventHandlers(chartLeft, chartRight, legendSelectorLeft, legendSel
             }
         });
     });
+    // Gestionnaire pour l'audiogramme champ libre
+    addPointFormChampLibre === null || addPointFormChampLibre === void 0 ? void 0 : addPointFormChampLibre.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const frequenciesInput = document.getElementById('frequenciesThird'); // Assurez-vous que l'ID est correct
+        const decibelsInput = document.getElementById('decibelsThird'); // Assurez-vous que l'ID est correct
+        const frequency = parseFloat(frequenciesInput.value.trim());
+        const decibel = parseFloat(decibelsInput.value.trim());
+        let isValid = !isNaN(frequency) && frequency > 0 && frequency <= 8000 && !isNaN(decibel) && decibel >= -10 && decibel <= 120;
+        if (isValid) {
+            const uniqueId = Date.now().toString();
+            const pointStyle = legendSelectorChampLibre.value;
+            addDataPointAndSort(chartChampLibre, frequency, decibel, uniqueId, pointStyle);
+            const audiogramDataChampLibre = {
+                ear: 'champLibre',
+                frequency: frequency,
+                decibels: decibel,
+                id: uniqueId,
+                style: pointStyle,
+            };
+            sendDataToServer(audiogramDataChampLibre);
+        }
+        else {
+            alert("Fréquence doit être comprise entre 0 et 8000 Hz.\nDécibels doivent être compris entre -10 et 120 dB.");
+        }
+    });
 }
 function addPointToLeftAudiogram(frequency, decibels, id, style) {
     // Vérifiez que cette fonction ajoute des points seulement à l'audiogramme gauche
@@ -453,13 +481,19 @@ function addPointToChampLibre(frequency, decibels, id, style) {
  * @throws {Error} - Lance une erreur si l'envoi des données échoue.
  */
 function sendDataToServer(audiogramData) {
-    let url = '/audiogram'; // URL de base
-    // Vérifie si l'audiogramme est pour l'oreille gauche ou droite
-    if (audiogramData.ear === 'gauche') {
-        url = '/audiogram/left';
-    }
-    else if (audiogramData.ear === 'droite') {
-        url = '/audiogram/right';
+    let url;
+    switch (audiogramData.ear) {
+        case 'gauche':
+            url = '/audiogram/left';
+            break;
+        case 'droite':
+            url = '/audiogram/right';
+            break;
+        case 'champLibre':
+            url = '/audiogram/champLibre';
+            break;
+        default:
+            throw new Error("Côté d'oreille non spécifié");
     }
     // La requête POST est envoyée à l'URL appropriée
     fetch(url, {
@@ -509,7 +543,6 @@ function getAudiogramData(chart, ear, legendSelector) {
 }
 function updateAudiogramWithData(data, chart) {
     data.forEach((point) => {
-        console.log(point.ear);
         if (!isPointAlreadyPresentWithStyle(chart, point.frequency, point.decibels, point.style)) {
             if (point.ear === 'gauche' && audiogramChartLeft) {
                 if (!isPointAlreadyExist(audiogramChartLeft, point)) {
@@ -517,10 +550,14 @@ function updateAudiogramWithData(data, chart) {
                 }
             }
             else if (point.ear === 'droite' && audiogramChartRight) {
-                addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id, point.style);
+                if (!isPointAlreadyExist(audiogramChartRight, point)) {
+                    addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id, point.style);
+                }
             }
             else if (point.ear === 'champLibre' && audiogramChampLibre) {
-                addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id, point.style);
+                if (!isPointAlreadyExist(audiogramChampLibre, point)) {
+                    addDataPointAndSort(audiogramChampLibre, point.frequency, point.decibels, point.id, point.style);
+                }
             }
         }
     });
@@ -672,46 +709,6 @@ function setupClickListeners(chart, ear, legendSelector) {
     });
 }
 /**
- * Configure un écouteur d'événements pour afficher des infobulles lors du survol de la souris sur un graphique.
- *
- * Cette fonction crée un écouteur d'événements 'mousemove' sur le canvas du graphique. Lorsque la souris se déplace sur le graphique,
- * elle calcule les coordonnées de la souris par rapport au graphique et affiche une infobulle personnalisée avec les informations
- * de fréquence et de décibels correspondantes. L'infobulle est masquée lorsque la souris quitte le canvas.
- *
- * @param chart - L'instance de l'audiogramme Chart.js pour laquelle l'infobulle est configurée.
- * @param tooltipId - L'identifiant de l'élément HTML qui servira d'infobulle.
- *
- * @example
- * setupMouseHoverListener(audiogramChartLeft, 'tooltipLeft'); // Configure l'écouteur d'événements pour l'audiogramme de l'oreille gauche
- */
-function setupMouseHoverListener(chart, tooltipId) {
-    const canvas = chart.canvas;
-    const tooltip = document.getElementById(tooltipId);
-    if (tooltip) { // Ajouter cette vérification
-        canvas.addEventListener('mousemove', (event) => {
-            const rect = canvas.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
-            let { frequency, decibels } = convertClickToChartData(chart, x, y);
-            // Mettez à jour et affichez le tooltip
-            tooltip.style.display = 'block';
-            tooltip.style.left = event.clientX + 'px';
-            tooltip.style.top = event.clientY + 'px';
-            tooltip.innerHTML = `Fréquence: ${frequency.toFixed(0)} Hz, dB: ${decibels.toFixed(0)}`;
-        });
-        canvas.addEventListener('mouseout', () => {
-            tooltip.style.display = 'none';
-        });
-    }
-    else {
-        console.error(`Tooltip with id '${tooltipId}' not found.`);
-    }
-}
-window.onload = function () {
-    setupMouseHoverListener(audiogramChartLeft, 'tooltipLeft');
-    setupMouseHoverListener(audiogramChartRight, 'tooltipRight');
-};
-/**
  * Supprime un point de l'audiogramme et met à jour le graphique.
  *
  * Cette fonction retire un point spécifique du graphique d'audiogramme basé sur son index.
@@ -828,15 +825,15 @@ window.onload = function () {
     audiogramChampLibre = initAudiogramChampLibre('audiogramChampLibre', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Champ Libre');
     const legendSelectorLeft = document.getElementById('legendSelectorLeft');
     const legendSelectorRight = document.getElementById('legendSelectorRight');
+    const legendSelectorChampLibre = document.getElementById('legendSelectorChampLibre');
     if (audiogramChartLeft && audiogramChartRight && audiogramChampLibre) {
-        setupEventHandlers(audiogramChartLeft, audiogramChartRight, legendSelectorLeft, legendSelectorRight);
+        setupEventHandlers(audiogramChartLeft, audiogramChartRight, audiogramChampLibre, legendSelectorLeft, legendSelectorRight, legendSelectorChampLibre);
     }
     getAudiogramData(audiogramChartLeft, 'gauche', legendSelectorLeft);
     getAudiogramData(audiogramChartRight, 'droite', legendSelectorRight);
-    getAudiogramData(audiogramChampLibre, 'champLibre', legendSelectorLeft);
+    getAudiogramData(audiogramChampLibre, 'champLibre', legendSelectorChampLibre);
     setupClickListeners(audiogramChartLeft, 'gauche', legendSelectorLeft);
     setupClickListeners(audiogramChartRight, 'droite', legendSelectorRight);
+    setupClickListeners(audiogramChampLibre, 'champLibre', legendSelectorChampLibre);
     initTabs();
-    setupMouseHoverListener(audiogramChartLeft, 'tooltipLeft');
-    setupMouseHoverListener(audiogramChartRight, 'tooltipRight');
 };

@@ -397,93 +397,127 @@ function addDataPointAndSort(chart: any, frequency: number, decibels: number, id
  * @param chartLeft - L'instance de l'audiogramme pour l'oreille gauche.
  * @param chartRight - L'instance de l'audiogramme pour l'oreille droite.
  */
-function setupEventHandlers(chartLeft: any, chartRight: any, legendSelectorLeft: HTMLSelectElement, legendSelectorRight: HTMLSelectElement) {
+function setupEventHandlers(chartLeft: any, chartRight: any, chartChampLibre: any, legendSelectorLeft: HTMLSelectElement, legendSelectorRight: HTMLSelectElement, legendSelectorChampLibre: HTMLSelectElement) {
   const addPointFormLeft = document.getElementById('addPointFormLeft') as HTMLFormElement;
   const addPointFormRight = document.getElementById('addPointFormRight') as HTMLFormElement;
+  const addPointFormChampLibre = document.getElementById('addPointFormThird') as HTMLFormElement; // Assurez-vous que l'ID est correct
 
+  // Gestionnaire pour l'audiogramme de gauche
   addPointFormLeft?.addEventListener('submit', function(event) {
-    event.preventDefault();
-    const frequenciesInput = document.getElementById('frequenciesLeft') as HTMLInputElement;
-    const decibelsInput = document.getElementById('decibelsLeft') as HTMLInputElement;
-
-    const frequencies = frequenciesInput.value.split(',').map(f => parseFloat(f.trim()));
-    const decibels = decibelsInput.value.split(',').map(d => parseFloat(d.trim()));
-
-    let isValid = true;
-    let errorMessage = '';
-
-    frequencies.forEach((frequency, index) => {
-      const decibel = decibels[index];
-
-            if (isNaN(frequency) || frequency < 0 || frequency > 8000) {
-                isValid = false;
-                errorMessage += 'Fréquence doit être comprise entre 0 et 8000 Hz.\n';
-            }
-
-            if (isNaN(decibel) || decibel < -10 || decibel > 120) {
-                isValid = false;
-                errorMessage += 'Décibels doivent être compris entre -10 et 120 dB.\n';
-            }
-
-            if (isValid) {
-              const uniqueId = Date.now().toString(); // Générer un ID unique ici
-              const pointStyle = legendSelectorLeft.value;
-              addDataPointAndSort(chartLeft, frequency, decibel, uniqueId, pointStyle);
-        const audiogramDataLeft = {
-          ear: 'gauche',
-          frequency: frequency,
-          decibels: decibel,
-          id: uniqueId,
-          style: pointStyle,
-        };
-        sendDataToServer(audiogramDataLeft);
-      }else {
-        alert(errorMessage);
-    }
-    });
-  });
-
-  addPointFormRight?.addEventListener('submit', function(event) {
-    event.preventDefault();
-    const frequenciesInput = document.getElementById('frequenciesRight') as HTMLInputElement;
-    const decibelsInput = document.getElementById('decibelsRight') as HTMLInputElement;
-
-    const frequencies = frequenciesInput.value.split(',').map(f => parseFloat(f.trim()));
-    const decibels = decibelsInput.value.split(',').map(d => parseFloat(d.trim()));
-
-    let isValid = true;
-    let errorMessage = '';
-
-    frequencies.forEach((frequency, index) => {
-      const decibel = decibels[index];
-      if (isNaN(frequency) || frequency < 0 || frequency > 8000) {
-        isValid = false;
-        errorMessage += 'Fréquence doit être comprise entre 0 et 8000 Hz.\n';
-    }
-
-    if (isNaN(decibel) || decibel < -10 || decibel > 120) {
-        isValid = false;
-        errorMessage += 'Décibels doivent être compris entre -10 et 120 dB.\n';
-    }
-
-    if (isValid) {
-      const uniqueId = Date.now().toString(); // Générer un ID unique ici
-      const pointStyle = legendSelectorRight.value;
-      addDataPointAndSort(chartRight, frequency, decibel, uniqueId, pointStyle);
-
-        const audiogramDataRight = {
-          ear: 'droite',
-          frequency: frequency,
-          decibels: decibel,
-          id: uniqueId,
-          style: pointStyle,
-        };
-
-        sendDataToServer(audiogramDataRight);
+      event.preventDefault();
+      const frequenciesInput = document.getElementById('frequenciesLeft') as HTMLInputElement;
+      const decibelsInput = document.getElementById('decibelsLeft') as HTMLInputElement;
+  
+      const frequencies = frequenciesInput.value.split(',').map(f => parseFloat(f.trim()));
+      const decibels = decibelsInput.value.split(',').map(d => parseFloat(d.trim()));
+  
+      let isValid = true;
+      let errorMessage = '';
+  
+      frequencies.forEach((frequency, index) => {
+        const decibel = decibels[index];
+  
+              if (isNaN(frequency) || frequency < 0 || frequency > 8000) {
+                  isValid = false;
+                  errorMessage += 'Fréquence doit être comprise entre 0 et 8000 Hz.\n';
+              }
+  
+              if (isNaN(decibel) || decibel < -10 || decibel > 120) {
+                  isValid = false;
+                  errorMessage += 'Décibels doivent être compris entre -10 et 120 dB.\n';
+              }
+  
+              if (isValid) {
+                const uniqueId = Date.now().toString(); // Générer un ID unique ici
+                const pointStyle = legendSelectorLeft.value;
+                addDataPointAndSort(chartLeft, frequency, decibel, uniqueId, pointStyle);
+          const audiogramDataLeft = {
+            ear: 'gauche',
+            frequency: frequency,
+            decibels: decibel,
+            id: uniqueId,
+            style: pointStyle,
+          };
+          sendDataToServer(audiogramDataLeft);
+        }else {
+          alert(errorMessage);
       }
+      });
     });
+
+  // Gestionnaire pour l'audiogramme de droite
+  addPointFormRight?.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const frequenciesInput = document.getElementById('frequenciesRight') as HTMLInputElement;
+      const decibelsInput = document.getElementById('decibelsRight') as HTMLInputElement;
+  
+      const frequencies = frequenciesInput.value.split(',').map(f => parseFloat(f.trim()));
+      const decibels = decibelsInput.value.split(',').map(d => parseFloat(d.trim()));
+  
+      let isValid = true;
+      let errorMessage = '';
+  
+      frequencies.forEach((frequency, index) => {
+        const decibel = decibels[index];
+        if (isNaN(frequency) || frequency < 0 || frequency > 8000) {
+          isValid = false;
+          errorMessage += 'Fréquence doit être comprise entre 0 et 8000 Hz.\n';
+      }
+  
+      if (isNaN(decibel) || decibel < -10 || decibel > 120) {
+          isValid = false;
+          errorMessage += 'Décibels doivent être compris entre -10 et 120 dB.\n';
+      }
+  
+      if (isValid) {
+        const uniqueId = Date.now().toString(); // Générer un ID unique ici
+        const pointStyle = legendSelectorRight.value;
+        addDataPointAndSort(chartRight, frequency, decibel, uniqueId, pointStyle);
+  
+          const audiogramDataRight = {
+            ear: 'droite',
+            frequency: frequency,
+            decibels: decibel,
+            id: uniqueId,
+            style: pointStyle,
+          };
+  
+          sendDataToServer(audiogramDataRight);
+        }
+      });
+    });
+
+  // Gestionnaire pour l'audiogramme champ libre
+  addPointFormChampLibre?.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const frequenciesInput = document.getElementById('frequenciesThird') as HTMLInputElement; // Assurez-vous que l'ID est correct
+    const decibelsInput = document.getElementById('decibelsThird') as HTMLInputElement; // Assurez-vous que l'ID est correct
+
+    const frequency = parseFloat(frequenciesInput.value.trim());
+    const decibel = parseFloat(decibelsInput.value.trim());
+
+    let isValid = !isNaN(frequency) && frequency > 0 && frequency <= 8000 && !isNaN(decibel) && decibel >= -10 && decibel <= 120;
+    
+    if (isValid) {
+      const uniqueId = Date.now().toString();
+      const pointStyle = legendSelectorChampLibre.value;
+      addDataPointAndSort(chartChampLibre, frequency, decibel, uniqueId, pointStyle);
+
+      const audiogramDataChampLibre = {
+        ear: 'champLibre',
+        frequency: frequency,
+        decibels: decibel,
+        id: uniqueId,
+        style: pointStyle,
+      };
+
+      sendDataToServer(audiogramDataChampLibre);
+    } else {
+      alert("Fréquence doit être comprise entre 0 et 8000 Hz.\nDécibels doivent être compris entre -10 et 120 dB.");
+    }
   });
 }
+
 
 function addPointToLeftAudiogram(frequency:number, decibels:number, id:any, style:any) {
   // Vérifiez que cette fonction ajoute des points seulement à l'audiogramme gauche
@@ -506,31 +540,38 @@ function addPointToChampLibre(frequency:number, decibels:number, id:any, style:a
  * @throws {Error} - Lance une erreur si l'envoi des données échoue.
  */
 function sendDataToServer(audiogramData: AudiogramData) {
-  let url = '/audiogram'; // URL de base
+  let url;
 
-  // Vérifie si l'audiogramme est pour l'oreille gauche ou droite
-  if (audiogramData.ear === 'gauche') {
-      url = '/audiogram/left'; 
-  } else if (audiogramData.ear === 'droite') {
-      url = '/audiogram/right'; 
+  switch (audiogramData.ear) {
+    case 'gauche':
+      url = '/audiogram/left';
+      break;
+    case 'droite':
+      url = '/audiogram/right';
+      break;
+    case 'champLibre':
+      url = '/audiogram/champLibre';
+      break;
+    default:
+      throw new Error("Côté d'oreille non spécifié");
   }
 
   // La requête POST est envoyée à l'URL appropriée
   fetch(url, {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(audiogramData),
-  })
-  .then(response => {
-      if (response.ok) {
-          return response.text();
-      }
-      throw new Error('Erreur dans l\'envoi des données');
-  })
-  .then(data => console.log(data))
-  .catch(error => console.error('Erreur:', error));
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(audiogramData),
+})
+.then(response => {
+    if (response.ok) {
+        return response.text();
+    }
+    throw new Error('Erreur dans l\'envoi des données');
+})
+.then(data => console.log(data))
+.catch(error => console.error('Erreur:', error));
 }
 
 /**
@@ -565,20 +606,24 @@ function getAudiogramData(chart: any, ear: string, legendSelector: HTMLSelectEle
 
 function updateAudiogramWithData(data: AudiogramData[], chart: any) {
   data.forEach((point) => {
-    console.log(point.ear)
-    if (!isPointAlreadyPresentWithStyle(chart, point.frequency,point.decibels,point.style)) {
+    if (!isPointAlreadyPresentWithStyle(chart, point.frequency, point.decibels, point.style)) {
       if (point.ear === 'gauche' && audiogramChartLeft) {
-        if(!isPointAlreadyExist(audiogramChartLeft,point)){
+        if (!isPointAlreadyExist(audiogramChartLeft, point)) {
           addDataPointAndSort(audiogramChartLeft, point.frequency, point.decibels, point.id, point.style);
         }
       } else if (point.ear === 'droite' && audiogramChartRight) {
-        addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id, point.style);
+        if (!isPointAlreadyExist(audiogramChartRight, point)) {
+          addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id, point.style);
+        }
       } else if (point.ear === 'champLibre' && audiogramChampLibre) {
-        addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id, point.style);
+        if (!isPointAlreadyExist(audiogramChampLibre, point)) {
+          addDataPointAndSort(audiogramChampLibre, point.frequency, point.decibels, point.id, point.style);
+        }
       }
     }
   });
 }
+
 
 
 /**
@@ -872,14 +917,16 @@ window.onload = function () {
   audiogramChampLibre = initAudiogramChampLibre('audiogramChampLibre', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Champ Libre');
   const legendSelectorLeft = document.getElementById('legendSelectorLeft') as HTMLSelectElement;
   const legendSelectorRight = document.getElementById('legendSelectorRight') as HTMLSelectElement;
+  const legendSelectorChampLibre = document.getElementById('legendSelectorChampLibre') as HTMLSelectElement;
   if (audiogramChartLeft && audiogramChartRight && audiogramChampLibre) {
-    setupEventHandlers(audiogramChartLeft, audiogramChartRight, legendSelectorLeft, legendSelectorRight);
+    setupEventHandlers(audiogramChartLeft, audiogramChartRight, audiogramChampLibre, legendSelectorLeft, legendSelectorRight, legendSelectorChampLibre);
   }
   getAudiogramData(audiogramChartLeft, 'gauche', legendSelectorLeft);
   getAudiogramData(audiogramChartRight, 'droite', legendSelectorRight);
-  getAudiogramData(audiogramChampLibre, 'champLibre', legendSelectorLeft)
+  getAudiogramData(audiogramChampLibre, 'champLibre', legendSelectorChampLibre)
   setupClickListeners(audiogramChartLeft, 'gauche', legendSelectorLeft);
   setupClickListeners(audiogramChartRight, 'droite', legendSelectorRight);
+  setupClickListeners(audiogramChampLibre, 'champLibre', legendSelectorChampLibre);
   initTabs();
 };
 

@@ -62,6 +62,27 @@
       <div class="chartBox">
         <canvas id="audiogramLeft" class="audiogram"></canvas>
               <!-- Left form Audiogram -->
+              <div class="form-container">
+                <form id="addPointFormLeft">
+                  <input
+                    type="text"
+                    id="frequenciesLeft"
+                    class="form-control"
+                    placeholder="Fréquence"
+                    name="frequency"
+                  /><br />
+                  <input
+                    type="text"
+                    id="decibelsLeft"
+                    class="form-control"
+                    placeholder="dB"
+                    name="decibels"
+                  /><br />
+                  <button type="submit" class="btn btn-outline-primary">
+                    Ajouter
+                  </button>
+                </form>
+              </div>
         </div>
 
 
@@ -141,30 +162,18 @@
       <div class="chartBox">
         <canvas id="audiogramRight" class="audiogram"></canvas>
         <!-- Form for Right Audiogram -->
-      </div>
-    </div>
-  </div>
-
-    <!-- Third Audiogram on a new line -->
-    <div class="audiogram-container">
-      <div class="chartBox">
-        <canvas
-          id="audiogramChampLibre"
-          class="audiogram"
-          style="display: none"
-        ></canvas>
-        <div class="form-container" id="test">
-          <form id="addPointFormThird" style="display: none">
+        <div class="form-container">
+          <form id="addPointFormRight">
             <input
               type="text"
-              id="frequenciesThird"
+              id="frequenciesRight"
               class="form-control"
               placeholder="Fréquence"
               name="frequency"
             /><br />
             <input
               type="text"
-              id="decibelsThird"
+              id="decibelsRight"
               class="form-control"
               placeholder="dB"
               name="decibels"
@@ -172,6 +181,28 @@
             <button type="submit" class="btn btn-outline-primary">
               Ajouter
             </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- Third Audiogram on a new line -->
+    <div class="audiogram-container">
+      <div class="chartBox">
+        <canvas id="audiogramChampLibre" class="audiogram" style="display: none"></canvas>
+        <div class="form-container" id="test">
+          <form id="addPointFormThird" style="display: none">
+            <div class="input-group">
+              <input type="text" id="frequenciesThird" class="form-control" placeholder="Fréquence" name="frequency" />
+              <input type="text" id="decibelsThird" class="form-control" placeholder="dB" name="decibels" />
+              <select id="legendSelectorChampLibre" class="form-select">
+                <option value="circle">Cercle</option>
+                <option value="A">A</option>
+              </select>
+            </div>
+            <br />
+            <button type="submit" class="btn btn-outline-primary">Ajouter</button>
           </form>
         </div>
       </div>

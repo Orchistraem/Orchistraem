@@ -83,12 +83,13 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html')); // Assurez-vous que le chemin est correct
 });
 
-// Répertoire pour stocker les données (assurez-vous qu'il existe)
+// Répertoire pour stocker les données 
 const DATA_DIR = './data';
 
 // Répertoires pour stocker les données
 const LEFT_DATA_DIR = './data/left';
 const RIGHT_DATA_DIR = './data/right';
+const CHAMPLIBRE_DATA_DIR = './data/champLibre';
 
 // Point de terminaison pour stocker les données des audiogrammes de l'oreille gauche
 app.post('/audiogram/left', (req, res) => {
@@ -98,6 +99,11 @@ app.post('/audiogram/left', (req, res) => {
 // Point de terminaison pour stocker les données des audiogrammes de l'oreille droite
 app.post('/audiogram/right', (req, res) => {
   saveAudiogramData(req.body, RIGHT_DATA_DIR, res);
+});
+
+// Point de terminaison pour stocker les données des audiogrammes du champ libre
+app.post('/audiogram/champLibre', (req, res) => {
+  saveAudiogramData(req.body, CHAMPLIBRE_DATA_DIR, res);
 });
 
 // Fonction pour enregistrer les données d'audiogramme
@@ -158,6 +164,7 @@ app.get('/list-audios', (req, res) => {
 app.get('/get-audiogram-data', (req, res) => {
   const LEFT_DATA_DIR = './data/left';
   const RIGHT_DATA_DIR = './data/right';
+  const CHAMPLIBRE_DATA_DIR = './data/champLibre';
 
   // Fonction pour lire les données d'un dossier spécifique
   function readAudiogramData(directory) {
@@ -178,9 +185,10 @@ app.get('/get-audiogram-data', (req, res) => {
   try {
     const leftAudiograms = readAudiogramData(LEFT_DATA_DIR);
     const rightAudiograms = readAudiogramData(RIGHT_DATA_DIR);
+    const champLibreAudiograms = readAudiogramData(CHAMPLIBRE_DATA_DIR);
 
     // Fusionner les données des audiogrammes gauche et droite
-    const allAudiograms = leftAudiograms.concat(rightAudiograms);
+    const allAudiograms = leftAudiograms.concat(rightAudiograms,champLibreAudiograms);
 
     // Envoyer les données combinées
     res.json(allAudiograms);
@@ -191,51 +199,69 @@ app.get('/get-audiogram-data', (req, res) => {
 });
 
 
-
 // Route pour supprimer un point
 app.delete('/audiogram/:ear/:pointId', (req, res) => {
   const { ear, pointId } = req.params;
-  const directory = ear === 'gauche' ? LEFT_DATA_DIR : RIGHT_DATA_DIR;
+  let directory;
+
+  switch (ear) {
+    case 'gauche':
+      directory = LEFT_DATA_DIR;
+      break;
+    case 'droite':
+      directory = RIGHT_DATA_DIR;
+      break;
+    case 'champLibre':
+      directory = CHAMPLIBRE_DATA_DIR;
+      break;
+    default:
+      return res.status(400).send({ error: "Côté de l'oreille non valide." });
+  }
 
   try {
-      const files = fs.readdirSync(directory);
-      const fileToDelete = files.find(file => file.includes(pointId));
+    const files = fs.readdirSync(directory);
+    const fileToDelete = files.find(file => file.includes(pointId));
 
-      if (fileToDelete) {
-          fs.unlinkSync(`${directory}/${fileToDelete}`);
-          res.status(200).send("Point supprimé");
-      } else {
-          res.status(404).send("Point non trouvé");
-      }
+    if (fileToDelete) {
+        fs.unlinkSync(`${directory}/${fileToDelete}`);
+        res.status(200).send("Point supprimé");
+    } else {
+        res.status(404).send("Point non trouvé");
+    }
   } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
-      res.status(500).send("Erreur interne du serveur");
+    console.error('Erreur lors de la suppression:', error);
+    res.status(500).send("Erreur interne du serveur");
   }
 });
 
-// Supprimer tous les points pour une oreille spécifique
+// Supprimer tous les points pour une oreille spécifique ou pour le champ libre
 app.delete('/delete-all-points/:ear', (req, res) => {
-  const ear = req.params.ear;
-  const directory = ear === 'gauche' ? LEFT_DATA_DIR : RIGHT_DATA_DIR;
+  const { ear } = req.params;
+  let directory;
+
+  switch (ear) {
+    case 'gauche':
+      directory = LEFT_DATA_DIR;
+      break;
+    case 'droite':
+      directory = RIGHT_DATA_DIR;
+      break;
+    case 'champLibre':
+      directory = CHAMPLIBRE_DATA_DIR;
+      break;
+    default:
+      return res.status(400).send({ error: "Côté de l'oreille non valide." });
+  }
 
   try {
-      fs.readdir(directory, (err, files) => {
-          if (err) {
-              throw err;
-          }
-
-          for (const file of files) {
-              fs.unlinkSync(path.join(directory, file));
-          }
-
-          res.status(200).send('Tous les points ont été supprimés.');
-      });
+    const files = fs.readdirSync(directory);
+    files.forEach(file => fs.unlinkSync(path.join(directory, file)));
+    res.status(200).send('Tous les points ont été supprimés.');
   } catch (error) {
-      console.error('Erreur lors de la suppression des points:', error);
-      res.status(500).send('Erreur interne du serveur');
+    console.error('Erreur lors de la suppression des points:', error);
+    res.status(500).send('Erreur interne du serveur');
   }
 });
-
 
 
 const storage = multer.diskStorage({
