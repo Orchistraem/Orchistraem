@@ -543,13 +543,13 @@ async function testAudioAnalysis(filePath: string): Promise<void> {
 }
 
 // Exemple d'utilisation de la fonction de test
-// Remplacez 'path/to/your/audioFile.mp3' par le chemin d'accès réel de votre fichier audio
 testAudioAnalysis('../uploads/arcade_retro_game_over.mp3');
 testAudioAnalysis('../uploads/cliquets.mp3');
 testAudioAnalysis('../uploads/deep_strange.mp3');
 testAudioAnalysis('../uploads/melodical_flute.mp3');
 testAudioAnalysis('../uploads/mon_audio.mp3');
 testAudioAnalysis('../uploads/tambourin_a_perles.mp3');
+console.log('test');
 
 /**
  * Dessine un sonogramme à partir d'un fichier audio Blob.
