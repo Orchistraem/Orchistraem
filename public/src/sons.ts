@@ -358,17 +358,11 @@ async function analyseAudio(audioFile: Blob, audioContainer: HTMLDivElement): Pr
     requestAnimationFrame(checkAudioProcessing);
 }
 
-/**
- * Initialise et dessine un sonogramme pour un fichier audio, avec des légendes pour les axes.
- * 
- * @param audioFile Le fichier audio à analyser et visualiser.
- * @param audioContainer Le conteneur HTML dans lequel le sonogramme sera affiché.
- */
 async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement): Promise<void> {
     const audioContext = new AudioContext();
     const arrayBuffer = await audioFile.arrayBuffer();
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    
+
     const canvas = document.createElement('canvas');
     canvas.id = 'sonogramCanvas';
     canvas.width = 600; // Largeur du canvas en pixels
@@ -380,7 +374,7 @@ async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement): Pr
         console.error('Impossible de récupérer le contexte du canvas');
         return;
     }
-    
+
     const analyser = audioContext.createAnalyser();
     analyser.fftSize = 2048;
     const bufferLength = analyser.frequencyBinCount;
@@ -392,15 +386,37 @@ async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement): Pr
     analyser.connect(audioContext.destination);
     source.start(0);
 
+    function drawLegends(ctx: CanvasRenderingContext2D, width: number, height: number, sampleRate: number, duration: number) {
+        const specificFrequencies = [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000];
+        const maxFreq = sampleRate / 2; // La fréquence maximale représentable est la moitié du taux d'échantillonnage
+        const freqPerPixel = maxFreq / width; // Fréquence représentée par chaque pixel
+    
+        ctx.font = '12px Arial';
+        ctx.fillStyle = 'black';
+    
+        // Légendes de fréquence spécifiques (axe X)
+        specificFrequencies.forEach(freq => {
+            const x = (freq / freqPerPixel);
+            ctx.fillText(`${freq} Hz`, x, height - 10);
+        });
+    
+        // Légendes d'intensité (axe Y) - Simplifié pour l'exemple
+        ctx.textAlign = 'right';
+        for(let i = 0; i <= 5; i++) {
+            const intensity = i * 20; // Exemple d'échelle
+            const y = height - (i * (height / 5));
+            ctx.fillText(`${intensity} dB`, width - 10, y);
+        }
+    }
+    
+
     const draw = () => {
         requestAnimationFrame(draw);
 
-        // Efface le canvas avant de redessiner
-        canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+        canvasContext.clearRect(0, 0, canvas.width, canvas.height); // Efface le canvas
 
         analyser.getByteFrequencyData(dataArray);
 
-        // Largeur d'une colonne du sonogramme
         const barWidth = (canvas.width / bufferLength) * 2.5;
         let barHeight;
         let x = 0;
@@ -408,48 +424,17 @@ async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement): Pr
         for(let i = 0; i < bufferLength; i++) {
             barHeight = dataArray[i];
 
-            canvasContext.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
+            canvasContext.fillStyle = `rgb(${barHeight+100},50,50)`;
             canvasContext.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight / 2);
 
             x += barWidth + 1;
         }
 
-        // Dessiner les légendes après le sonogramme pour éviter qu'elles soient recouvertes
         drawLegends(canvasContext, canvas.width, canvas.height, audioBuffer.sampleRate, audioBuffer.duration);
     };
 
     draw();
 }
-
-/**
- * Dessine les légendes sur le canvas.
- * 
- * @param ctx Le contexte du canvas sur lequel dessiner.
- * @param width La largeur du canvas.
- * @param height La hauteur du canvas.
- * @param sampleRate Le taux d'échantillonnage de l'audio analysé.
- * @param duration La durée de l'audio analysé.
- */
-function drawLegends(ctx: CanvasRenderingContext2D, width: number, height: number, sampleRate: number, duration: number): void {
-    ctx.fillStyle = 'black';
-    ctx.font = '12px Arial';
-
-    // Légende pour l'axe des fréquences (axe vertical)
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    for (let i = 0; i <= height; i += 50) {
-        const frequency = Math.round((i / height) * (sampleRate / 2));
-        ctx.fillText(`${frequency} Hz`, 5, height - i);
-    }
-
-    // Légende pour l'axe du temps (axe horizontal)
-    ctx.textAlign = 'center';
-    for (let i = 0; i <= width; i += 100) {
-        const time = Math.round((i / width) * duration);
-        ctx.fillText(`${time}s`, i, height - 10);
-    }
-}
-
 
 
 
