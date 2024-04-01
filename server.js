@@ -332,9 +332,21 @@ app.post('/delete-audio', (req, res) => {
   });
 });
 
+app.get('/list-audios', (req, res) => {
+  const directoryPath = path.join(__dirname, 'uploads'); // Assurez-vous que le chemin est correct
 
+  fs.readdir(directoryPath, (err, files) => {
+      if (err) {
+          console.error('Erreur lors de la lecture du dossier:', err);
+          return res.status(500).send('Impossible de lire le dossier des fichiers audio');
+      }
 
+      // Filtrer pour ne retourner que les fichiers audio, si nécessaire. Ici, on suppose que tous les fichiers dans 'uploads' sont des audios.
+      const audioFiles = files.filter(file => file.endsWith('.mp3') || file.endsWith('.wav')); // Vous pouvez ajuster les extensions selon vos besoins
 
+      res.json(audioFiles);
+  });
+});
 
 
 app.listen(port, () => {

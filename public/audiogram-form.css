@@ -70,6 +70,11 @@
 .legend {
     display: flex;
     width: max-content;
+    margin-bottom: 0.2em;
+}
+
+#legendSelectorLeft {
+    margin-right: 0.3em;
 }
 
 .form-select {
@@ -100,4 +105,16 @@
 
 .form-check {
     margin-left: 5.5em;
+}
+
+#soundSelectorChampLibre {
+    margin-bottom: 0.5em;
+}
+
+#frequenciesThird  {
+    margin-right: 0.3em;
+}
+
+#decibelsThird {
+    margin-right: 0.2em;
 }

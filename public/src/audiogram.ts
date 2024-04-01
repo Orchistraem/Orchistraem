@@ -221,9 +221,21 @@ function initAudiogram(canvasID: string, pointColor: string, borderColor: string
                       padding: {
                         top: 10,
                         bottom: 30
+                      },
+                    },
+                    annotation: {
+                      annotations: {
+                        box1: {
+                          type: 'box',
+                          xMin: 500, // Fréquence basse
+                          xMax: 2000, // Fréquence haute
+                          yMin: 20, // Intensité basse
+                          yMax: 60, // Intensité haute
+                          backgroundColor: 'rgba(255, 99, 132, 0.25)'
+                        }
                       }
+                    }
                   },
-                },
                   elements: {
                       line: {
                           tension: 0 // Lignes droites sans courbure
@@ -237,6 +249,60 @@ function initAudiogram(canvasID: string, pointColor: string, borderColor: string
   }
   return null; // Retourne null si le canvas ou le contexte 2D n'existe pas
 }
+
+const soundValues: { [key: string]: { xMin: number; xMax: number; yMin: number; yMax: number } } = {
+  "arcade_retro_game_over.mp3": { xMin: 500, xMax: 2000, yMin: 20, yMax: 60 },
+  "cliquets.mp3": { xMin: 250, xMax: 3000, yMin: 30, yMax: 70 },
+  // Ajoutez d'autres sons et leurs valeurs ici
+};
+
+let select = document.getElementById("soundSelectorChampLibre") as HTMLSelectElement;
+if (select) {
+    select.addEventListener("change", function() {
+        const selectedSound = this.value;
+        console.log("Son sélectionné:", selectedSound);
+        
+        // Récupère les valeurs pour le son sélectionné
+        const values = soundValues[selectedSound];
+        
+        if (values) {
+            console.log("Valeurs associées au son:", values);
+            updateAudiogramForSound(selectedSound);
+        }
+    });
+}
+
+function updateAudiogramForSound(selectedSound: string) {
+  // Vérifiez si les valeurs pour le son sélectionné existent
+  const values = soundValues[selectedSound];
+  if (!values) {
+    console.error("Valeurs non trouvées pour le son sélectionné:", selectedSound);
+    return;
+  }
+
+  // Assurez-vous que votre instance d'audiogramme est accessible ici, par exemple audiogramChartChampLibre
+  if (audiogramChartRight) {
+    // Mise à jour des annotations pour l'audiogramme avec les nouvelles valeurs
+    const annotationsOptions = audiogramChartRight.options.plugins.annotation.annotations;
+    
+    // Mise à jour ou création de l'annotation de type 'box'
+    annotationsOptions.box1 = {
+      type: 'box',
+      xMin: values.xMin,
+      xMax: values.xMax,
+      yMin: values.yMin,
+      yMax: values.yMax,
+      backgroundColor: 'rgba(255, 99, 132, 0.25)'
+    };
+    
+    // Redessine le graphique avec les nouvelles annotations
+    audiogramChartRight.update();
+  } else {
+    console.error("L'instance d'audiogramme n'est pas définie.");
+  }
+}
+
+
 
 /**
  * Initialise un audiogramme.
@@ -906,6 +972,55 @@ function snapToDecibelLevels(decibels: number): number {
   console.log(`Décibels ajustés: ${snappedDecibels}`); // Ajouter pour le débogage
   return snappedDecibels;
 }
+
+// Cette fonction est appelée au chargement de la page pour remplir le sélecteur de sons
+function fillSoundSelector(): void {
+  fetch('/list-audios') 
+      .then(response => response.json())
+      .then((sounds: string[]) => { // Ici on spécifie que `sounds` est un tableau de chaînes de caractères
+          const soundSelector = document.getElementById('soundSelectorChampLibre');
+
+          // Vérification pour s'assurer que soundSelector n'est pas null
+          if (soundSelector) {
+              sounds.forEach(sound => {
+                  const option = document.createElement('option');
+                  option.value = sound;
+                  option.textContent = sound; // Affiche le nom du fichier comme texte de l'option
+                  soundSelector.appendChild(option);
+              });
+          } else {
+              console.error('Le sélecteur de sons est introuvable.');
+          }
+      })
+      .catch(error => console.error('Erreur lors de la récupération des sons:', error));
+}
+
+// Assurez-vous d'appeler fillSoundSelector lorsque la page est chargée
+document.addEventListener('DOMContentLoaded', fillSoundSelector);
+
+// Assurez-vous que ce script s'exécute après que le DOM est entièrement chargé
+document.addEventListener('DOMContentLoaded', () => {
+  const select = document.getElementById('soundSelectorChampLibre');
+
+  if (select instanceof HTMLSelectElement) { // Vérifie si 'select' est bien un élément HTMLSelectElement
+      fetch('/list-audios')
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error('Réponse réseau non OK');
+              }
+              return response.json();
+          })
+          .then((audios: string[]) => {
+              audios.forEach((audio) => {
+                  const option = new Option(audio, audio); // Utilise le nom du fichier comme valeur et texte
+                  select.add(option);
+              });
+          })
+          .catch(error => console.error('Erreur lors de la récupération des audios:', error));
+  } else {
+      console.error('Élément select non trouvé ou n\'est pas un élément select');
+  }
+});
 
 /**
  * Initialise les audiogrammes lorsque la fenêtre se charge.
