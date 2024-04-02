@@ -18,6 +18,12 @@
     border-radius: 25px; /* Coins arrondis pour l'effet bulle */
 }
 
+#uploadAudioForm{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
 .audio-container p, #uploadAudioForm p {
     font-size: 1.2rem; /* Taille de texte plus grande */
     text-shadow: none; /* Retirer l'ombre du texte pour améliorer la lisibilité */
@@ -66,3 +72,4 @@ div .col-3{
 .categSon button{
     margin: 2px;
 }
+
