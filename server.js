@@ -53,16 +53,17 @@ if (!fs.existsSync(categoriesFilePath)) {
 
 
 app.post('/categories', (req, res) => {
-    const { name } = req.body;
-    const categories = JSON.parse(fs.readFileSync(categoriesFilePath, 'utf-8'));
-    if (!categories.find(category => category.name === name)) {
-        categories.push({ name });
-        fs.writeFileSync(categoriesFilePath, JSON.stringify(categories, null, 2), 'utf-8');
-        res.status(201).send('Catégorie ajoutée');
-    } else {
-        res.status(409).send('Catégorie déjà existante');
-    }
+  const { name } = req.body;
+  const categories = JSON.parse(fs.readFileSync(categoriesFilePath, 'utf-8'));
+  if (!categories.find(category => category.name === name)) {
+      categories.push({ name });
+      fs.writeFileSync(categoriesFilePath, JSON.stringify(categories, null, 2), 'utf-8');
+      res.status(201).send({name: name}); // Envoyer la catégorie ajoutée dans la réponse
+  } else {
+      res.status(409).send('Catégorie déjà existante');
+  }
 });
+
 
 // Route pour lister toutes les catégories
 app.get('/categories', (req, res) => {
@@ -71,13 +72,24 @@ app.get('/categories', (req, res) => {
 });
 
 // Route pour supprimer une catégorie
-app.delete('/categories/:name', (req, res) => {
-    const { name } = req.params;
-    let categories = JSON.parse(fs.readFileSync(categoriesFilePath, 'utf-8'));
-    categories = categories.filter(category => category.name !== name);
-    fs.writeFileSync(categoriesFilePath, JSON.stringify(categories, null, 2), 'utf-8');
-    res.send('Catégorie supprimée');
+app.delete('/categories/:name', async (req, res) => {
+  const { name } = req.params;
+  let categories = JSON.parse(fs.readFileSync(categoriesFilePath, 'utf-8'));
+  categories = categories.filter(category => category.name !== name);
+  fs.writeFileSync(categoriesFilePath, JSON.stringify(categories, null, 2), 'utf-8');
+
+  // Récupérer et mettre à jour les métadonnées audio
+  let audioMetadata = JSON.parse(fs.readFileSync(audioMetadataPath, 'utf-8'));
+  audioMetadata.forEach(meta => {
+      if (meta.category === name) {
+          meta.category = 'Non catégorisé'; // Réaffecter à "Non catégorisé"
+      }
+  });
+  fs.writeFileSync(audioMetadataPath, JSON.stringify(audioMetadata, null, 2), 'utf-8');
+
+  res.send('Catégorie supprimée et fichiers audio mis à jour');
 });
+
 // Route pour la racine qui répond aux requêtes GET
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html')); // Assurez-vous que le chemin est correct

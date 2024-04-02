@@ -594,20 +594,47 @@ async function addCategory(): Promise<void> {
     });
 
     if (response.ok) {
-        await loadAndDisplayCategories(); // Recharger la liste des catégories
+        const newCategory = await response.json(); // Supposer que le serveur renvoie la catégorie ajoutée
+        // Mise à jour de la liste des catégories côté client
+        categories.push(newCategory); // Supposons que 'categories' est la liste des catégories maintenue côté client
+        const categorySelects = document.querySelectorAll('.categSelect');
+        categorySelects.forEach(select => {
+            const option = document.createElement('option');
+            option.value = newCategory.name;
+            option.textContent = newCategory.name;
+            select.appendChild(option);
+        });
+        newCategoryNameInput.value = ''; // Effacer le champ après l'ajout
     } else {
         alert('Erreur lors de l\'ajout de la catégorie');
     }
 }
 
+
 async function deleteCategory(categoryName: string): Promise<void> {
     const response = await fetch(`/categories/${categoryName}`, { method: 'DELETE' });
     if (response.ok) {
-        await loadAndDisplayCategories(); // Recharger la liste des catégories
+        // Recharger la liste des catégories
+        await loadAndDisplayCategories();
+        
+        // Mise à jour de l'interface utilisateur pour refléter la suppression
+        document.querySelectorAll('.categSelect').forEach(selectElement => {
+            const select = selectElement as HTMLSelectElement; // Cast explicitement en HTMLSelectElement
+            Array.from(select.options).forEach(option => {
+                if (option.value === categoryName) {
+                    option.remove(); // Supprimer l'option de la catégorie supprimée
+                }
+            });
+        });
+        
+        // Optionnel : Mettre à jour la catégorie des fichiers audio affectés à "Non catégorisé"
+        refreshAudioList();
     } else {
         alert('Erreur lors de la suppression de la catégorie');
     }
 }
+
+
 
 async function assignCategoryToFile(fileName: string, categoryName: string) {
     try {

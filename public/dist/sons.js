@@ -140,14 +140,18 @@ function displayAudioList() {
                             fetch(audioUrl)
                                 .then(response => response.blob())
                                 .then(blob => {
-                                drawSonogram(blob, audioContainer);
+                                drawSonogram(blob, editSon);
                             });
                         });
                         editSon.appendChild(analyseButton);
                         // Ajouter le div "editSon" au conteneur principal
                         audioContainer.appendChild(editSon);
+                        // Créer le div "categSon"
+                        const categSon = document.createElement('div');
+                        categSon.classList.add('categSon');
                         // Menu déroulant pour les catégories
                         const categorySelect = document.createElement('select');
+                        categorySelect.classList.add('categSelect');
                         categories.forEach((category) => {
                             const option = document.createElement('option');
                             option.value = category.name;
@@ -155,7 +159,7 @@ function displayAudioList() {
                             categorySelect.appendChild(option);
                         });
                         categorySelect.value = fileCategory; // Sélectionner la catégorie actuelle
-                        audioContainer.appendChild(categorySelect);
+                        categSon.appendChild(categorySelect);
                         // Bouton pour assigner la catégorie
                         const assignCategoryButton = document.createElement('button');
                         assignCategoryButton.textContent = 'Assigner Catégorie';
@@ -164,7 +168,8 @@ function displayAudioList() {
                             assignCategoryToFile(file, categorySelect.value);
                             fileCategoryParagraph.textContent = `Catégorie: ${categorySelect.value}`; // Mise à jour immédiate de l'affichage de la catégorie
                         };
-                        audioContainer.appendChild(assignCategoryButton);
+                        categSon.appendChild(assignCategoryButton);
+                        audioContainer.appendChild(categSon);
                         audioListContainer.appendChild(audioContainer);
                     });
                 }
@@ -520,7 +525,17 @@ function addCategory() {
             body: JSON.stringify({ name: newCategoryName })
         });
         if (response.ok) {
-            yield loadAndDisplayCategories(); // Recharger la liste des catégories
+            const newCategory = yield response.json(); // Supposer que le serveur renvoie la catégorie ajoutée
+            // Mise à jour de la liste des catégories côté client
+            categories.push(newCategory); // Supposons que 'categories' est la liste des catégories maintenue côté client
+            const categorySelects = document.querySelectorAll('.categSelect');
+            categorySelects.forEach(select => {
+                const option = document.createElement('option');
+                option.value = newCategory.name;
+                option.textContent = newCategory.name;
+                select.appendChild(option);
+            });
+            newCategoryNameInput.value = ''; // Effacer le champ après l'ajout
         }
         else {
             alert('Erreur lors de l\'ajout de la catégorie');
@@ -531,7 +546,19 @@ function deleteCategory(categoryName) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield fetch(`/categories/${categoryName}`, { method: 'DELETE' });
         if (response.ok) {
-            yield loadAndDisplayCategories(); // Recharger la liste des catégories
+            // Recharger la liste des catégories
+            yield loadAndDisplayCategories();
+            // Mise à jour de l'interface utilisateur pour refléter la suppression
+            document.querySelectorAll('.categSelect').forEach(selectElement => {
+                const select = selectElement; // Cast explicitement en HTMLSelectElement
+                Array.from(select.options).forEach(option => {
+                    if (option.value === categoryName) {
+                        option.remove(); // Supprimer l'option de la catégorie supprimée
+                    }
+                });
+            });
+            // Optionnel : Mettre à jour la catégorie des fichiers audio affectés à "Non catégorisé"
+            refreshAudioList();
         }
         else {
             alert('Erreur lors de la suppression de la catégorie');
