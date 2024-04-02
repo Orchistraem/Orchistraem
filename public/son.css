@@ -58,3 +58,11 @@ div .col-3{
     margin-right: auto;
     text-align: center; /* Aligner le texte à gauche */
 }
+
+.editSon button{
+    margin: 2px;
+}
+
+.categSon button{
+    margin: 2px;
+}

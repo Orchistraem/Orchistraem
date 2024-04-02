@@ -91,6 +91,9 @@ function displayAudioList() {
                         const audioContainer = document.createElement('div');
                         audioContainer.classList.add('audio-container');
                         audioContainer.setAttribute('data-file', file);
+                        audioContainer.addEventListener('click', () => {
+                            audioContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        });
                         const fileNameParagraph = document.createElement('p');
                         fileNameParagraph.textContent = file.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
                         audioContainer.appendChild(fileNameParagraph);
@@ -140,12 +143,15 @@ function displayAudioList() {
                             fetch(audioUrl)
                                 .then(response => response.blob())
                                 .then(blob => {
-                                drawSonogram(blob, audioContainer);
+                                drawSonogram(blob, editSon);
                             });
                         });
                         editSon.appendChild(analyseButton);
                         // Ajouter le div "editSon" au conteneur principal
                         audioContainer.appendChild(editSon);
+                        // Créer le div "categSon"
+                        const categSon = document.createElement('div');
+                        categSon.classList.add('categSon');
                         // Menu déroulant pour les catégories
                         const categorySelect = document.createElement('select');
                         categories.forEach((category) => {
@@ -155,7 +161,7 @@ function displayAudioList() {
                             categorySelect.appendChild(option);
                         });
                         categorySelect.value = fileCategory; // Sélectionner la catégorie actuelle
-                        audioContainer.appendChild(categorySelect);
+                        categSon.appendChild(categorySelect);
                         // Bouton pour assigner la catégorie
                         const assignCategoryButton = document.createElement('button');
                         assignCategoryButton.textContent = 'Assigner Catégorie';
@@ -164,7 +170,8 @@ function displayAudioList() {
                             assignCategoryToFile(file, categorySelect.value);
                             fileCategoryParagraph.textContent = `Catégorie: ${categorySelect.value}`; // Mise à jour immédiate de l'affichage de la catégorie
                         };
-                        audioContainer.appendChild(assignCategoryButton);
+                        categSon.appendChild(assignCategoryButton);
+                        audioContainer.appendChild(categSon);
                         audioListContainer.appendChild(audioContainer);
                     });
                 }

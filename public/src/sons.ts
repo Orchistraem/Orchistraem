@@ -91,6 +91,9 @@ function displayAudioList() {
                     const audioContainer = document.createElement('div');
                     audioContainer.classList.add('audio-container');
                     audioContainer.setAttribute('data-file', file);
+                    audioContainer.addEventListener('click', () => {
+                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    });                
                     
                     const fileNameParagraph = document.createElement('p');
                     fileNameParagraph.textContent = file.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
@@ -163,7 +166,6 @@ function displayAudioList() {
   
                     // Menu déroulant pour les catégories
                     const categorySelect = document.createElement('select');
-                    categorySelect.classList.add('categSelect');
                     categories.forEach((category : any) => {
                       const option = document.createElement('option');
                       option.value = category.name;
