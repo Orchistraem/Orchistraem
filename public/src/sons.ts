@@ -92,7 +92,7 @@ function displayAudioList() {
                     audioContainer.classList.add('audio-container');
                     audioContainer.setAttribute('data-file', file);
                     audioContainer.addEventListener('click', () => {
-                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     });                
                     
                     const fileNameParagraph = document.createElement('p');
@@ -108,6 +108,9 @@ function displayAudioList() {
                     const audioElement = document.createElement('audio');
                     audioElement.setAttribute('controls', '');
                     audioElement.src = `/uploads/${file}`;
+                    audioElement.addEventListener('play', () => {
+                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    });
                     audioContainer.appendChild(audioElement);
   
                     // Créer le div "editSon"
@@ -120,6 +123,9 @@ function displayAudioList() {
                     modifyButton.classList.add('btn', 'btn-primary');
                     modifyButton.onclick = () => modifyName(file);
                     editSon.appendChild(modifyButton);
+                    modifyButton.addEventListener('click', () => {
+                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    });
 
                     // Bouton Supprimer
                     const deleteButton = document.createElement('button');
@@ -127,6 +133,9 @@ function displayAudioList() {
                     deleteButton.classList.add('btn', 'btn-danger');
                     deleteButton.onclick = () => deleteSong(file);
                     editSon.appendChild(deleteButton);
+                    deleteButton.addEventListener('click', () => {
+                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    });
 
                     // Ajouter le bouton d'analyse des sons
                     const analyseButton = document.createElement('button');
@@ -154,7 +163,9 @@ function displayAudioList() {
                                 drawSonogram(blob, editSon);
                             });
                     });
-
+                    analyseButton.addEventListener('click', () => {
+                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    });
                     editSon.appendChild(analyseButton);
 
                     // Ajouter le div "editSon" au conteneur principal
@@ -174,6 +185,9 @@ function displayAudioList() {
                     });
                     categorySelect.value = fileCategory; // Sélectionner la catégorie actuelle
                     categSon.appendChild(categorySelect);
+                    categorySelect.addEventListener('click', () => {
+                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    });
   
                     // Bouton pour assigner la catégorie
                     const assignCategoryButton = document.createElement('button');
@@ -184,6 +198,9 @@ function displayAudioList() {
                       fileCategoryParagraph.textContent = `Catégorie: ${categorySelect.value}`; // Mise à jour immédiate de l'affichage de la catégorie
                     };
                     categSon.appendChild(assignCategoryButton);
+                    assignCategoryButton.addEventListener('click', () => {
+                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    });
                     
                     audioContainer.appendChild(categSon);
                     audioListContainer.appendChild(audioContainer);
