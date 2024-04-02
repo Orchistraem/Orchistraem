@@ -390,12 +390,6 @@ function analyseAudio(audioFile, audioContainer) {
         requestAnimationFrame(checkAudioProcessing);
     });
 }
-/**
- * Dessine un sonogramme à partir d'un fichier audio Blob.
- *
- * @param audioFile Le Blob du fichier audio à analyser.
- * @param audioContainer Le conteneur HTML où le sonogramme sera affiché.
- */
 function drawSonogram(audioFile, audioContainer) {
     return __awaiter(this, void 0, void 0, function* () {
         const audioContext = new AudioContext();
@@ -403,8 +397,11 @@ function drawSonogram(audioFile, audioContainer) {
         const audioBuffer = yield audioContext.decodeAudioData(arrayBuffer);
         const canvas = document.createElement('canvas');
         canvas.id = 'sonogramCanvas';
-        canvas.width = 800; // Largeur du canvas en pixels
-        canvas.height = 300; // Hauteur du canvas en pixels
+        canvas.width = 850; // Inclut l'espace pour les légendes
+        canvas.height = 350; // Inclut l'espace pour les légendes
+        const animationHeight = 300; // Hauteur dédiée à l'animation
+        const legendSpaceBottom = 50; // Espace réservé pour les légendes horizontales
+        const legendSpaceSide = 150; // Espace réservé pour les légendes verticales
         audioContainer.appendChild(canvas);
         const canvasContext = canvas.getContext('2d');
         if (!canvasContext) {
@@ -420,44 +417,54 @@ function drawSonogram(audioFile, audioContainer) {
         source.connect(analyser);
         analyser.connect(audioContext.destination);
         source.start(0);
-        function drawLegends(ctx, width, height, sampleRate) {
+        // Définition de la fonction drawLegends pour les fréquences
+        function drawLegends(ctx, width, sampleRate) {
             const specificFrequencies = [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000];
             const maxFreq = sampleRate / 2;
+            const logMax = Math.log10(maxFreq);
+            const logMin = Math.log10(specificFrequencies[0]);
             ctx.font = '12px Arial';
-            ctx.fillStyle = 'black';
-            // Assurez-vous que la première fréquence et la dernière sont entièrement visibles
-            const offset = ctx.measureText('125 Hz').width / 2; // Calculez l'offset basé sur la largeur du texte
-            const effectiveWidth = width - offset * 2; // Largeur effective du canvas pour le placement des légendes
+            const bottomOffset = 20;
             specificFrequencies.forEach(freq => {
                 const logFreq = Math.log10(freq);
-                const logMax = Math.log10(maxFreq);
-                const logMin = Math.log10(specificFrequencies[0]);
-                const x = ((logFreq - logMin) / (logMax - logMin)) * effectiveWidth + offset;
-                ctx.textAlign = 'center';
-                ctx.fillText(`${freq}`, x, height - 10);
+                const x = ((logFreq - logMin) / (logMax - logMin)) * (width - legendSpaceSide);
+                ctx.fillText(`${freq}`, x, canvas.height - bottomOffset);
             });
-            // Légendes d'intensité (axe Y) - Simplifié pour l'exemple
-            ctx.textAlign = 'right';
-            for (let i = 0; i <= 5; i++) {
-                const intensity = i * 20; // Exemple d'échelle
-                const y = height - (i * (height / 5));
-                ctx.fillText(`${intensity} dB`, width - 10, y);
-            }
+        }
+        // Définition de la fonction drawDbLegends pour les décibels
+        function drawDbLegends(ctx, width, height, legendSpaceBottom, legendSpaceSide) {
+            const dbValues = [-60, -48, -36, -24, -12, 0];
+            ctx.font = '12px Arial';
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'left';
+            const offsetX = 20; // Distance horizontale depuis le bord droit du graphique d'animation
+            // Assurez-vous que le décalage horizontal ne fait pas sortir les légendes du cadre
+            const maxLegendWidth = legendSpaceSide - offsetX;
+            dbValues.forEach((db, index) => {
+                // Y position is from top of canvas to the bottom
+                const y = (index / (dbValues.length - 1)) * (height - legendSpaceBottom);
+                // Assurez-vous que le texte des dB est dessiné à l'intérieur du cadre
+                ctx.fillText(`${db} dB`, width - maxLegendWidth, y);
+            });
         }
         const draw = () => {
             requestAnimationFrame(draw);
-            canvasContext.clearRect(0, 0, canvas.width, canvas.height); // Efface le canvas
+            canvasContext.clearRect(0, 0, canvas.width, canvas.height);
             analyser.getByteFrequencyData(dataArray);
+            const animationWidth = canvas.width - legendSpaceSide;
             const barWidth = (canvas.width / bufferLength) * 2.5;
             let barHeight;
             let x = 0;
             for (let i = 0; i < bufferLength; i++) {
                 barHeight = dataArray[i];
-                canvasContext.fillStyle = `rgb(${barHeight + 100},50,50)`;
-                canvasContext.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight / 2);
+                if (x < animationWidth) {
+                    canvasContext.fillStyle = `rgb(${barHeight + 100},50,50)`;
+                    canvasContext.fillRect(x, canvas.height - 50 - barHeight / 2, barWidth, barHeight / 2);
+                }
                 x += barWidth + 1;
             }
-            drawLegends(canvasContext, canvas.width, canvas.height, audioBuffer.sampleRate);
+            drawLegends(canvasContext, canvas.width, audioBuffer.sampleRate);
+            drawDbLegends(canvasContext, canvas.width, canvas.height, legendSpaceBottom, legendSpaceSide);
         };
         draw();
     });
