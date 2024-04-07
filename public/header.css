@@ -39,7 +39,8 @@
     width: 3%;
 }
 
-.tab2 img:hover, .tab1 img:hover {
-    margin-right: 1%;
-    width:4%;
+
+@font-face {
+    font-family: Colagraph;
+    src: url('ressources/Colagraph8-Regular.ttf');
 }

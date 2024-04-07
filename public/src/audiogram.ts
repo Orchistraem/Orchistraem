@@ -250,57 +250,131 @@ function initAudiogram(canvasID: string, pointColor: string, borderColor: string
   return null; // Retourne null si le canvas ou le contexte 2D n'existe pas
 }
 
-const soundValues: { [key: string]: { xMin: number; xMax: number; yMin: number; yMax: number } } = {
-  "arcade_retro_game_over.mp3": { xMin: 500, xMax: 2000, yMin: 20, yMax: 60 },
-  "cliquets.mp3": { xMin: 250, xMax: 3000, yMin: 30, yMax: 70 },
-  // Ajoutez d'autres sons et leurs valeurs ici
-};
+function adjustValuesToGraphLimits(minFrequency:number, maxFrequency:number, minIntensityDb:number, maxIntensityDb:number) {
+  const graphMinFrequency = 125; // Limite minimale de la fréquence sur le graphique
+  const graphMaxFrequency = 8000; // Limite maximale de la fréquence sur le graphique
+  const graphMinIntensity = 0; // Limite minimale de l'intensité sur le graphique
+  const graphMaxIntensity = 120; // Limite maximale de l'intensité sur le graphique
+
+  // Ajustement des valeurs pour s'assurer qu'elles sont dans les limites du graphique
+  const xMin = Math.max(minFrequency, graphMinFrequency);
+  const xMax = Math.min(maxFrequency, graphMaxFrequency);
+  const yMin = Math.max(minIntensityDb, graphMinIntensity);
+  const yMax = Math.min(maxIntensityDb, graphMaxIntensity);
+
+  return { xMin, xMax, yMin, yMax };
+}
 
 let select = document.getElementById("soundSelectorChampLibre") as HTMLSelectElement;
 if (select) {
-    select.addEventListener("change", function() {
+    select.addEventListener("change", async function() {
         const selectedSound = this.value;
         console.log("Son sélectionné:", selectedSound);
-        
-        // Récupère les valeurs pour le son sélectionné
-        const values = soundValues[selectedSound];
-        
-        if (values) {
-            console.log("Valeurs associées au son:", values);
-            updateAudiogramForSound(selectedSound);
+
+        // Construire l'URL du fichier audio basé sur le son sélectionné
+        const audioUrl = `/uploads/${selectedSound}`; // Assurez-vous que ce chemin est correct
+
+        // Chargement et analyse du fichier audio
+        try {
+            const audioResponse = await fetch(audioUrl);
+            const audioBlob = await audioResponse.blob();
+            // Utilisez les noms de propriétés corrects conformément à la fonction analyseAudioExtremesConsole
+            analyseAudioExtremesConsole(audioBlob).then((values) => {
+                console.log("Valeurs extrêmes de l'audio:", values);
+                // Pas besoin de convertir les noms de propriétés ici
+                const adjustedValues = adjustValuesToGraphLimits(values.xMin, values.xMax, values.yMin, values.yMax);
+                updateAudiogramWithNewValues(adjustedValues);
+            });
+        } catch (error) {
+            console.error('Erreur lors du chargement ou de l\'analyse du fichier audio:', error);
         }
     });
 }
 
-function updateAudiogramForSound(selectedSound: string) {
-  // Vérifiez si les valeurs pour le son sélectionné existent
-  const values = soundValues[selectedSound];
-  if (!values) {
-    console.error("Valeurs non trouvées pour le son sélectionné:", selectedSound);
-    return;
+
+
+
+async function analyseAudioExtremesConsole(audioFile: Blob): Promise<{xMin: number, xMax: number, yMin: number, yMax: number}> {
+  const audioContext = new AudioContext();
+  const arrayBuffer = await audioFile.arrayBuffer();
+  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+  const analyser = audioContext.createAnalyser();
+  const source = audioContext.createBufferSource();
+
+  source.buffer = audioBuffer;
+  source.connect(analyser);
+  analyser.fftSize = 2048;
+  const bufferLength = analyser.frequencyBinCount;
+  const dataArrayFrequency = new Uint8Array(bufferLength);
+
+  source.connect(audioContext.destination);
+  source.start(0);
+
+  return new Promise((resolve, reject) => {
+      const checkAudioProcessing = () => {
+          analyser.getByteFrequencyData(dataArrayFrequency);
+          
+          let minFreqIndex = bufferLength;
+          let maxFreqIndex = 0;
+          let minIntensityDb = Infinity;
+          let maxIntensityDb = -Infinity;
+
+          for (let i = 0; i < bufferLength; i++) {
+              if (dataArrayFrequency[i] > 0) {
+                  minFreqIndex = Math.min(minFreqIndex, i);
+                  maxFreqIndex = Math.max(maxFreqIndex, i);
+
+                  let intensityDb = 20 * Math.log10(dataArrayFrequency[i] / 255);
+                  minIntensityDb = Math.min(minIntensityDb, intensityDb);
+                  maxIntensityDb = Math.max(maxIntensityDb, intensityDb);
+              }
+          }
+
+          if (minFreqIndex < bufferLength) {
+              const minFrequency = minFreqIndex * audioContext.sampleRate / analyser.fftSize;
+              const maxFrequency = maxFreqIndex * audioContext.sampleRate / analyser.fftSize;
+
+              resolve({
+                  xMin: minFrequency,
+                  xMax: maxFrequency,
+                  yMin: minIntensityDb,
+                  yMax: maxIntensityDb
+              });
+
+              source.stop();
+              audioContext.close();
+          } else {
+              requestAnimationFrame(checkAudioProcessing);
+          }
+      };
+
+      requestAnimationFrame(checkAudioProcessing);
+  });
+}
+
+
+function updateAudiogramWithNewValues(values:any) {
+  if (!audiogramChartRight) {
+      console.error("L'instance d'audiogramme n'est pas définie.");
+      return;
   }
 
-  // Assurez-vous que votre instance d'audiogramme est accessible ici, par exemple audiogramChartChampLibre
-  if (audiogramChartRight) {
-    // Mise à jour des annotations pour l'audiogramme avec les nouvelles valeurs
-    const annotationsOptions = audiogramChartRight.options.plugins.annotation.annotations;
-    
-    // Mise à jour ou création de l'annotation de type 'box'
-    annotationsOptions.box1 = {
-      type: 'box',
-      xMin: values.xMin,
-      xMax: values.xMax,
-      yMin: values.yMin,
-      yMax: values.yMax,
-      backgroundColor: 'rgba(255, 99, 132, 0.25)'
-    };
-    
-    // Redessine le graphique avec les nouvelles annotations
-    audiogramChartRight.update();
-  } else {
-    console.error("L'instance d'audiogramme n'est pas définie.");
-  }
+  // Mise à jour des annotations pour l'audiogramme avec les nouvelles valeurs
+  const annotationsOptions = audiogramChartRight.options.plugins.annotation.annotations;
+  
+  annotationsOptions.box1 = {
+    type: 'box',
+    xMin: values.xMin,
+    xMax: values.xMax,
+    yMin: values.yMin,
+    yMax: values.yMax,
+    backgroundColor: 'rgba(255, 99, 132, 0.25)'
+  };
+  
+  // Redessine le graphique avec les nouvelles annotations
+  audiogramChartRight.update();
 }
+
 
 
 

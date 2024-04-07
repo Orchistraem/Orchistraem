@@ -429,6 +429,7 @@ async function analyseAudio(audioFile: Blob, audioContainer: HTMLDivElement): Pr
     requestAnimationFrame(checkAudioProcessing);
 }
 
+
 /**
  * Dessine un sonogramme à partir d'un fichier audio Blob.
  * 
