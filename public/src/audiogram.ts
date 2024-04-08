@@ -64,11 +64,11 @@ function deleteAllPointsFromCharts() {
 function deleteAllPointsFromServer() {
   // Envoyer des requêtes de suppression au serveur pour chaque oreille
   fetch('/delete-all-points/gauche', { method: 'DELETE' })
-      .then(response => console.log('Tous les points de l\'oreille gauche supprimés'))
+      .then(response => console.log('Tous les points de l\'oreille droite supprimés'))
       .catch(error => console.error('Erreur:', error));
 
   fetch('/delete-all-points/droite', { method: 'DELETE' })
-      .then(response => console.log('Tous les points de l\'oreille droite supprimés'))
+      .then(response => console.log('Tous les points de l\'oreille gauche supprimés'))
       .catch(error => console.error('Erreur:', error));
 }
 
@@ -792,8 +792,8 @@ function snapToDecibelLevels(decibels: number): number {
  * Crée les graphiques d'audiogramme et configure les gestionnaires d'événements pour les formulaires d'ajout de points.
  */
 window.onload = function () {
-  audiogramChartLeft = initAudiogram('audiogramLeft', 'rgb(0, 0, 0)', 'rgba(0, 1, 1)', 'Oreille Gauche');
-  audiogramChartRight = initAudiogram('audiogramRight', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Oreille Droite');
+  audiogramChartLeft = initAudiogram('audiogramLeft', 'rgb(0, 0, 0)', 'rgba(0, 1, 1)', 'Oreille Droite');
+  audiogramChartRight = initAudiogram('audiogramRight', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Oreille Gauche');
   const legendSelectorLeft = document.getElementById('legendSelectorLeft') as HTMLSelectElement;
   const legendSelectorRight = document.getElementById('legendSelectorRight') as HTMLSelectElement;
   if (audiogramChartLeft && audiogramChartRight) {

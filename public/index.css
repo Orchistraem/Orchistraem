@@ -39,3 +39,6 @@ a>img{
     animation: grandir-et-rétrécir 8s infinite; /* Animation de 8 secondes qui se répète indéfiniment */
   }
   
+.header {
+  padding: 4% 4%;
+}
