@@ -123,6 +123,7 @@ function displayAudioList() {
                         analyseButton.textContent = 'Analyser';
                         analyseButton.classList.add('btn', 'btn-info');
                         analyseButton.addEventListener('click', () => {
+                            const canvas = audioContainer.querySelector('#sonogramCanvas');
                             let closeButton = audioContainer.querySelector('#closeButtonAnalyse');
                             if (!closeButton) {
                                 closeButton = document.createElement('button');
@@ -140,7 +141,7 @@ function displayAudioList() {
                             fetch(audioUrl)
                                 .then(response => response.blob())
                                 .then(blob => {
-                                drawSonogram(blob, editSon);
+                                drawSonogram(blob, editSon, canvas);
                             });
                         });
                         editSon.appendChild(analyseButton);
@@ -390,12 +391,12 @@ function analyseAudio(audioFile, audioContainer) {
         requestAnimationFrame(checkAudioProcessing);
     });
 }
-function drawSonogram(audioFile, audioContainer) {
+function drawSonogram(audioFile, audioContainer, sonogramCanvas) {
     return __awaiter(this, void 0, void 0, function* () {
         const audioContext = new AudioContext();
         const arrayBuffer = yield audioFile.arrayBuffer();
         const audioBuffer = yield audioContext.decodeAudioData(arrayBuffer);
-        const canvas = document.createElement('canvas');
+        const canvas = sonogramCanvas || document.createElement('canvas');
         canvas.id = 'sonogramCanvas';
         canvas.width = 850; // Inclut l'espace pour les légendes
         canvas.height = 350; // Inclut l'espace pour les légendes
@@ -424,6 +425,7 @@ function drawSonogram(audioFile, audioContainer) {
             const logMax = Math.log10(maxFreq);
             const logMin = Math.log10(specificFrequencies[0]);
             ctx.font = '12px Arial';
+            ctx.fillStyle = 'white';
             const bottomOffset = 20;
             specificFrequencies.forEach(freq => {
                 const logFreq = Math.log10(freq);
@@ -431,9 +433,8 @@ function drawSonogram(audioFile, audioContainer) {
                 ctx.fillText(`${freq}`, x, canvas.height - bottomOffset);
             });
         }
-        // Définition de la fonction drawDbLegends pour les décibels
         function drawDbLegends(ctx, width, height, legendSpaceBottom, legendSpaceSide) {
-            const dbValues = [-60, -48, -36, -24, -12, 0];
+            const dbValues = Array.from({ length: 14 }, (_, i) => -10 + i * 10); // Créer un tableau de valeurs de -10 à 120 par pas de 10
             ctx.font = '12px Arial';
             ctx.fillStyle = 'white';
             ctx.textAlign = 'left';
@@ -441,8 +442,8 @@ function drawSonogram(audioFile, audioContainer) {
             // Assurez-vous que le décalage horizontal ne fait pas sortir les légendes du cadre
             const maxLegendWidth = legendSpaceSide - offsetX;
             dbValues.forEach((db, index) => {
-                // Y position is from top of canvas to the bottom
-                const y = (index / (dbValues.length - 1)) * (height - legendSpaceBottom);
+                // Calculer la position verticale y de manière inversée
+                const y = ((db - (-10)) / (120 - (-10))) * (height - legendSpaceBottom);
                 // Assurez-vous que le texte des dB est dessiné à l'intérieur du cadre
                 ctx.fillText(`${db} dB`, width - maxLegendWidth, y);
             });
