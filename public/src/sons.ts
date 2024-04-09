@@ -13,18 +13,25 @@ interface Category {
 
 let categories: Category[] = []; // Initialisez les catégories, vous devrez les charger depuis le serveur.
 
+
+
+// Configure le formulaire pour le téléchargement de fichiers audio.
 function setupUploadAudioForm(): void {
+    // Récupère les éléments du formulaire et du champ de fichier audio.
     const uploadAudioForm = document.getElementById('uploadAudioForm') as HTMLFormElement | null;
     const audioFileInput = document.getElementById('audioFile') as HTMLInputElement | null;
 
     if (uploadAudioForm && audioFileInput) {
+        // Ajoute un écouteur d'événements pour le formulaire de téléchargement.
         uploadAudioForm.addEventListener('submit', function (event: Event): void {
             event.preventDefault();
+            // Crée un objet FormData pour envoyer les données du fichier audio.
             const formData = new FormData();
             const audioFile = audioFileInput.files ? audioFileInput.files[0] : null;
 
             if (audioFile) {
                 formData.append('audioFile', audioFile);
+                // Envoie les données du formulaire au serveur via une requête fetch.
                 fetch('/upload-audio', {
                     method: 'POST',
                     body: formData
@@ -71,7 +78,7 @@ function refreshAudioList(): void {
  * @returns aucune valeur n'est retourné
  */
 function displayAudioList() {
-    // Récupérez les catégories disponibles
+    // Récupérez les catégories disponibles depuis le serveur.
     fetch('/categories')
       .then(response => response.json())
       .then(categories => {
@@ -79,14 +86,15 @@ function displayAudioList() {
         fetch('/audio-metadata')
           .then(response => response.json())
           .then(audioMetadata => {
-            // Ensuite, récupérez la liste des fichiers audio
+            // Ensuite, récupérez la liste des fichiers audio depuis le serveur.
             fetch('/list-audios')
               .then(response => response.json())
               .then(audioFiles => {
                 const audioListContainer = document.getElementById('audioList');
                 if (audioListContainer) {
                   audioListContainer.innerHTML = ''; // Vider la liste existante
-                  
+
+                  // Parcourt chaque fichier audio pour créer et afficher les éléments HTML correspondants.
                   audioFiles.forEach((file : any) => {
                     const audioContainer = document.createElement('div');
                     audioContainer.classList.add('audio-container');
@@ -95,16 +103,19 @@ function displayAudioList() {
                         audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     });                
                     
+                    // Affiche le nom du fichier audio sans l'extension .mp3 et remplace les caractères spéciaux par des espaces.
                     const fileNameParagraph = document.createElement('p');
                     fileNameParagraph.textContent = file.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
                     audioContainer.appendChild(fileNameParagraph);
-  
+                    
+                    // Récupère et affiche la catégorie du fichier à partir des métadonnées ou l'indique comme "Non catégorisé".
                     const fileMetadata = audioMetadata.find((meta : any) => meta.name === file);
                     const fileCategory = fileMetadata ? fileMetadata.category : 'Non catégorisé';
                     const fileCategoryParagraph = document.createElement('p');
                     fileCategoryParagraph.textContent = `Catégorie: ${fileCategory}`;
                     audioContainer.appendChild(fileCategoryParagraph);
-  
+                    
+                    // Crée et affiche un lecteur audio pour écouter le fichier.
                     const audioElement = document.createElement('audio');
                     audioElement.setAttribute('controls', '');
                     audioElement.src = `/uploads/${file}`;
@@ -550,92 +561,139 @@ async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement, son
 
 
 
-
+// Charge et affiche la liste des catégories depuis le serveur
 async function loadAndDisplayCategories(): Promise<void> {
+    // Récupère le conteneur HTML pour afficher les catégories
     const categoriesListDiv = document.getElementById('categoriesList') as HTMLDivElement; // Assertion de type pour éviter les erreurs de nullabilité.
-    if (!categoriesListDiv) return;
+    if (!categoriesListDiv) return;// Arrête la fonction si le conteneur n'est pas trouvé
 
+    // Effectue une requête GET vers "/categories" pour obtenir les catégories depuis le serveur
     const response = await fetch('/categories');
     const categories: Category[] = await response.json(); // Assurez-vous que la réponse correspond à l'interface Category[].
 
+    // Vide le contenu actuel du conteneur des catégories
     categoriesListDiv.innerHTML = '';
+
+    // Pour chaque catégorie récupérée, crée un élément div pour l'affichage
     categories.forEach((category: Category) => {
         const categoryDiv = document.createElement('div');
         categoryDiv.textContent = category.name;
 
+        // Crée un bouton de suppression pour chaque catégorie
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'Supprimer';
         deleteBtn.classList.add('btn', 'btn-danger');
-        deleteBtn.onclick = () => deleteCategory(category.name);
+        deleteBtn.onclick = () => deleteCategory(category.name);// Associe la suppression au clic du bouton
 
+        // Ajoute le bouton de suppression à l'élément div de la catégorie
         categoryDiv.appendChild(deleteBtn);
+
+        // Ajoute l'élément div de la catégorie au conteneur des catégories
         categoriesListDiv.appendChild(categoryDiv);
     });
 }
 
+// Ajoute une nouvelle catégorie côté client et la sauvegarde sur le serveur
 async function addCategory(): Promise<void> {
     const newCategoryNameInput = document.getElementById('newCategoryName') as HTMLInputElement | null;
-    if (!newCategoryNameInput) return;
+    if (!newCategoryNameInput) return; // Arrête la fonction si l'input n'est pas trouvé
 
+    // Récupère le nom de la nouvelle catégorie depuis l'input
     const newCategoryName = newCategoryNameInput.value;
+
+    // Effectue une requête POST vers "/categories" pour ajouter la nouvelle catégorie
     const response = await fetch('/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newCategoryName })
     });
 
+    // Si la requête est réussie, met à jour la liste des catégories côté client
     if (response.ok) {
-        await loadAndDisplayCategories(); // Recharger la liste des catégories
+        const newCategory = await response.json(); // Supposer que le serveur renvoie la catégorie ajoutée
+        // Mise à jour de la liste des catégories côté client
+        categories.push(newCategory); // Supposons que 'categories' est la liste des catégories maintenue côté client
+        const categorySelects = document.querySelectorAll('.categSelect');
+        categorySelects.forEach(select => {
+            const option = document.createElement('option');
+            option.value = newCategory.name;
+            option.textContent = newCategory.name;
+            select.appendChild(option);
+        });
+        newCategoryNameInput.value = ''; // Effacer le champ après l'ajout
+
+        // Recharge la liste des catégories pour afficher la nouvelle catégorie
+        await loadAndDisplayCategories();
     } else {
-        alert('Erreur lors de l\'ajout de la catégorie');
+        alert("Erreur lors de l'ajout de la catégorie");
     }
 }
 
+// Supprime une catégorie existante côté client et sur le serveur
 async function deleteCategory(categoryName: string): Promise<void> {
+    // Effectue une requête DELETE vers "/categories/{categoryName}" pour supprimer la catégorie
     const response = await fetch(`/categories/${categoryName}`, { method: 'DELETE' });
+
+    // Si la suppression est réussie, recharge la liste des catégories et met à jour l'interface utilisateur
     if (response.ok) {
-        await loadAndDisplayCategories(); // Recharger la liste des catégories
+        await loadAndDisplayCategories(); // Recharge la liste des catégories
+        // Met à jour l'interface utilisateur en supprimant l'option de la catégorie supprimée dans les sélecteurs HTML
+        document.querySelectorAll('.categSelect').forEach(selectElement => {
+            const select = selectElement as HTMLSelectElement;
+            Array.from(select.options).forEach(option => {
+                if (option.value === categoryName) {
+                    option.remove(); // Supprime l'option de la catégorie supprimée
+                }
+            });
+        });
+
+        // Optionnel : Met à jour la catégorie des fichiers audio affectés à "Non catégorisé"
+        refreshAudioList();
     } else {
-        alert('Erreur lors de la suppression de la catégorie');
+        alert('Erreur lors de la suppression de la catégorie'); // Affiche une alerte en cas d'erreur
     }
 }
 
+
+
+// Affecte une catégorie à un fichier audio spécifique
 async function assignCategoryToFile(fileName: string, categoryName: string) {
     try {
         const url = `http://localhost:3000/assign-category`;
+        // Effectue une requête POST pour affecter la catégorie au fichier audio
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fileName, categoryName })
         });
 
+        // Si la requête échoue, affiche une erreur
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Erreur lors de l'affectation de la catégorie : ${errorText}`);
         }
 
+        // Si la requête réussit, met à jour l'affichage côté client avec la nouvelle catégorie assignée
         console.log(`Catégorie ${categoryName} affectée à ${fileName}`);
         const categoryParagraph = document.getElementById(`category-${fileName}`) as HTMLParagraphElement;
         if (categoryParagraph) {
-            categoryParagraph.textContent = `Catégorie : ${categoryName}`; // Mise à jour de la catégorie affichée sans recharger toute la liste
+            // Met à jour la catégorie affichée sans recharger toute la liste
+            categoryParagraph.textContent = `Catégorie : ${categoryName}`;
         }
     } catch (error) {
-        console.error('Erreur:', error);
+        console.error('Erreur:', error); // Affiche l'erreur dans la console en cas d'échec
     }
 }
 
-
-
-
-
-
-
+// Fonction exécutée lorsque la page est entièrement chargée
 window.onload = async (): Promise<void> => {
-    await displayAudioList();
-    await loadAndDisplayCategories();
-    setupUploadAudioForm()
+    await displayAudioList(); // Affiche la liste des fichiers audio
+    await loadAndDisplayCategories(); // Charge et affiche la liste des catégories
+    setupUploadAudioForm(); // Initialise le formulaire d'upload de fichiers audio
+
+    // Attache un gestionnaire d'événement au bouton "Ajouter une catégorie"
     const addCategoryBtn = document.getElementById('addCategoryBtn');
     if (addCategoryBtn) {
-        addCategoryBtn.onclick = addCategory;
+        addCategoryBtn.onclick = addCategory; // Associe l'ajout de catégorie à un clic sur le bouton
     }
 }
