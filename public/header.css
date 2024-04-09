@@ -34,13 +34,7 @@
     font-size: 250%;
 }
 
-.tab2 img, .tab1 img {
+.header .tab2 img, .header .tab1 img {
     margin-right: 2%;
-    width: 3%;
-}
-
-
-@font-face {
-    font-family: Colagraph;
-    src: url('ressources/Colagraph8-Regular.ttf');
+    width: 5%;
 }

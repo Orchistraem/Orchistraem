@@ -67,11 +67,11 @@ function deleteAllPointsFromCharts() {
 function deleteAllPointsFromServer() {
   // Envoyer des requêtes de suppression au serveur pour chaque oreille
   fetch('/delete-all-points/gauche', { method: 'DELETE' })
-      .then(response => console.log('Tous les points de l\'oreille gauche supprimés'))
+      .then(response => console.log('Tous les points de l\'oreille droite supprimés'))
       .catch(error => console.error('Erreur:', error));
 
   fetch('/delete-all-points/droite', { method: 'DELETE' })
-      .then(response => console.log('Tous les points de l\'oreille droite supprimés'))
+      .then(response => console.log('Tous les points de l\'oreille gauche supprimés'))
       .catch(error => console.error('Erreur:', error));
 
   fetch('/delete-all-points/champLibre', { method: 'DELETE' })
@@ -477,7 +477,7 @@ function initAudiogramChampLibre(canvasID: string, pointColor: string, borderCol
                           tension: 0 // Lignes droites sans courbure
                       }
                   },
-                  responsive: false,
+                  responsive: true,
                   maintainAspectRatio: true
               }
           });
@@ -1101,9 +1101,8 @@ document.addEventListener('DOMContentLoaded', () => {
  * Crée les graphiques d'audiogramme et configure les gestionnaires d'événements pour les formulaires d'ajout de points.
  */
 window.onload = function () {
-  audiogramChartLeft = initAudiogram('audiogramLeft', 'rgb(0, 0, 0)', 'rgba(0, 1, 1)', 'Oreille Gauche');
-  audiogramChartRight = initAudiogram('audiogramRight', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Oreille Droite');
-  audiogramChampLibre = initAudiogramChampLibre('audiogramChampLibre', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Champ Libre');
+  audiogramChartLeft = initAudiogram('audiogramLeft', 'rgb(0, 0, 0)', 'rgba(0, 1, 1)', 'Oreille Droite');
+  audiogramChartRight = initAudiogram('audiogramRight', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Oreille Gauche');
   const legendSelectorLeft = document.getElementById('legendSelectorLeft') as HTMLSelectElement;
   const legendSelectorRight = document.getElementById('legendSelectorRight') as HTMLSelectElement;
   const legendSelectorChampLibre = document.getElementById('legendSelectorChampLibre') as HTMLSelectElement;
