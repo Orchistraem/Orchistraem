@@ -1103,6 +1103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 window.onload = function () {
   audiogramChartLeft = initAudiogram('audiogramLeft', 'rgb(0, 0, 0)', 'rgba(0, 1, 1)', 'Oreille Droite');
   audiogramChartRight = initAudiogram('audiogramRight', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Oreille Gauche');
+  audiogramChampLibre = initAudiogramChampLibre('audiogramChampLibre', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Champ Libre');
   const legendSelectorLeft = document.getElementById('legendSelectorLeft') as HTMLSelectElement;
   const legendSelectorRight = document.getElementById('legendSelectorRight') as HTMLSelectElement;
   const legendSelectorChampLibre = document.getElementById('legendSelectorChampLibre') as HTMLSelectElement;
