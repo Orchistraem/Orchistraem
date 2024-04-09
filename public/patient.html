@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="base.css" />
     <link rel="stylesheet" href="layout.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2/dist/chartjs-plugin-annotation.min.js"></script>
     <link
       rel="icon"
       sizes="64x64"
@@ -38,55 +39,58 @@
       </div>
     </div>
 
+    <div
+      id="notification"
+      style="
+        display: none;
+        position: fixed;
+        top: 7%;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #caf0f8;
+        color: #0077b6;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+      "
+    >
+      Message de notification
+    </div>
+
     <div class="audiogram-container">
-      <!-- Notification Div -->
-      <div
-        id="notification"
-        style="
-          display: none;
-          position: fixed;
-          top: 7%;
-          left: 50%;
-          transform: translateX(-50%);
-          background-color: #caf0f8;
-          color: #0077b6;
-          padding: 10px;
-          border-radius: 5px;
-          box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
-          z-index: 1000;
-        "
-      >
-        Message de notification
-      </div>
-
-      <div>
-        <div class="chartBox">
-          <canvas id="audiogramLeft" class="audiogram"></canvas>
+      <!-- Left Audiogram -->
+      <div class="chartBox">
+        <canvas id="audiogramLeft" class="audiogram"></canvas>
+              <!-- Left form Audiogram -->
+              <div class="form-container">
+                <form id="addPointFormLeft">
+                  <input
+                    type="text"
+                    id="frequenciesLeft"
+                    class="form-control"
+                    placeholder="Fréquence"
+                    name="frequency"
+                  /><br />
+                  <input
+                    type="text"
+                    id="decibelsLeft"
+                    class="form-control"
+                    placeholder="dB"
+                    name="decibels"
+                  /><br />
+                  <button type="submit" class="btn btn-outline-primary">
+                    Ajouter
+                  </button>
+                </form>
+              </div>
         </div>
 
-        <div class="form-container">
-          <form id="addPointFormLeft">
-            <input
-              type="text"
-              id="frequenciesLeft"
-              class="form-control"
-              placeholder="Fréquence"
-              name="frequency"
-            /><br />
-            <input
-              type="text"
-              id="decibelsLeft"
-              class="form-control"
-              placeholder="dB"
-              name="decibels"
-            /><br />
-            <button type="submit" class="btn btn-outline-primary">
-              Ajouter
-            </button>
-          </form>
-        </div>
-      </div>
+
       <div class="edit">
+        <select id="soundSelectorChampLibre" class="form-select">
+          <!-- Les options seront ajoutées dynamiquement via JavaScript -->
+        </select>
         <div class="legend">
           <select id="legendSelectorLeft" class="form-select">
             <option value="circle">Cercle</option>
@@ -120,13 +124,48 @@
         <button id="deleteAllPoints" class="btn btn-outline-primary">
           Supprimer Tous les Points
         </button>
+
+        <script>
+          function toggleAudiogramVisibility() {
+            const toggleChampLibre =
+              document.getElementById("toggleChampLibre");
+            const audiogramChampLibre = document.getElementById(
+              "audiogramChampLibre"
+            );
+            const formThird = document.getElementById("addPointFormThird");
+
+            if (toggleChampLibre.checked) {
+              audiogramChampLibre.style.display = "block";
+              formThird.style.display = "block";
+            } else {
+              audiogramChampLibre.style.display = "none";
+              formThird.style.display = "none";
+            }
+          }
+          document.addEventListener(
+            "DOMContentLoaded",
+            toggleAudiogramVisibility
+          );
+        </script>
+        <div class="AfficherAudioLibre">
+          <label class="form-check-label" for="toggleChampLibre">
+            Afficher l'Audiogramme Champ Libre
+          </label>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="toggleChampLibre"
+              onclick="toggleAudiogramVisibility()"
+            />
+          </div>
+        </div>
       </div>
 
-      <div>
-        <div class="chartBox">
-          <canvas id="audiogramRight" class="audiogram"></canvas>
-        </div>
-        <div id="tooltipLeft" class="tooltip" style="display: none"></div>
+      <!-- Right Audiogram -->
+      <div class="chartBox">
+        <canvas id="audiogramRight" class="audiogram"></canvas>
+        <!-- Form for Right Audiogram -->
         <div class="form-container">
           <form id="addPointFormRight">
             <input
@@ -150,8 +189,29 @@
         </div>
       </div>
     </div>
+  </div>
+
+    <!-- Third Audiogram on a new line -->
+    <div class="audiogram-container">
+      <div class="chartBox">
+        <canvas id="audiogramChampLibre" class="audiogram" style="display: none"></canvas>
+        <div class="form-container" id="test">
+          <form id="addPointFormThird" style="display: none">
+            <div class="input-group">
+              <input type="text" id="frequenciesThird" class="form-control" placeholder="Fréquence" name="frequency" />
+              <input type="text" id="decibelsThird" class="form-control" placeholder="dB" name="decibels" />
+              <select id="legendSelectorChampLibre" class="form-select">
+                <option value="circle">Cercle</option>
+                <option value="A">A</option>
+              </select>
+            </div>
+            <br />
+            <button type="submit" class="btn btn-outline-primary">Ajouter</button>
+          </form>
+        </div>
+      </div>
+    </div>
 
     <script src="dist/audiogram.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>

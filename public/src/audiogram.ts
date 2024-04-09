@@ -4,6 +4,7 @@ declare var Chart: any;
 // Déclaration des instances de Chart.js pour les audiogrammes de chaque oreille.
 let audiogramChartLeft: any = null;
 let audiogramChartRight: any = null;
+let audiogramChampLibre: any = null;
 
 // Mode de suppression désactivé par défaut
 let isDeletionModeActive = false;
@@ -57,6 +58,8 @@ function deleteAllPointsFromCharts() {
   // Supprimer tous les points des graphiques
   audiogramChartLeft.data.datasets.forEach((dataset: any) => dataset.data = []);
   audiogramChartRight.data.datasets.forEach((dataset: any) => dataset.data = []);
+  audiogramChampLibre.data.datasets.forEach((dataset: any) => dataset.data = []);
+  audiogramChampLibre.update();
   audiogramChartLeft.update();
   audiogramChartRight.update();
 }
@@ -69,6 +72,10 @@ function deleteAllPointsFromServer() {
 
   fetch('/delete-all-points/droite', { method: 'DELETE' })
       .then(response => console.log('Tous les points de l\'oreille droite supprimés'))
+      .catch(error => console.error('Erreur:', error));
+
+  fetch('/delete-all-points/champLibre', { method: 'DELETE' })
+      .then(response => console.log('Tous les points du champ libre supprimés'))
       .catch(error => console.error('Erreur:', error));
 }
 
@@ -214,6 +221,254 @@ function initAudiogram(canvasID: string, pointColor: string, borderColor: string
                       padding: {
                         top: 10,
                         bottom: 30
+                      },
+                    },
+                    annotation: {
+                      annotations: {
+                        box1: {
+                          type: 'box',
+                          xMin: 500, // Fréquence basse
+                          xMax: 2000, // Fréquence haute
+                          yMin: 20, // Intensité basse
+                          yMax: 60, // Intensité haute
+                          backgroundColor: 'rgba(255, 99, 132, 0.25)'
+                        }
+                      }
+                    }
+                  },
+                  elements: {
+                      line: {
+                          tension: 0 // Lignes droites sans courbure
+                      }
+                  },
+                  responsive: false,
+                  maintainAspectRatio: true
+              }
+          });
+      }
+  }
+  return null; // Retourne null si le canvas ou le contexte 2D n'existe pas
+}
+
+function adjustValuesToGraphLimits(minFrequency:number, maxFrequency:number, minIntensityDb:number, maxIntensityDb:number) {
+  const graphMinFrequency = 125; // Limite minimale de la fréquence sur le graphique
+  const graphMaxFrequency = 8000; // Limite maximale de la fréquence sur le graphique
+  const graphMinIntensity = 0; // Limite minimale de l'intensité sur le graphique
+  const graphMaxIntensity = 120; // Limite maximale de l'intensité sur le graphique
+
+  // Ajustement des valeurs pour s'assurer qu'elles sont dans les limites du graphique
+  const xMin = Math.max(minFrequency, graphMinFrequency);
+  const xMax = Math.min(maxFrequency, graphMaxFrequency);
+  const yMin = Math.max(minIntensityDb, graphMinIntensity);
+  const yMax = Math.min(maxIntensityDb, graphMaxIntensity);
+
+  return { xMin, xMax, yMin, yMax };
+}
+
+let select = document.getElementById("soundSelectorChampLibre") as HTMLSelectElement;
+if (select) {
+    select.addEventListener("change", async function() {
+        const selectedSound = this.value;
+        console.log("Son sélectionné:", selectedSound);
+
+        // Construire l'URL du fichier audio basé sur le son sélectionné
+        const audioUrl = `/uploads/${selectedSound}`; // Assurez-vous que ce chemin est correct
+
+        // Chargement et analyse du fichier audio
+        try {
+            const audioResponse = await fetch(audioUrl);
+            const audioBlob = await audioResponse.blob();
+            // Utilisez les noms de propriétés corrects conformément à la fonction analyseAudioExtremesConsole
+            analyseAudioExtremesConsole(audioBlob).then((values) => {
+                console.log("Valeurs extrêmes de l'audio:", values);
+                // Pas besoin de convertir les noms de propriétés ici
+                const adjustedValues = adjustValuesToGraphLimits(values.xMin, values.xMax, values.yMin, values.yMax);
+                updateAudiogramWithNewValues(adjustedValues);
+            });
+        } catch (error) {
+            console.error('Erreur lors du chargement ou de l\'analyse du fichier audio:', error);
+        }
+    });
+}
+
+
+
+
+async function analyseAudioExtremesConsole(audioFile: Blob): Promise<{xMin: number, xMax: number, yMin: number, yMax: number}> {
+  const audioContext = new AudioContext();
+  const arrayBuffer = await audioFile.arrayBuffer();
+  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+  const analyser = audioContext.createAnalyser();
+  const source = audioContext.createBufferSource();
+
+  source.buffer = audioBuffer;
+  source.connect(analyser);
+  analyser.fftSize = 2048;
+  const bufferLength = analyser.frequencyBinCount;
+  const dataArrayFrequency = new Uint8Array(bufferLength);
+
+  source.connect(audioContext.destination);
+  source.start(0);
+
+  return new Promise((resolve, reject) => {
+      const checkAudioProcessing = () => {
+          analyser.getByteFrequencyData(dataArrayFrequency);
+          
+          let minFreqIndex = bufferLength;
+          let maxFreqIndex = 0;
+          let minIntensityDb = Infinity;
+          let maxIntensityDb = -Infinity;
+
+          for (let i = 0; i < bufferLength; i++) {
+              if (dataArrayFrequency[i] > 0) {
+                  minFreqIndex = Math.min(minFreqIndex, i);
+                  maxFreqIndex = Math.max(maxFreqIndex, i);
+
+                  let intensityDb = 20 * Math.log10(dataArrayFrequency[i] / 255);
+                  minIntensityDb = Math.min(minIntensityDb, intensityDb);
+                  maxIntensityDb = Math.max(maxIntensityDb, intensityDb);
+              }
+          }
+
+          if (minFreqIndex < bufferLength) {
+              const minFrequency = minFreqIndex * audioContext.sampleRate / analyser.fftSize;
+              const maxFrequency = maxFreqIndex * audioContext.sampleRate / analyser.fftSize;
+
+              resolve({
+                  xMin: minFrequency,
+                  xMax: maxFrequency,
+                  yMin: minIntensityDb,
+                  yMax: maxIntensityDb
+              });
+
+              source.stop();
+              audioContext.close();
+          } else {
+              requestAnimationFrame(checkAudioProcessing);
+          }
+      };
+
+      requestAnimationFrame(checkAudioProcessing);
+  });
+}
+
+
+function updateAudiogramWithNewValues(values:any) {
+  if (!audiogramChartRight) {
+      console.error("L'instance d'audiogramme n'est pas définie.");
+      return;
+  }
+
+  // Mise à jour des annotations pour l'audiogramme avec les nouvelles valeurs
+  const annotationsOptions = audiogramChartRight.options.plugins.annotation.annotations;
+  
+  annotationsOptions.box1 = {
+    type: 'box',
+    xMin: values.xMin,
+    xMax: values.xMax,
+    yMin: values.yMin,
+    yMax: values.yMax,
+    backgroundColor: 'rgba(255, 99, 132, 0.25)'
+  };
+  
+  // Redessine le graphique avec les nouvelles annotations
+  audiogramChartRight.update();
+}
+
+
+
+
+/**
+ * Initialise un audiogramme.
+ * 
+ * Cette fonction crée et configure un audiogramme à l'aide de Chart.js. 
+ * 
+ * @param canvasID - L'identifiant de l'élément canvas HTML où afficher l'audiogramme.
+ * @param pointColor - Couleur des points de l'audiogramme.
+ * @param borderColor - Couleur de la bordure de l'audiogramme.
+ * @param earSide - Côté de l'oreille (gauche ou droite) associé à l'audiogramme.
+ * @returns L'instance de Chart créée ou null en cas d'échec.
+ */
+function initAudiogramChampLibre(canvasID: string, pointColor: string, borderColor: string, earSide: string) {
+  const canvas = document.getElementById(canvasID) as HTMLCanvasElement | null;
+  if (canvas && canvas.getContext) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+          return new Chart(ctx, {
+              type: 'line',
+              data: {
+                  labels: [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000],
+                  datasets: [{
+                      label: 'Oreille nue',
+                      data: [],
+                      showLine: true,
+                      backgroundColor: pointColor,
+                      borderColor: borderColor,
+                      borderWidth: 1,
+                      pointRadius: 5,
+                      pointStyle: 'circle',
+                  },
+                  {
+                    label: 'Oreille apareillé',
+                    data: [],
+                    showLine: true,
+                    backgroundColor:'rgb(255,0,0)',
+                    borderColor: 'rgb(255,0,0)',
+                    borderWidth: 1,
+                    pointRadius: 5,
+                    pointStyle: createPointStyle('A'),
+                }
+              ]
+              },
+              options: {
+                  scales: {
+                      y: {
+                          beginAtZero: false,
+                          reverse: true,
+                          min: -10,
+                          max: 120,
+                          ticks: {
+                              stepSize: 10
+                          },
+                          title: {
+                            display: true,
+                            text: 'Seuil Auditif (db)'
+                          }
+                      },
+                      x: {
+                        type: 'logarithmic',
+                        position: 'bottom',
+                        min: 100, 
+                        max: 8000,
+                        ticks: {
+                          min: 100,
+                          max: 8000,
+                          callback: function(value: number, index: number, ticks: any[]) {
+                            return value.toString();
+                          }
+                        },
+                        afterBuildTicks: function(chart: any) {
+                          chart.ticks = [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000];
+                          chart.ticks.forEach(function(value: number, index: number, array: any[]) {
+                            array[index] = { value: value.toString() }; 
+                          });
+                        },
+                        title: {
+                          display: true,
+                          text: 'Fréquence (Hz)'
+                        }
+                      } 
+                  },
+                  plugins: {
+                    title: {
+                      display: true,
+                      text: earSide, 
+                      font: {
+                        size: 18
+                      },
+                      padding: {
+                        top: 10,
+                        bottom: 30
                       }
                   },
                 },
@@ -282,93 +537,127 @@ function addDataPointAndSort(chart: any, frequency: number, decibels: number, id
  * @param chartLeft - L'instance de l'audiogramme pour l'oreille gauche.
  * @param chartRight - L'instance de l'audiogramme pour l'oreille droite.
  */
-function setupEventHandlers(chartLeft: any, chartRight: any, legendSelectorLeft: HTMLSelectElement, legendSelectorRight: HTMLSelectElement) {
+function setupEventHandlers(chartLeft: any, chartRight: any, chartChampLibre: any, legendSelectorLeft: HTMLSelectElement, legendSelectorRight: HTMLSelectElement, legendSelectorChampLibre: HTMLSelectElement) {
   const addPointFormLeft = document.getElementById('addPointFormLeft') as HTMLFormElement;
   const addPointFormRight = document.getElementById('addPointFormRight') as HTMLFormElement;
+  const addPointFormChampLibre = document.getElementById('addPointFormThird') as HTMLFormElement; // Assurez-vous que l'ID est correct
 
+  // Gestionnaire pour l'audiogramme de gauche
   addPointFormLeft?.addEventListener('submit', function(event) {
-    event.preventDefault();
-    const frequenciesInput = document.getElementById('frequenciesLeft') as HTMLInputElement;
-    const decibelsInput = document.getElementById('decibelsLeft') as HTMLInputElement;
-
-    const frequencies = frequenciesInput.value.split(',').map(f => parseFloat(f.trim()));
-    const decibels = decibelsInput.value.split(',').map(d => parseFloat(d.trim()));
-
-    let isValid = true;
-    let errorMessage = '';
-
-    frequencies.forEach((frequency, index) => {
-      const decibel = decibels[index];
-
-            if (isNaN(frequency) || frequency < 0 || frequency > 8000) {
-                isValid = false;
-                errorMessage += 'Fréquence doit être comprise entre 0 et 8000 Hz.\n';
-            }
-
-            if (isNaN(decibel) || decibel < -10 || decibel > 120) {
-                isValid = false;
-                errorMessage += 'Décibels doivent être compris entre -10 et 120 dB.\n';
-            }
-
-            if (isValid) {
-              const uniqueId = Date.now().toString(); // Générer un ID unique ici
-              const pointStyle = legendSelectorLeft.value;
-              addDataPointAndSort(chartLeft, frequency, decibel, uniqueId, pointStyle);
-        const audiogramDataLeft = {
-          ear: 'gauche',
-          frequency: frequency,
-          decibels: decibel,
-          id: uniqueId,
-          style: pointStyle,
-        };
-        sendDataToServer(audiogramDataLeft);
-      }else {
-        alert(errorMessage);
-    }
-    });
-  });
-
-  addPointFormRight?.addEventListener('submit', function(event) {
-    event.preventDefault();
-    const frequenciesInput = document.getElementById('frequenciesRight') as HTMLInputElement;
-    const decibelsInput = document.getElementById('decibelsRight') as HTMLInputElement;
-
-    const frequencies = frequenciesInput.value.split(',').map(f => parseFloat(f.trim()));
-    const decibels = decibelsInput.value.split(',').map(d => parseFloat(d.trim()));
-
-    let isValid = true;
-    let errorMessage = '';
-
-    frequencies.forEach((frequency, index) => {
-      const decibel = decibels[index];
-      if (isNaN(frequency) || frequency < 0 || frequency > 8000) {
-        isValid = false;
-        errorMessage += 'Fréquence doit être comprise entre 0 et 8000 Hz.\n';
-    }
-
-    if (isNaN(decibel) || decibel < -10 || decibel > 120) {
-        isValid = false;
-        errorMessage += 'Décibels doivent être compris entre -10 et 120 dB.\n';
-    }
-
-    if (isValid) {
-      const uniqueId = Date.now().toString(); // Générer un ID unique ici
-      const pointStyle = legendSelectorRight.value;
-      addDataPointAndSort(chartRight, frequency, decibel, uniqueId, pointStyle);
-
-        const audiogramDataRight = {
-          ear: 'droite',
-          frequency: frequency,
-          decibels: decibel,
-          id: uniqueId,
-          style: pointStyle,
-        };
-
-        sendDataToServer(audiogramDataRight);
+      event.preventDefault();
+      const frequenciesInput = document.getElementById('frequenciesLeft') as HTMLInputElement;
+      const decibelsInput = document.getElementById('decibelsLeft') as HTMLInputElement;
+  
+      const frequencies = frequenciesInput.value.split(',').map(f => parseFloat(f.trim()));
+      const decibels = decibelsInput.value.split(',').map(d => parseFloat(d.trim()));
+  
+      let isValid = true;
+      let errorMessage = '';
+  
+      frequencies.forEach((frequency, index) => {
+        const decibel = decibels[index];
+  
+              if (isNaN(frequency) || frequency < 0 || frequency > 8000) {
+                  isValid = false;
+                  errorMessage += 'Fréquence doit être comprise entre 0 et 8000 Hz.\n';
+              }
+  
+              if (isNaN(decibel) || decibel < -10 || decibel > 120) {
+                  isValid = false;
+                  errorMessage += 'Décibels doivent être compris entre -10 et 120 dB.\n';
+              }
+  
+              if (isValid) {
+                const uniqueId = Date.now().toString(); // Générer un ID unique ici
+                const pointStyle = legendSelectorLeft.value;
+                addDataPointAndSort(chartLeft, frequency, decibel, uniqueId, pointStyle);
+          const audiogramDataLeft = {
+            ear: 'gauche',
+            frequency: frequency,
+            decibels: decibel,
+            id: uniqueId,
+            style: pointStyle,
+          };
+          sendDataToServer(audiogramDataLeft);
+        }else {
+          alert(errorMessage);
       }
+      });
     });
+
+  // Gestionnaire pour l'audiogramme de droite
+  addPointFormRight?.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const frequenciesInput = document.getElementById('frequenciesRight') as HTMLInputElement;
+      const decibelsInput = document.getElementById('decibelsRight') as HTMLInputElement;
+  
+      const frequencies = frequenciesInput.value.split(',').map(f => parseFloat(f.trim()));
+      const decibels = decibelsInput.value.split(',').map(d => parseFloat(d.trim()));
+  
+      let isValid = true;
+      let errorMessage = '';
+  
+      frequencies.forEach((frequency, index) => {
+        const decibel = decibels[index];
+        if (isNaN(frequency) || frequency < 0 || frequency > 8000) {
+          isValid = false;
+          errorMessage += 'Fréquence doit être comprise entre 0 et 8000 Hz.\n';
+      }
+  
+      if (isNaN(decibel) || decibel < -10 || decibel > 120) {
+          isValid = false;
+          errorMessage += 'Décibels doivent être compris entre -10 et 120 dB.\n';
+      }
+  
+      if (isValid) {
+        const uniqueId = Date.now().toString(); // Générer un ID unique ici
+        const pointStyle = legendSelectorRight.value;
+        addDataPointAndSort(chartRight, frequency, decibel, uniqueId, pointStyle);
+  
+          const audiogramDataRight = {
+            ear: 'droite',
+            frequency: frequency,
+            decibels: decibel,
+            id: uniqueId,
+            style: pointStyle,
+          };
+  
+          sendDataToServer(audiogramDataRight);
+        }
+      });
+    });
+
+  // Gestionnaire pour l'audiogramme champ libre
+  addPointFormChampLibre?.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const frequenciesInput = document.getElementById('frequenciesThird') as HTMLInputElement; // Assurez-vous que l'ID est correct
+    const decibelsInput = document.getElementById('decibelsThird') as HTMLInputElement; // Assurez-vous que l'ID est correct
+
+    const frequency = parseFloat(frequenciesInput.value.trim());
+    const decibel = parseFloat(decibelsInput.value.trim());
+
+    let isValid = !isNaN(frequency) && frequency > 0 && frequency <= 8000 && !isNaN(decibel) && decibel >= -10 && decibel <= 120;
+    
+    if (isValid) {
+      const uniqueId = Date.now().toString();
+      const pointStyle = legendSelectorChampLibre.value;
+      addDataPointAndSort(chartChampLibre, frequency, decibel, uniqueId, pointStyle);
+
+      const audiogramDataChampLibre = {
+        ear: 'champLibre',
+        frequency: frequency,
+        decibels: decibel,
+        id: uniqueId,
+        style: pointStyle,
+      };
+
+      sendDataToServer(audiogramDataChampLibre);
+    } else {
+      alert("Fréquence doit être comprise entre 0 et 8000 Hz.\nDécibels doivent être compris entre -10 et 120 dB.");
+    }
   });
 }
+
 
 function addPointToLeftAudiogram(frequency:number, decibels:number, id:any, style:any) {
   // Vérifiez que cette fonction ajoute des points seulement à l'audiogramme gauche
@@ -379,6 +668,11 @@ function addPointToRightAudiogram(frequency:number, decibels:number, id:any, sty
   // Vérifiez que cette fonction ajoute des points seulement à l'audiogramme droit
   addDataPointAndSort(audiogramChartRight, frequency, decibels, id, style);
 }
+
+function addPointToChampLibre(frequency:number, decibels:number, id:any, style:any)  {
+  // Vérifiez que cette fonction ajoute des points seulement à l'audiogramme droit
+  addDataPointAndSort(audiogramChampLibre, frequency, decibels, id, style);
+}
 /**
  * Envoie les données d'audiogramme au serveur via une requête POST.
  * 
@@ -386,31 +680,38 @@ function addPointToRightAudiogram(frequency:number, decibels:number, id:any, sty
  * @throws {Error} - Lance une erreur si l'envoi des données échoue.
  */
 function sendDataToServer(audiogramData: AudiogramData) {
-  let url = '/audiogram'; // URL de base
+  let url;
 
-  // Vérifie si l'audiogramme est pour l'oreille gauche ou droite
-  if (audiogramData.ear === 'gauche') {
-      url = '/audiogram/left'; 
-  } else if (audiogramData.ear === 'droite') {
-      url = '/audiogram/right'; 
+  switch (audiogramData.ear) {
+    case 'gauche':
+      url = '/audiogram/left';
+      break;
+    case 'droite':
+      url = '/audiogram/right';
+      break;
+    case 'champLibre':
+      url = '/audiogram/champLibre';
+      break;
+    default:
+      throw new Error("Côté d'oreille non spécifié");
   }
 
   // La requête POST est envoyée à l'URL appropriée
   fetch(url, {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(audiogramData),
-  })
-  .then(response => {
-      if (response.ok) {
-          return response.text();
-      }
-      throw new Error('Erreur dans l\'envoi des données');
-  })
-  .then(data => console.log(data))
-  .catch(error => console.error('Erreur:', error));
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(audiogramData),
+})
+.then(response => {
+    if (response.ok) {
+        return response.text();
+    }
+    throw new Error('Erreur dans l\'envoi des données');
+})
+.then(data => console.log(data))
+.catch(error => console.error('Erreur:', error));
 }
 
 /**
@@ -445,18 +746,24 @@ function getAudiogramData(chart: any, ear: string, legendSelector: HTMLSelectEle
 
 function updateAudiogramWithData(data: AudiogramData[], chart: any) {
   data.forEach((point) => {
-    console.log(point.ear)
-    if (!isPointAlreadyPresentWithStyle(chart, point.frequency,point.decibels,point.style)) {
+    if (!isPointAlreadyPresentWithStyle(chart, point.frequency, point.decibels, point.style)) {
       if (point.ear === 'gauche' && audiogramChartLeft) {
-        if(!isPointAlreadyExist(audiogramChartLeft,point)){
+        if (!isPointAlreadyExist(audiogramChartLeft, point)) {
           addDataPointAndSort(audiogramChartLeft, point.frequency, point.decibels, point.id, point.style);
         }
       } else if (point.ear === 'droite' && audiogramChartRight) {
-        addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id, point.style);
+        if (!isPointAlreadyExist(audiogramChartRight, point)) {
+          addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id, point.style);
+        }
+      } else if (point.ear === 'champLibre' && audiogramChampLibre) {
+        if (!isPointAlreadyExist(audiogramChampLibre, point)) {
+          addDataPointAndSort(audiogramChampLibre, point.frequency, point.decibels, point.id, point.style);
+        }
       }
     }
   });
 }
+
 
 
 /**
@@ -621,53 +928,6 @@ function setupClickListeners(chart: any, ear: string, legendSelector: HTMLSelect
   });  
 }
 
-
-/**
- * Configure un écouteur d'événements pour afficher des infobulles lors du survol de la souris sur un graphique.
- * 
- * Cette fonction crée un écouteur d'événements 'mousemove' sur le canvas du graphique. Lorsque la souris se déplace sur le graphique,
- * elle calcule les coordonnées de la souris par rapport au graphique et affiche une infobulle personnalisée avec les informations
- * de fréquence et de décibels correspondantes. L'infobulle est masquée lorsque la souris quitte le canvas.
- * 
- * @param chart - L'instance de l'audiogramme Chart.js pour laquelle l'infobulle est configurée.
- * @param tooltipId - L'identifiant de l'élément HTML qui servira d'infobulle.
- * 
- * @example
- * setupMouseHoverListener(audiogramChartLeft, 'tooltipLeft'); // Configure l'écouteur d'événements pour l'audiogramme de l'oreille gauche
- */
-function setupMouseHoverListener(chart:any, tooltipId:any) {
-  const canvas = chart.canvas;
-  const tooltip = document.getElementById(tooltipId);
-
-  if (tooltip) { // Ajouter cette vérification
-    canvas.addEventListener('mousemove', (event:MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-
-      let { frequency, decibels } = convertClickToChartData(chart, x, y);
-
-      // Mettez à jour et affichez le tooltip
-      tooltip.style.display = 'block';
-      tooltip.style.left = event.clientX + 'px';
-      tooltip.style.top = event.clientY + 'px';
-      tooltip.innerHTML = `Fréquence: ${frequency.toFixed(0)} Hz, dB: ${decibels.toFixed(0)}`;
-    });
-
-    canvas.addEventListener('mouseout', () => {
-      tooltip.style.display = 'none';
-    });
-  } else {
-    console.error(`Tooltip with id '${tooltipId}' not found.`);
-  }
-}
-
-window.onload = function () {
-
-  setupMouseHoverListener(audiogramChartLeft, 'tooltipLeft');
-  setupMouseHoverListener(audiogramChartRight, 'tooltipRight');
-};
-
 /**
  * Supprime un point de l'audiogramme et met à jour le graphique.
  * 
@@ -787,6 +1047,55 @@ function snapToDecibelLevels(decibels: number): number {
   return snappedDecibels;
 }
 
+// Cette fonction est appelée au chargement de la page pour remplir le sélecteur de sons
+function fillSoundSelector(): void {
+  fetch('/list-audios') 
+      .then(response => response.json())
+      .then((sounds: string[]) => { // Ici on spécifie que `sounds` est un tableau de chaînes de caractères
+          const soundSelector = document.getElementById('soundSelectorChampLibre');
+
+          // Vérification pour s'assurer que soundSelector n'est pas null
+          if (soundSelector) {
+              sounds.forEach(sound => {
+                  const option = document.createElement('option');
+                  option.value = sound;
+                  option.textContent = sound; // Affiche le nom du fichier comme texte de l'option
+                  soundSelector.appendChild(option);
+              });
+          } else {
+              console.error('Le sélecteur de sons est introuvable.');
+          }
+      })
+      .catch(error => console.error('Erreur lors de la récupération des sons:', error));
+}
+
+// Assurez-vous d'appeler fillSoundSelector lorsque la page est chargée
+document.addEventListener('DOMContentLoaded', fillSoundSelector);
+
+// Assurez-vous que ce script s'exécute après que le DOM est entièrement chargé
+document.addEventListener('DOMContentLoaded', () => {
+  const select = document.getElementById('soundSelectorChampLibre');
+
+  if (select instanceof HTMLSelectElement) { // Vérifie si 'select' est bien un élément HTMLSelectElement
+      fetch('/list-audios')
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error('Réponse réseau non OK');
+              }
+              return response.json();
+          })
+          .then((audios: string[]) => {
+              audios.forEach((audio) => {
+                  const option = new Option(audio, audio); // Utilise le nom du fichier comme valeur et texte
+                  select.add(option);
+              });
+          })
+          .catch(error => console.error('Erreur lors de la récupération des audios:', error));
+  } else {
+      console.error('Élément select non trouvé ou n\'est pas un élément select');
+  }
+});
+
 /**
  * Initialise les audiogrammes lorsque la fenêtre se charge.
  * Crée les graphiques d'audiogramme et configure les gestionnaires d'événements pour les formulaires d'ajout de points.
@@ -794,18 +1103,20 @@ function snapToDecibelLevels(decibels: number): number {
 window.onload = function () {
   audiogramChartLeft = initAudiogram('audiogramLeft', 'rgb(0, 0, 0)', 'rgba(0, 1, 1)', 'Oreille Gauche');
   audiogramChartRight = initAudiogram('audiogramRight', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Oreille Droite');
+  audiogramChampLibre = initAudiogramChampLibre('audiogramChampLibre', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Champ Libre');
   const legendSelectorLeft = document.getElementById('legendSelectorLeft') as HTMLSelectElement;
   const legendSelectorRight = document.getElementById('legendSelectorRight') as HTMLSelectElement;
-  if (audiogramChartLeft && audiogramChartRight) {
-    setupEventHandlers(audiogramChartLeft, audiogramChartRight, legendSelectorLeft, legendSelectorRight);
+  const legendSelectorChampLibre = document.getElementById('legendSelectorChampLibre') as HTMLSelectElement;
+  if (audiogramChartLeft && audiogramChartRight && audiogramChampLibre) {
+    setupEventHandlers(audiogramChartLeft, audiogramChartRight, audiogramChampLibre, legendSelectorLeft, legendSelectorRight, legendSelectorChampLibre);
   }
   getAudiogramData(audiogramChartLeft, 'gauche', legendSelectorLeft);
   getAudiogramData(audiogramChartRight, 'droite', legendSelectorRight);
+  getAudiogramData(audiogramChampLibre, 'champLibre', legendSelectorChampLibre)
   setupClickListeners(audiogramChartLeft, 'gauche', legendSelectorLeft);
   setupClickListeners(audiogramChartRight, 'droite', legendSelectorRight);
+  setupClickListeners(audiogramChampLibre, 'champLibre', legendSelectorChampLibre);
   initTabs();
-  setupMouseHoverListener(audiogramChartLeft, 'tooltipLeft');
-  setupMouseHoverListener(audiogramChartRight, 'tooltipRight');
 };
 
 

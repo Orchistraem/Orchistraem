@@ -6,8 +6,8 @@
 
 /* Style des graphiques (ne pas toucher le quadrillage) */
 .audiogram {
-    width: 600px;
-    height: 400px;
+    width: 720px !important;
+    height: 380px ;
     background-color: white; /* Définit le fond des graphiques en blanc */
     border-radius: 1%;
 }
@@ -17,6 +17,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-bottom: -5em;
 }
 
 .audiogram-container {
@@ -41,15 +42,6 @@
 
 .show {
     display: block;
-}
-
-.tooltip {
-    position: absolute;
-    background-color: #fff;
-    border: 1px solid #000;
-    padding: 5px;
-    border-radius: 5px;
-    pointer-events: none; /* Empêcher le tooltip d'interférer avec les clics de la souris */
 }
 
 .chartBox canvas {
@@ -78,6 +70,11 @@
 .legend {
     display: flex;
     width: max-content;
+    margin-bottom: 0.2em;
+}
+
+#legendSelectorLeft {
+    margin-right: 0.3em;
 }
 
 .form-select {
@@ -89,8 +86,35 @@
 
 .edit {
     width: min-content;
+    margin-bottom: 10em !important;
 }
+
 
 .edit button {
     margin: 2%;
+}
+
+.AfficherAudioLibre {
+    text-align: center;
+    color: #03045e;
+    border: 1px solid #03045e;
+    width: fit-content;
+    border-radius: 5px;
+    margin-top: 0.5em;
+}
+
+.form-check {
+    margin-left: 5.5em;
+}
+
+#soundSelectorChampLibre {
+    margin-bottom: 0.5em;
+}
+
+#frequenciesThird  {
+    margin-right: 0.3em;
+}
+
+#decibelsThird {
+    margin-right: 0.2em;
 }
