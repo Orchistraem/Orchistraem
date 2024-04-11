@@ -33,6 +33,8 @@ function setupUploadAudioForm(): void {
                     if (response.ok) {
                         console.log('Fichier téléchargé avec succès');
                         refreshAudioList(); // Rafraîchir la liste après le téléchargement réussi
+                    }else if (response.status === 409) {
+                        alert('Un fichier portant le même nom existe déjà. Veuillez renommer votre fichier et réessayer.');
                     } else {
                         throw new Error('Erreur lors du téléchargement du fichier');
                     }
@@ -93,7 +95,7 @@ function displayAudioList() {
                     audioContainer.setAttribute('data-file', file);
                     
                     const fileNameParagraph = document.createElement('p');
-                    fileNameParagraph.textContent = file.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
+                    fileNameParagraph.textContent = file.replace(/\.(mp3|wav)$/, '').replace(/[_-]/g, ' ');
                     audioContainer.appendChild(fileNameParagraph);
   
                     const fileMetadata = audioMetadata.find((meta : any) => meta.name === file);
@@ -633,10 +635,6 @@ async function assignCategoryToFile(fileName: string, categoryName: string) {
         console.error('Erreur:', error);
     }
 }
-
-
-
-
 
 
 

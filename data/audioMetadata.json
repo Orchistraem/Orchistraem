@@ -22,5 +22,33 @@
   {
     "name": "mon_audio.mp3",
     "category": "Cuivre"
+  },
+  {
+    "name": "440.wav",
+    "category": "Non catégorisé"
+  },
+  {
+    "name": "441.wav",
+    "category": "Non catégorisé"
+  },
+  {
+    "name": "442.wav",
+    "category": "Non catégorisé"
+  },
+  {
+    "name": "ttsmaker-file-2024-4-4-17-12-47.mp3",
+    "category": "Non catégorisé"
+  },
+  {
+    "name": "500.wav",
+    "category": "Non catégorisé"
+  },
+  {
+    "name": "505.wav",
+    "category": "Non catégorisé"
+  },
+  {
+    "name": "100.wav",
+    "category": "Non catégorisé"
   }
 ]

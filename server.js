@@ -154,7 +154,7 @@ app.get('/list-audios', (req, res) => {
       }
 
       // Filtrer pour ne garder que les fichiers audio
-      let audioFiles = files.filter(file => file.endsWith('.mp3'));
+      let audioFiles = files.filter(file => file.endsWith('.mp3') || file.endsWith('.wav'));
 
       // Envoyer la liste des fichiers audio
       res.json(audioFiles);
