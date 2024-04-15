@@ -441,7 +441,36 @@ function initAudiogramChampLibre(canvasID, pointColor, borderColor, earSide) {
 function isPointAlreadyPresent(chart, frequency, style) {
     return chart.data.datasets.some((dataset) => {
         return dataset.data.some((point) => {
-            return Math.abs(point.x - frequency) < 0.1 && point.style === style;
+            // Vérifier si le point a la même fréquence et un style différent
+            const isFrequencyMatch = Math.abs(point.x - frequency) < 0.1; // Check for same frequency
+            const isDifferentStyle = point.styleLabel === style; // Check for different style
+            return isFrequencyMatch && isDifferentStyle; // Should return true if frequency matches but style is different
+        });
+    });
+}
+/**
+ * Vérifie si un point avec des coordonnées de fréquence, de décibels et un style spécifique existe déjà sur un graphique d'audiogramme.
+ *
+ * Cette fonction parcourt tous les datasets du graphique d'audiogramme pour chercher un point existant avec des coordonnées
+ * et un style correspondants aux valeurs fournies. Elle compare la fréquence et les décibels avec une certaine tolérance pour les
+ * différences mineures, et vérifie également si le style du point (représenté par 'circle', 'A', 'I', etc.) correspond.
+ *
+ * @param chart - L'instance de l'audiogramme Chart.js dans laquelle la recherche est effectuée.
+ * @param frequency - La fréquence du point à vérifier.
+ * @param decibels - Le niveau de décibels du point à vérifier.
+ * @param style - Le style du point (comme 'circle', 'A', 'I', etc.) à vérifier.
+ * @returns `true` si un point correspondant est trouvé, sinon `false`.
+ *
+ * @example
+ * // Vérifie si un point avec 1000 Hz, 20 dB et le style 'A' existe déjà
+ * isPointAlreadyPresentWithStyle(audiogramChart, 1000, 20, 'A');
+ */
+function isPointAlreadyPresentWithStyle(chart, frequency, style) {
+    return chart.data.datasets.some((dataset) => {
+        return dataset.data.some((point) => {
+            const isFrequencyMatch = Math.abs(point.x - frequency) < 0.1; // même fréquence
+            const isSameStyle = point.style === style; // même style
+            return isFrequencyMatch && isSameStyle; // Problème si même fréquence mais style différent
         });
     });
 }
@@ -456,28 +485,38 @@ function isPointAlreadyPresent(chart, frequency, style) {
  * addDataPointAndSort(audiogramChart, 1000, 20); // Ajoute ou met à jour le point à 1000 Hz avec 20 dB
  */
 function addDataPointAndSort(chart, frequency, decibels, id, style) {
+    if (isPointAlreadyPresentWithStyle(chart, frequency, style)) {
+        console.log("Swal should trigger now.");
+        Swal.fire({
+            title: 'Erreur!',
+            text: 'Un point avec la même fréquence et un style différent existe déjà.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+        return; // Ne pas ajouter le point si un autre avec un style différent existe déjà
+    }
+    if (isPointAlreadyExist(chart, frequency, decibels)) {
+        console.log("Point with the same frequency and decibels already exists.");
+        return; // Ne pas ajouter le point si un autre avec les mêmes fréquences et décibels existe déjà
+    }
+    // Ajout du point si aucun point conflictuel n'est détecté
     const newDataPoint = {
         x: frequency,
         y: decibels,
         id: id,
-        style: style === 'circle' ? 'circle' : createPointStyle(style)
+        style: style === 'circle' ? 'circle' : createPointStyle(style),
+        styleLabel: style
     };
     // Déterminer l'index du dataset en fonction du style
-    let datasetIndex;
-    if (style === 'circle') {
-        datasetIndex = 0; // Index pour le style 'circle'
-    }
-    else if (style === 'A') {
-        datasetIndex = 1; // Index pour le style 'A'
-    }
-    else if (style === 'I') {
-        datasetIndex = 2; // Index pour le style 'I', ajustez selon la configuration de vos datasets
-    }
-    else {
-        datasetIndex = 0; // Par défaut, utilisez le premier dataset
-    }
+    let datasetIndex = style === 'circle' ? 0 :
+        style === 'A' ? 1 :
+            style === 'I' ? 2 :
+                style === 'AI' ? 3 : 0;
+    // Ajoute le point au dataset approprié
     chart.data.datasets[datasetIndex].data.push(newDataPoint);
+    // Trie les points pour maintenir l'ordre des fréquences
     chart.data.datasets[datasetIndex].data.sort((a, b) => a.x - b.x);
+    // Met à jour le graphique pour refléter les changements
     chart.update();
 }
 /**
@@ -488,7 +527,7 @@ function addDataPointAndSort(chart, frequency, decibels, id, style) {
  * @param chartLeft - L'instance de l'audiogramme pour l'oreille gauche.
  * @param chartRight - L'instance de l'audiogramme pour l'oreille droite.
  */
-function setupEventHandlers(chartLeft, chartRight, chartChampLibre, legendSelectorLeft, legendSelectorRight, legendSelectorChampLibre) {
+function setupEventHandlers(chartLeft, chartRight, chartChampLibre, legendSelector) {
     const addPointFormLeft = document.getElementById('addPointFormLeft');
     const addPointFormRight = document.getElementById('addPointFormRight');
     const addPointFormChampLibre = document.getElementById('addPointFormThird'); // Assurez-vous que l'ID est correct
@@ -513,7 +552,7 @@ function setupEventHandlers(chartLeft, chartRight, chartChampLibre, legendSelect
             }
             if (isValid) {
                 const uniqueId = Date.now().toString(); // Générer un ID unique ici
-                const pointStyle = legendSelectorLeft.value;
+                const pointStyle = legendSelector.value;
                 addDataPointAndSort(chartLeft, frequency, decibel, uniqueId, pointStyle);
                 const audiogramDataLeft = {
                     ear: 'gauche',
@@ -550,7 +589,7 @@ function setupEventHandlers(chartLeft, chartRight, chartChampLibre, legendSelect
             }
             if (isValid) {
                 const uniqueId = Date.now().toString(); // Générer un ID unique ici
-                const pointStyle = legendSelectorRight.value;
+                const pointStyle = legendSelector.value;
                 addDataPointAndSort(chartRight, frequency, decibel, uniqueId, pointStyle);
                 const audiogramDataRight = {
                     ear: 'droite',
@@ -573,7 +612,7 @@ function setupEventHandlers(chartLeft, chartRight, chartChampLibre, legendSelect
         let isValid = !isNaN(frequency) && frequency > 0 && frequency <= 8000 && !isNaN(decibel) && decibel >= -10 && decibel <= 120;
         if (isValid) {
             const uniqueId = Date.now().toString();
-            const pointStyle = legendSelectorChampLibre.value;
+            const pointStyle = legendSelector.value;
             addDataPointAndSort(chartChampLibre, frequency, decibel, uniqueId, pointStyle);
             const audiogramDataChampLibre = {
                 ear: 'champLibre',
@@ -670,21 +709,21 @@ function getAudiogramData(chart, ear, legendSelector) {
 }
 function updateAudiogramWithData(data, chart) {
     data.forEach((point) => {
-        if (!isPointAlreadyPresentWithStyle(chart, point.frequency, point.decibels, point.style)) {
-            if (point.ear === 'gauche' && audiogramChartLeft) {
-                if (!isPointAlreadyExist(audiogramChartLeft, point)) {
-                    addDataPointAndSort(audiogramChartLeft, point.frequency, point.decibels, point.id, point.style);
-                }
+        // Vérifier si un point avec le même style et la même fréquence existe déjà mais sans tenir compte du style
+        if (!isPointAlreadyPresentWithStyle(chart, point.frequency, point.style) && !isPointAlreadyExist(chart, point.frequency, point.decibels)) {
+            // Choix du graphique approprié en fonction de l'oreille
+            let targetChart;
+            if (point.ear === 'gauche') {
+                targetChart = audiogramChartLeft;
             }
-            else if (point.ear === 'droite' && audiogramChartRight) {
-                if (!isPointAlreadyExist(audiogramChartRight, point)) {
-                    addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id, point.style);
-                }
+            else if (point.ear === 'droite') {
+                targetChart = audiogramChartRight;
             }
-            else if (point.ear === 'champLibre' && audiogramChampLibre) {
-                if (!isPointAlreadyExist(audiogramChampLibre, point)) {
-                    addDataPointAndSort(audiogramChampLibre, point.frequency, point.decibels, point.id, point.style);
-                }
+            else if (point.ear === 'champLibre') {
+                targetChart = audiogramChampLibre;
+            }
+            if (targetChart) {
+                addDataPointAndSort(targetChart, point.frequency, point.decibels, point.id, point.style);
             }
         }
     });
@@ -705,43 +744,11 @@ function updateAudiogramWithData(data, chart) {
  * const pointToTest = { id: "12345", frequency: 1000, decibels: 20, style: 'A' };
  * isPointAlreadyExist(audiogramChart, pointToTest);
  */
-function isPointAlreadyExist(chart, pointTest) {
-    let pointExists = false;
-    chart.data.datasets.forEach((dataset) => {
-        dataset.data.forEach((point) => {
-            if (point.id === pointTest.id) {
-                pointExists = true;
-            }
-        });
-    });
-    return pointExists;
-}
-/**
- * Vérifie si un point avec des coordonnées de fréquence, de décibels et un style spécifique existe déjà sur un graphique d'audiogramme.
- *
- * Cette fonction parcourt tous les datasets du graphique d'audiogramme pour chercher un point existant avec des coordonnées
- * et un style correspondants aux valeurs fournies. Elle compare la fréquence et les décibels avec une certaine tolérance pour les
- * différences mineures, et vérifie également si le style du point (représenté par 'circle', 'A', 'I', etc.) correspond.
- *
- * @param chart - L'instance de l'audiogramme Chart.js dans laquelle la recherche est effectuée.
- * @param frequency - La fréquence du point à vérifier.
- * @param decibels - Le niveau de décibels du point à vérifier.
- * @param style - Le style du point (comme 'circle', 'A', 'I', etc.) à vérifier.
- * @returns `true` si un point correspondant est trouvé, sinon `false`.
- *
- * @example
- * // Vérifie si un point avec 1000 Hz, 20 dB et le style 'A' existe déjà
- * isPointAlreadyPresentWithStyle(audiogramChart, 1000, 20, 'A');
- */
-function isPointAlreadyPresentWithStyle(chart, frequency, decibels, style) {
+function isPointAlreadyExist(chart, frequency, decibels) {
     return chart.data.datasets.some((dataset) => {
-        if (style === 'circle' && dataset.pointStyle === 'circle' ||
-            style !== 'circle' && dataset.pointStyle !== 'circle') {
-            return dataset.data.some((point) => {
-                return Math.abs(point.x - frequency) < 0.1 && Math.abs(point.y - decibels) < 0.1;
-            });
-        }
-        return false;
+        return dataset.data.some((point) => {
+            return Math.abs(point.x - frequency) < 0.1 && Math.abs(point.y - decibels) < 0.1; // Tolérance ajustable
+        });
     });
 }
 const standardFrequencies = [125, 250, 500, 1000, 2000, 4000, 8000];
@@ -950,6 +957,14 @@ function fillSoundSelector() {
         const soundSelector = document.getElementById('soundSelectorChampLibre');
         // Vérification pour s'assurer que soundSelector n'est pas null
         if (soundSelector) {
+            // Ajouter une option par défaut qui n'est pas sélectionnable
+            const defaultOption = document.createElement('option');
+            defaultOption.textContent = 'Sélectionner un son'; // Texte d'incitation à choisir
+            defaultOption.value = ''; // Valeur vide pour indiquer qu'aucune sélection n'a été faite
+            defaultOption.disabled = true; // Rendre l'option non sélectionnable
+            defaultOption.selected = true; // Faire de cette option la sélection par défaut
+            soundSelector.appendChild(defaultOption);
+            // Ajouter les sons disponibles comme options
             sounds.forEach(sound => {
                 const option = document.createElement('option');
                 option.value = sound;
@@ -996,17 +1011,15 @@ window.onload = function () {
     audiogramChartLeft = initAudiogram('audiogramLeft', 'rgb(0, 0, 0)', 'rgba(0, 1, 1)', 'Oreille Droite');
     audiogramChartRight = initAudiogram('audiogramRight', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Oreille Gauche');
     audiogramChampLibre = initAudiogramChampLibre('audiogramChampLibre', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Champ Libre');
-    const legendSelectorLeft = document.getElementById('legendSelectorLeft');
-    const legendSelectorRight = document.getElementById('legendSelectorRight');
-    const legendSelectorChampLibre = document.getElementById('legendSelectorChampLibre');
+    const legendSelector = document.getElementById('legendSelector');
     if (audiogramChartLeft && audiogramChartRight && audiogramChampLibre) {
-        setupEventHandlers(audiogramChartLeft, audiogramChartRight, audiogramChampLibre, legendSelectorLeft, legendSelectorRight, legendSelectorChampLibre);
+        setupEventHandlers(audiogramChartLeft, audiogramChartRight, audiogramChampLibre, legendSelector);
     }
-    getAudiogramData(audiogramChartLeft, 'gauche', legendSelectorLeft);
-    getAudiogramData(audiogramChartRight, 'droite', legendSelectorRight);
-    getAudiogramData(audiogramChampLibre, 'champLibre', legendSelectorChampLibre);
-    setupClickListeners(audiogramChartLeft, 'gauche', legendSelectorLeft);
-    setupClickListeners(audiogramChartRight, 'droite', legendSelectorRight);
-    setupClickListeners(audiogramChampLibre, 'champLibre', legendSelectorChampLibre);
+    getAudiogramData(audiogramChartLeft, 'gauche', legendSelector);
+    getAudiogramData(audiogramChartRight, 'droite', legendSelector);
+    getAudiogramData(audiogramChampLibre, 'champLibre', legendSelector);
+    setupClickListeners(audiogramChartLeft, 'gauche', legendSelector);
+    setupClickListeners(audiogramChartRight, 'droite', legendSelector);
+    setupClickListeners(audiogramChampLibre, 'champLibre', legendSelector);
     initTabs();
 };
