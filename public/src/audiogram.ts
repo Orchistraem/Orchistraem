@@ -1,11 +1,11 @@
 // Déclare Chart.js comme une variable globale
 declare var Chart: any;
 declare var Swal: any;
-
 // Déclaration des instances de Chart.js pour les audiogrammes de chaque oreille.
 let audiogramChartLeft: any = null;
 let audiogramChartRight: any = null;
 let audiogramChampLibre: any = null;
+
 
 // Mode de suppression désactivé par défaut
 let isDeletionModeActive = false;
@@ -36,6 +36,8 @@ if (toggleDeletionMode) {
         // Afficher ou masquer l'image de la gomme
         gomme.style.display = isDeletionModeActive ? "block" : "none";
       }
+
+    toggleShakeEffect(isDeletionModeActive);
     // Afficher une notification avec le statut du mode de suppression
     showNotification("Mode de suppression " + status, 3000);
     
@@ -47,11 +49,44 @@ if (toggleDeletionMode) {
 const deleteAllPointsButton = document.getElementById('deleteAllPoints');
 if (deleteAllPointsButton) {
     deleteAllPointsButton.addEventListener('click', function() {
-        if (confirm('Êtes-vous sûr de vouloir supprimer tous les points ?')) {
-            deleteAllPointsFromCharts();
-            deleteAllPointsFromServer();
+      Swal.fire({
+        title: 'Êtes-vous sûr?',
+        text: "Vous ne pourrez pas revenir en arrière!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Oui, supprimez-les!'
+      }).then((result:any) => {
+        if (result.isConfirmed) {
+          deleteAllPointsFromCharts();
+          deleteAllPointsFromServer();
+          Swal.fire(
+            'Supprimés!',
+            'Vos points ont été supprimés.',
+            'success'
+          )
         }
+      }); 
     });
+}
+
+
+function toggleShakeEffect(enable:any) {
+  [audiogramChartLeft, audiogramChartRight, audiogramChampLibre].forEach(chart => {
+    if (chart) {
+      chart.data.datasets.forEach((dataset:any) => {
+        if (enable) {
+          // Augmenter le rayon du point pour un effet visuel
+          dataset.pointRadius = 7; // Taille normale + effet
+        } else {
+          // Réinitialiser le rayon du point
+          dataset.pointRadius = 5; // Taille normale
+        }
+      });
+      chart.update();
+    }
+  });
 }
 
 
@@ -101,9 +136,6 @@ type DataPoint = {
 
 // Fonction pour créer un canvas avec une lettre
 function createPointStyle(letter: string): HTMLCanvasElement | string {
-  if (letter === 'circle') {
-    return 'circle';
-  }
   const pointSize = 20;
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = pointSize * 2; // Taille du canvas
@@ -117,10 +149,15 @@ function createPointStyle(letter: string): HTMLCanvasElement | string {
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.font = `${pointSize}px Arial`;
-    context.fillText(letter, pointSize, pointSize); // Dessiner la lettre au centre
+    if (letter === 'AI') {
+      context.fillText('A+I', pointSize, pointSize); // Dessiner 'A+I' au centre pour le style combiné
+    } else {
+      context.fillText(letter, pointSize, pointSize); // Dessiner la lettre au centre pour les autres styles
+    }
   }
   return canvas;
 }
+
 /**
  * Initialise un audiogramme.
  * 
@@ -170,7 +207,17 @@ function initAudiogram(canvasID: string, pointColor: string, borderColor: string
                   borderWidth: 1,
                   pointRadius: 5,
                   pointStyle: createPointStyle('I'),
-              }
+              },
+              {
+                label: 'Aide auditive + Implant',
+                data: [],
+                showLine: true,
+                backgroundColor:'rgb(0,0,255)',
+                borderColor: 'rgb(0,0,255)',
+                borderWidth: 1,
+                pointRadius: 5,
+                pointStyle: createPointStyle('AI'),
+            }
               ]
               },
               options: {
@@ -226,14 +273,6 @@ function initAudiogram(canvasID: string, pointColor: string, borderColor: string
                     },
                     annotation: {
                       annotations: {
-                        box1: {
-                          type: 'box',
-                          xMin: 500, // Fréquence basse
-                          xMax: 2000, // Fréquence haute
-                          yMin: 20, // Intensité basse
-                          yMax: 60, // Intensité haute
-                          backgroundColor: 'rgba(255, 99, 132, 0.25)'
-                        }
                       }
                     }
                   },
@@ -311,10 +350,15 @@ async function analyseAudioExtremesConsole(audioFile: Blob): Promise<{xMin: numb
   source.connect(audioContext.destination);
   source.start(0);
 
+  const graphMinFrequency = 125;
+  const graphMaxFrequency = 8000;
+  const graphMinIntensity = 0;
+  const graphMaxIntensity = 120;
+
   return new Promise((resolve, reject) => {
       const checkAudioProcessing = () => {
           analyser.getByteFrequencyData(dataArrayFrequency);
-          
+
           let minFreqIndex = bufferLength;
           let maxFreqIndex = 0;
           let minIntensityDb = Infinity;
@@ -326,20 +370,28 @@ async function analyseAudioExtremesConsole(audioFile: Blob): Promise<{xMin: numb
                   maxFreqIndex = Math.max(maxFreqIndex, i);
 
                   let intensityDb = 20 * Math.log10(dataArrayFrequency[i] / 255);
+                  intensityDb = Math.abs(intensityDb); // Convert to absolute value
                   minIntensityDb = Math.min(minIntensityDb, intensityDb);
                   maxIntensityDb = Math.max(maxIntensityDb, intensityDb);
               }
           }
 
           if (minFreqIndex < bufferLength) {
-              const minFrequency = minFreqIndex * audioContext.sampleRate / analyser.fftSize;
-              const maxFrequency = maxFreqIndex * audioContext.sampleRate / analyser.fftSize;
+              let minFrequency = minFreqIndex * audioContext.sampleRate / analyser.fftSize;
+              let maxFrequency = maxFreqIndex * audioContext.sampleRate / analyser.fftSize;
+
+              minFrequency = Math.max(minFrequency, graphMinFrequency);
+              maxFrequency = Math.min(maxFrequency, graphMaxFrequency);
+
+              if (minFrequency > maxFrequency) {
+                  maxFrequency = minFrequency;
+              }
 
               resolve({
                   xMin: minFrequency,
                   xMax: maxFrequency,
-                  yMin: minIntensityDb,
-                  yMax: maxIntensityDb
+                  yMin: Math.max(minIntensityDb, graphMinIntensity),
+                  yMax: Math.min(maxIntensityDb, graphMaxIntensity)
               });
 
               source.stop();
@@ -354,27 +406,63 @@ async function analyseAudioExtremesConsole(audioFile: Blob): Promise<{xMin: numb
 }
 
 
+
+
 function updateAudiogramWithNewValues(values:any) {
+  // Check if the right audiogram chart instance is defined
   if (!audiogramChartRight) {
-      console.error("L'instance d'audiogramme n'est pas définie.");
+      console.error("The right audiogram chart instance is not defined.");
       return;
   }
 
-  // Mise à jour des annotations pour l'audiogramme avec les nouvelles valeurs
-  const annotationsOptions = audiogramChartRight.options.plugins.annotation.annotations;
-  
-  annotationsOptions.box1 = {
-    type: 'box',
-    xMin: values.xMin,
-    xMax: values.xMax,
-    yMin: values.yMin,
-    yMax: values.yMax,
-    backgroundColor: 'rgba(255, 99, 132, 0.25)'
-  };
-  
-  // Redessine le graphique avec les nouvelles annotations
-  audiogramChartRight.update();
+  // Check if the left audiogram chart instance is defined
+  if (!audiogramChartLeft) {
+      console.error("The left audiogram chart instance is not defined.");
+      return;
+  }
+
+  if (!audiogramChampLibre) {
+    console.error("The left audiogram chart instance is not defined.");
+    return;
 }
+  // Update annotations for the right audiogram
+  const annotationsRight = audiogramChartRight.options.plugins.annotation.annotations;
+  annotationsRight.box1 = {
+      type: 'box',
+      xMin: values.xMin,
+      xMax: values.xMax,
+      yMin: values.yMin,
+      yMax: values.yMax,
+      backgroundColor: 'rgba(255, 99, 132, 0.25)'
+  };
+
+  // Update annotations for the left audiogram
+  const annotationsLeft = audiogramChartLeft.options.plugins.annotation.annotations;
+  annotationsLeft.box1 = {
+      type: 'box',
+      xMin: values.xMin,
+      xMax: values.xMax,
+      yMin: values.yMin,
+      yMax: values.yMax,
+      backgroundColor: 'rgba(255, 99, 132, 0.25)'
+  };
+
+  const annotationsChampLibre = audiogramChampLibre.options.plugins.annotation.annotations;
+  annotationsChampLibre.box1 = {
+      type: 'box',
+      xMin: values.xMin,
+      xMax: values.xMax,
+      yMin: values.yMin,
+      yMax: values.yMax,
+      backgroundColor: 'rgba(255, 99, 132, 0.25)'
+  };
+
+  // Redraw both charts with the new annotations
+  audiogramChartRight.update();
+  audiogramChartLeft.update();
+  audiogramChampLibre.update();
+}
+
 
 
 
@@ -471,6 +559,10 @@ function initAudiogramChampLibre(canvasID: string, pointColor: string, borderCol
                         top: 10,
                         bottom: 30
                       }
+                  },
+                  annotation: {
+                    annotations: {
+                    }
                   },
                 },
                   elements: {
