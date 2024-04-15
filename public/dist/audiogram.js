@@ -488,7 +488,7 @@ function addDataPointAndSort(chart, frequency, decibels, id, style) {
  * @param chartLeft - L'instance de l'audiogramme pour l'oreille gauche.
  * @param chartRight - L'instance de l'audiogramme pour l'oreille droite.
  */
-function setupEventHandlers(chartLeft, chartRight, chartChampLibre, legendSelectorLeft, legendSelectorRight, legendSelectorChampLibre) {
+function setupEventHandlers(chartLeft, chartRight, chartChampLibre, legendSelector) {
     const addPointFormLeft = document.getElementById('addPointFormLeft');
     const addPointFormRight = document.getElementById('addPointFormRight');
     const addPointFormChampLibre = document.getElementById('addPointFormThird'); // Assurez-vous que l'ID est correct
@@ -513,7 +513,7 @@ function setupEventHandlers(chartLeft, chartRight, chartChampLibre, legendSelect
             }
             if (isValid) {
                 const uniqueId = Date.now().toString(); // Générer un ID unique ici
-                const pointStyle = legendSelectorLeft.value;
+                const pointStyle = legendSelector.value;
                 addDataPointAndSort(chartLeft, frequency, decibel, uniqueId, pointStyle);
                 const audiogramDataLeft = {
                     ear: 'gauche',
@@ -550,7 +550,7 @@ function setupEventHandlers(chartLeft, chartRight, chartChampLibre, legendSelect
             }
             if (isValid) {
                 const uniqueId = Date.now().toString(); // Générer un ID unique ici
-                const pointStyle = legendSelectorRight.value;
+                const pointStyle = legendSelector.value;
                 addDataPointAndSort(chartRight, frequency, decibel, uniqueId, pointStyle);
                 const audiogramDataRight = {
                     ear: 'droite',
@@ -573,7 +573,7 @@ function setupEventHandlers(chartLeft, chartRight, chartChampLibre, legendSelect
         let isValid = !isNaN(frequency) && frequency > 0 && frequency <= 8000 && !isNaN(decibel) && decibel >= -10 && decibel <= 120;
         if (isValid) {
             const uniqueId = Date.now().toString();
-            const pointStyle = legendSelectorChampLibre.value;
+            const pointStyle = legendSelector.value;
             addDataPointAndSort(chartChampLibre, frequency, decibel, uniqueId, pointStyle);
             const audiogramDataChampLibre = {
                 ear: 'champLibre',
@@ -996,17 +996,15 @@ window.onload = function () {
     audiogramChartLeft = initAudiogram('audiogramLeft', 'rgb(0, 0, 0)', 'rgba(0, 1, 1)', 'Oreille Droite');
     audiogramChartRight = initAudiogram('audiogramRight', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Oreille Gauche');
     audiogramChampLibre = initAudiogramChampLibre('audiogramChampLibre', 'rgb(0,0,0)', 'rgb(0,1,1)', 'Champ Libre');
-    const legendSelectorLeft = document.getElementById('legendSelectorLeft');
-    const legendSelectorRight = document.getElementById('legendSelectorRight');
-    const legendSelectorChampLibre = document.getElementById('legendSelectorChampLibre');
+    const legendSelector = document.getElementById('legendSelector');
     if (audiogramChartLeft && audiogramChartRight && audiogramChampLibre) {
-        setupEventHandlers(audiogramChartLeft, audiogramChartRight, audiogramChampLibre, legendSelectorLeft, legendSelectorRight, legendSelectorChampLibre);
+        setupEventHandlers(audiogramChartLeft, audiogramChartRight, audiogramChampLibre, legendSelector);
     }
-    getAudiogramData(audiogramChartLeft, 'gauche', legendSelectorLeft);
-    getAudiogramData(audiogramChartRight, 'droite', legendSelectorRight);
-    getAudiogramData(audiogramChampLibre, 'champLibre', legendSelectorChampLibre);
-    setupClickListeners(audiogramChartLeft, 'gauche', legendSelectorLeft);
-    setupClickListeners(audiogramChartRight, 'droite', legendSelectorRight);
-    setupClickListeners(audiogramChampLibre, 'champLibre', legendSelectorChampLibre);
+    getAudiogramData(audiogramChartLeft, 'gauche', legendSelector);
+    getAudiogramData(audiogramChartRight, 'droite', legendSelector);
+    getAudiogramData(audiogramChampLibre, 'champLibre', legendSelector);
+    setupClickListeners(audiogramChartLeft, 'gauche', legendSelector);
+    setupClickListeners(audiogramChartRight, 'droite', legendSelector);
+    setupClickListeners(audiogramChampLibre, 'champLibre', legendSelector);
     initTabs();
 };
