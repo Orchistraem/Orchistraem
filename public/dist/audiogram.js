@@ -519,7 +519,7 @@ function isPointAlreadyPresent(chart, frequency, style) {
         return dataset.data.some((point) => {
             // Vérifier si le point a la même fréquence et un style différent
             const isFrequencyMatch = Math.abs(point.x - frequency) < 0.1; // Check for same frequency
-            const isDifferentStyle = point.styleLabel !== style; // Check for different style
+            const isDifferentStyle = point.styleLabel === style; // Check for different style
             return isFrequencyMatch && isDifferentStyle; // Should return true if frequency matches but style is different
         });
     });
@@ -822,9 +822,8 @@ function isPointAlreadyPresentWithStyle(chart, frequency, style) {
     return chart.data.datasets.some((dataset) => {
         return dataset.data.some((point) => {
             const isFrequencyMatch = Math.abs(point.x - frequency) < 0.1; // même fréquence
-            const isDifferentStyle = point.styleLabel !== style; // comparaison des styles en tant que texte
-            console.log(`Checking: freqMatch=${isFrequencyMatch}, diffStyle=${isDifferentStyle}, pointStyle=${point.styleLabel}, inputStyle=${style}`);
-            return isFrequencyMatch && isDifferentStyle; // Vrai si même fréquence mais style différent
+            const isSameStyle = point.style === style; // même style
+            return isFrequencyMatch && isSameStyle; // Problème si même fréquence mais style différent
         });
     });
 }
