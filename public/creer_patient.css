@@ -1,0 +1,57 @@
+#title-list {
+    color: white; 
+    font-size: 2.5rem;
+    margin-top: 20px; 
+    margin-bottom: 20px;  
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 4px #03045e; 
+    text-align: center;
+}
+
+form {
+    color: #FFF; /* Texte blanc pour le contraste */
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 3px 10px 0 rgba(0, 0, 0, 0.09); /* Ombre plus légère */
+    border-radius: 25px; /* Coins arrondis pour l'effet bulle */
+    padding: 10px; /* Espace intérieur */
+    margin-bottom: 10px; /* Espace entre les bulles */
+    background-color: rgb(45, 142, 207); /* Couleur de fond */
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2); /* Ombre pour un effet 3D */
+    max-width: 800px; /* Largeur maximale */
+    max-height: 800px;
+    margin-left: auto; /* Centrer la bulle */
+    margin-right: auto;
+    text-align: center; /* Aligner le texte à gauche */
+}
+
+#chooseProfilPic{
+    columns: 5;
+    background-color: #0d7b91; /* Couleur plus foncée pour le conteneur d'ajout de son */
+    color: white; /* Texte blanc pour une meilleure lisibilité */
+    border: 1px solid #005f79; /* Bordure légèrement plus foncée pour un meilleur contraste */
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 3px 10px 0 rgba(0, 0, 0, 0.09); /* Ombre pour un effet de profondeur */
+    padding: 20px; /* Alignement de l'espacement intérieur avec les autres conteneurs audio */
+    padding-right: 40px; 
+    margin-bottom: 20px; /* Assurer un espacement uniforme entre les éléments */
+    max-width: 600px; /* Alignement de la largeur maximale avec les autres conteneurs audio */
+    margin-left: auto; /* Centrage horizontal */
+    margin-right: auto;
+    text-align: left; /* Alignement du texte à gauche pour la cohérence */
+    border-radius: 25px; /* Coins arrondis pour l'effet bulle */
+}
+
+.profile_pic{
+    text-align: center;
+    background-color: #0077b6; /* Couleur plus foncée pour le conteneur d'ajout de son */
+    color: white; /* Texte blanc pour une meilleure lisibilité */
+    border: 2px solid white; /* Bordure légèrement plus foncée pour un meilleur contraste */
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 3px 10px 0 rgba(0, 0, 0, 0.09); /* Ombre pour un effet de profondeur */
+    border-radius: 25px; /* Coins arrondis pour l'effet bulle */
+    margin: 5%;
+    padding: 3%;
+}
+
+.profile_pic > img{
+    width: 100%;
+    border-radius: 25px; /* Coins arrondis pour l'effet bulle */
+}
+
