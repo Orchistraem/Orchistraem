@@ -10,6 +10,8 @@ const path = require('path');
 // Pour lire le corps des requêtes POST en JSON
 app.use(bodyParser.json());
 
+app.use(bodyParser.urlencoded({ extended: true }));
+
 const audioMetadataPath = path.join(__dirname, 'data', 'audioMetadata.json');
 
 app.post('/assign-category', (req, res) => {
@@ -358,6 +360,35 @@ app.get('/list-audios', (req, res) => {
 
       res.json(audioFiles);
   });
+});
+
+// Chemin vers le fichier JSON où les données des patients seront stockées
+const dataDir = path.join(__dirname, 'data'); // Utilise __dirname pour déterminer le chemin du répertoire actuel de server.js
+const patientsFilePath = path.join(dataDir, 'patients.json');
+
+// Assurez-vous que le répertoire 'data' existe
+if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+}
+
+app.post('/create-patient', (req, res) => {
+    const patientData = req.body;
+    console.log('Réception des données du patient:', patientData);
+
+    // Lire le fichier existant ou initialiser un tableau vide si le fichier n'existe pas
+    fs.readFile(patientsFilePath, { encoding: 'utf8', flag: 'a+' }, (err, data) => {
+        let patients = data ? JSON.parse(data) : [];
+        patients.push(patientData);
+
+        // Sauvegarder les données mises à jour dans le fichier JSON
+        fs.writeFile(patientsFilePath, JSON.stringify(patients, null, 2), 'utf8', (err) => {
+            if (err) {
+                console.error('Erreur lors de l\'écriture du fichier:', err);
+                return res.status(500).send({ message: 'Erreur lors de l\'enregistrement des données' });
+            }
+            res.send({ message: 'Données du patient enregistrées avec succès' });
+        });
+    });
 });
 
 
