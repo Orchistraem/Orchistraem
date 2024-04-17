@@ -190,6 +190,8 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
                     ]
                 },
                 options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
                     scales: {
                         y: {
                             beginAtZero: false,
@@ -249,8 +251,6 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
                             tension: 0 // Lignes droites sans courbure
                         }
                     },
-                    responsive: false,
-                    maintainAspectRatio: true
                 }
             });
         }
