@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Patients</title>
+</head>
+<body>
+    <h1>Liste des Patients</h1>
+    <ul id="patientsList">
+        <li data-id="1">Patient 1</li>
+        <li data-id="2">Patient 2</li>
+        <li data-id="3">Patient 3</li>
+        <!-- Autres patients... -->
+    </ul>
+
+    <script>
+        // Récupérez la liste des patients
+        const patientsList = document.getElementById('patientsList');
+
+        // Ajoutez un écouteur d'événement pour gérer les clics sur les patients
+        patientsList.addEventListener('click', (event) => {
+            const patientId = event.target.dataset.id; // Obtenez l'ID du patient cliqué
+
+            if (patientId) {
+                // Redirigez vers la page patient.html avec l'ID du patient en tant que paramètre
+                window.location.href = `patient.html?id=${patientId}`;
+            }
+        });
+    </script>
+</body>
+</html>

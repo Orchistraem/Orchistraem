@@ -13,22 +13,30 @@ document.addEventListener('DOMContentLoaded', function () {
     form.addEventListener('submit', function (event) {
         return __awaiter(this, void 0, void 0, function* () {
             event.preventDefault();
+            const nom = document.getElementById('nom').value;
+            const prenom = document.getElementById('prenom').value;
+            const age = parseInt(document.getElementById('age').value, 10);
+            const profile_pic = document.querySelector('input[name="profile_pic"]:checked').value;
             const formData = {
-                nom: document.getElementById('nom').value,
-                prenom: document.getElementById('prenom').value,
-                age: document.getElementById('age').value,
-                profile_pic: document.querySelector('input[name="profile_pic"]:checked').value
+                name: `${prenom} ${nom}`,
+                age: age,
+                gender: profile_pic
             };
             try {
-                const response = yield fetch('/create-patient', {
+                const response = yield fetch('/patients', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(formData)
                 });
-                const result = yield response.json();
-                alert(result.message);
+                if (response.ok) {
+                    const result = yield response.json();
+                    alert(`Patient ajouté avec succès. Identifiant : ${result.patientId}`);
+                }
+                else {
+                    throw new Error('Erreur lors de la création du patient');
+                }
             }
             catch (error) {
                 console.error('Erreur lors de l\'envoi du formulaire:', error);

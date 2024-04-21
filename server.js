@@ -362,35 +362,92 @@ app.get('/list-audios', (req, res) => {
   });
 });
 
-// Chemin vers le fichier JSON où les données des patients seront stockées
-const dataDir = path.join(__dirname, 'data'); // Utilise __dirname pour déterminer le chemin du répertoire actuel de server.js
-const patientsFilePath = path.join(dataDir, 'patients.json');
+const PATIENTS_DIR = './data/patients';
 
-// Assurez-vous que le répertoire 'data' existe
-if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-}
+// Route pour ajouter un nouveau patient
+app.post('/patients', (req, res) => {
+  const { name, age } = req.body;
 
-app.post('/create-patient', (req, res) => {
-    const patientData = req.body;
-    console.log('Réception des données du patient:', patientData);
+  // Générer un identifiant unique pour le patient (par exemple, un UUID)
+  const patientId = generateUniqueId();
 
-    // Lire le fichier existant ou initialiser un tableau vide si le fichier n'existe pas
-    fs.readFile(patientsFilePath, { encoding: 'utf8', flag: 'a+' }, (err, data) => {
-        let patients = data ? JSON.parse(data) : [];
-        patients.push(patientData);
+  // Créer le répertoire du patient
+  const patientDir = path.join(PATIENTS_DIR, patientId);
+  const patientInfoFilePath = path.join(patientDir, 'info.json');
+  const patientRightAudiogramDataInfoFilePath = path.join(patientDir, 'right');
+  const patientLeftAudiogramDataInfoFilePath = path.join(patientDir, 'left');
+  const patientChampLibreAudiogramDataInfoFilePath = path.join(patientDir, 'champLibre');
 
-        // Sauvegarder les données mises à jour dans le fichier JSON
-        fs.writeFile(patientsFilePath, JSON.stringify(patients, null, 2), 'utf8', (err) => {
-            if (err) {
-                console.error('Erreur lors de l\'écriture du fichier:', err);
-                return res.status(500).send({ message: 'Erreur lors de l\'enregistrement des données' });
-            }
-            res.send({ message: 'Données du patient enregistrées avec succès' });
-        });
-    });
+  try {
+    // Vérifiez si le répertoire des patients existe, sinon créez-le
+    if (!fs.existsSync(PATIENTS_DIR)) {
+      fs.mkdirSync(PATIENTS_DIR, { recursive: true });
+    }
+
+    // Créez le répertoire du patient
+    fs.mkdirSync(patientDir);
+    fs.mkdirSync(patientRightAudiogramDataInfoFilePath)
+    fs.mkdirSync(patientLeftAudiogramDataInfoFilePath)
+    fs.mkdirSync(patientChampLibreAudiogramDataInfoFilePath)
+
+    // Enregistrez les informations du patient dans un fichier JSON dans le dossier du patient
+    const patientData = { id: patientId, name, age };
+    fs.writeFileSync(patientInfoFilePath, JSON.stringify(patientData));
+
+    res.status(201).json({ message: 'Patient ajouté avec succès', patientId });
+  } catch (error) {
+    console.error('Erreur lors de la création du dossier patient:', error);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
+  }
 });
 
+// Fonction utilitaire pour générer un identifiant unique
+function generateUniqueId() {
+  return Math.random().toString(36).substr(2, 9); // Exemple simple d'identifiant aléatoire
+}
+
+// Point de terminaison pour récupérer les données d'un patient spécifique
+app.get('/patients/:id', (req, res) => {
+  const patientId = req.params.id;
+  // Récupérer les données du patient depuis votre système de stockage (base de données, fichiers, etc.)
+  // Ici, vous pouvez récupérer les données du patient et les envoyer comme réponse JSON
+  const patientData = {
+    id: patientId,
+    name: 'Nom du Patient', // Exemple: Récupérer le nom du patient depuis votre source de données
+    leftAudiogram: loadAudiogramData(patientId, 'left'),
+    rightAudiogram: loadAudiogramData(patientId, 'right'),
+    champLibreAudiogram: loadAudiogramData(patientId, 'champLibre'),
+  };
+});
+
+// Fonction pour charger les données d'audiogramme d'un patient spécifique
+function loadAudiogramData(patientId, ear) {
+  const directory = getAudiogramDirectory(ear);
+  const filename = `${patientId}.json`;
+  const filePath = path.join(directory, filename);
+
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error(`Erreur lors du chargement des données d'audiogramme (${ear}) du patient ${patientId}:`, error);
+    return [];
+  }
+}
+
+// Fonction utilitaire pour obtenir le répertoire approprié en fonction de l'oreille spécifiée
+function getAudiogramDirectory(ear) {
+  switch (ear) {
+    case 'left':
+      return LEFT_DATA_DIR;
+    case 'right':
+      return RIGHT_DATA_DIR;
+    case 'champLibre':
+      return CHAMPLIBRE_DATA_DIR;
+    default:
+      throw new Error("Côté d'oreille non spécifié");
+  }
+}
 
 app.listen(port, () => {
   console.log(`Serveur démarré sur http://localhost:${port}/index.html`);
