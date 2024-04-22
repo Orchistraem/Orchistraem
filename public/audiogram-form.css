@@ -108,6 +108,10 @@
 
 #soundSelectorChampLibre {
     margin-bottom: 0.5em;
+    min-width: 200px; /* ou la largeur qui convient le mieux */
+    font-size: 1rem; /* ajustez selon les besoins */
+    padding: .375rem 2.25rem .375rem .75rem; /* ajustez le padding droit si l'icône de la flèche est trop proche du texte */
+
 }
 
 #frequenciesThird  {
@@ -116,4 +120,53 @@
 
 #decibelsThird {
     margin-right: 0.2em;
+}
+
+
+
+.patient-info {
+    display: flex;
+    align-items: center; /* Centrer les éléments verticalement */
+    justify-content: space-between; /* Espacer les éléments horizontalement */
+}
+
+.patient-info .patient-text {
+    /* Attributs facultatifs pour ajuster le texte */
+    text-align: left;
+}
+
+.patient-info .patient-photo img {
+    width: 100px; /* ou la taille souhaitée */
+    height: auto;
+    border-radius: 50%; /* pour une photo en cercle */
+}
+
+/* Styles supplémentaires pour gérer l'espacement et d'autres aspects esthétiques */
+.patient-info .patient-text, .patient-info .patient-photo {
+    padding: 10px;
+}
+
+@media (max-width: 600px) {
+    .patient-info {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .patient-info .patient-photo, .patient-info .patient-text {
+        width: 100%; /* prend toute la largeur sur petits écrans */
+        text-align: center; /* centre le texte pour les petits écrans */
+        padding: 5px;
+    }
+
+    .patient-info .patient-photo img {
+        width: 80px; /* taille plus petite pour les petits écrans */
+    }
+}
+
+#patientPhoto {
+    float: right;
+    width: 150px;
+    height: 200px ;
+    border-radius: 50%;
+    border: solid 3px rgba(54, 162, 235, 1);
 }
