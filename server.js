@@ -449,6 +449,26 @@ function getAudiogramDirectory(ear) {
   }
 }
 
+app.get('/all-patient-info', (req, res) => {
+  try {
+    const patientsDir = './data/patients';
+    const patientInfoList = [];
+
+    fs.readdirSync(patientsDir).forEach(patientId => {
+      const infoFilePath = path.join(patientsDir, patientId, 'info.json');
+      if (fs.existsSync(infoFilePath)) {
+        const patientData = JSON.parse(fs.readFileSync(infoFilePath, 'utf8'));
+        patientInfoList.push(patientData);
+      }
+    });
+
+    res.json(patientInfoList);
+  } catch (error) {
+    console.error('Error retrieving patient information:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Serveur démarré sur http://localhost:${port}/index.html`);
 });
