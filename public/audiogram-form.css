@@ -170,3 +170,10 @@
     border-radius: 50%;
     border: solid 3px rgba(54, 162, 235, 1);
 }
+
+.champ-libre-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: auto; /* Centre le conteneur dans la page */
+  }
