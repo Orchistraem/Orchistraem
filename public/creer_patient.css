@@ -55,3 +55,11 @@ form {
     border-radius: 25px; /* Coins arrondis pour l'effet bulle */
 }
 
+div .form-control {
+    width : 50%;
+    text-align: center;
+    margin-left: 25%;
+    margin-right: 25%;
+    margin-top: 1%;
+}
+
