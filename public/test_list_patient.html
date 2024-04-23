@@ -8,24 +8,48 @@
 <body>
     <h1>Liste des Patients</h1>
     <ul id="patientsList">
-        <li data-id="1">Patient 1</li>
-        <li data-id="2">Patient 2</li>
-        <li data-id="3">Patient 3</li>
-        <!-- Autres patients... -->
+        <!-- Les éléments de la liste des patients seront ajoutés ici dynamiquement -->
     </ul>
 
     <script>
-        // Récupérez la liste des patients
-        const patientsList = document.getElementById('patientsList');
-
-        // Ajoutez un écouteur d'événement pour gérer les clics sur les patients
-        patientsList.addEventListener('click', (event) => {
-            const patientId = event.target.dataset.id; // Obtenez l'ID du patient cliqué
-
-            if (patientId) {
-                // Redirigez vers la page patient.html avec l'ID du patient en tant que paramètre
-                window.location.href = `patient.html?id=${patientId}`;
+        async function fetchAllPatientInfo() {
+            try {
+                const response = await fetch('/all-patient-info');
+                if (response.ok) {
+                    return await response.json();
+                } else {
+                    console.error('Erreur lors de la récupération des informations des patients:', response.statusText);
+                    return [];
+                }
+            } catch (error) {
+                console.error('Erreur lors de la récupération des informations des patients:', error);
+                return [];
             }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const patientsList = document.getElementById('patientsList');
+
+            // Récupérer les informations de tous les patients
+            const patientInfos = await fetchAllPatientInfo();
+
+            // Ajouter les éléments de liste pour chaque patient
+            patientInfos.forEach(patient => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `Patient ${patient.name}`;
+                patientsList.appendChild(listItem);
+            });
+
+            // Ajouter un gestionnaire d'événement pour rediriger vers la page patient.html avec l'ID du patient
+            patientsList.addEventListener('click', (event) => {
+                const listItem = event.target;
+                const patientIndex = Array.from(patientsList.children).indexOf(listItem);
+
+                if (patientIndex !== -1) {
+                    const patientId = patientInfos[patientIndex].id;
+                    window.location.href = `patient.html?id=${patientId}`;
+                }
+            });
         });
     </script>
 </body>
