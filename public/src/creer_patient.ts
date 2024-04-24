@@ -1,11 +1,3 @@
-interface Patient {
-    id: string;
-    leftAudiogramData: AudiogramData[];
-    rightAudiogramData: AudiogramData[];
-    champLibreAudiogramData: AudiogramData[];
-  }
-
-
   document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('patientForm') as HTMLFormElement;
     form.addEventListener('submit', async function(event) {
@@ -19,7 +11,7 @@ interface Patient {
         const formData = {
             name: `${prenom} ${nom}`, 
             age: age,
-            gender: profile_pic
+            pic: profile_pic
         };
 
         try {

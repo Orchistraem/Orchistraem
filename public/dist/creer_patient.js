@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const formData = {
                 name: `${prenom} ${nom}`,
                 age: age,
-                gender: profile_pic
+                pic: profile_pic
             };
             try {
                 const response = yield fetch('/patients', {

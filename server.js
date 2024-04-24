@@ -378,7 +378,7 @@ const PATIENTS_DIR = './data/patients';
 
 // Route pour ajouter un nouveau patient
 app.post('/patients', (req, res) => {
-  const { name, age } = req.body;
+  const { name, age, pic } = req.body;
 
   // Générer un identifiant unique pour le patient (par exemple, un UUID)
   const patientId = generateUniqueId();
@@ -403,7 +403,7 @@ app.post('/patients', (req, res) => {
     fs.mkdirSync(patientChampLibreAudiogramDataInfoFilePath)
 
     // Enregistrez les informations du patient dans un fichier JSON dans le dossier du patient
-    const patientData = { id: patientId, name, age };
+    const patientData = { id: patientId, name, age,pic };
     fs.writeFileSync(patientInfoFilePath, JSON.stringify(patientData));
 
     res.status(201).json({ message: 'Patient ajouté avec succès', patientId });
@@ -438,6 +438,20 @@ app.get('/all-patient-info', (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+app.get('/patients/:id/info.json', (req, res) => {
+  const { id } = req.params; // Extraction de l'ID du patient à partir de l'URL
+  const infoPath = path.join(__dirname, 'data', 'patients', id, 'info.json'); // Chemin vers le fichier info.json du patient
+
+  fs.readFile(infoPath, 'utf8', (err, data) => {
+      if (err) {
+          console.error('Erreur lors de la lecture du fichier:', err);
+          return res.status(404).json({ error: 'Patient non trouvé' });
+      }
+      res.json(JSON.parse(data)); // Envoyer les données du patient en réponse
+  });
+});
+
 
 app.listen(port, () => {
   console.log(`Serveur démarré sur http://localhost:${port}/index.html`);

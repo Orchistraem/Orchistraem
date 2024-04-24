@@ -1108,6 +1108,41 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+function fetchPatientInfo() {
+  let patientId = getPatientIdFromUrl()
+  const url = `/patients/${patientId}/info.json`;
+
+  fetch(url)
+      .then(response => {
+          if (!response.ok) {
+              throw new Error('Erreur lors de la récupération des informations du patient');
+          }
+          return response.json();
+      })
+      .then(patientInfo => {
+          displayPatientInfo(patientInfo);
+      })
+      .catch(error => {
+          console.error('Erreur:', error);
+      });
+}
+
+function displayPatientInfo(patientInfo: any) {
+  const patientNameElement = document.getElementById('patientName');
+  const patientImageElement = document.getElementById('patientImage') as HTMLImageElement | null; // Assertion de type
+
+  if (patientNameElement && patientImageElement) { // Vérification que les éléments ne sont pas null
+    patientNameElement.textContent = patientInfo.name;
+    if (patientInfo.pic) {
+        patientImageElement.src = "src/Images/profile_pics/"+patientInfo.pic;
+        patientImageElement.alt = `Photo de profil de ${patientInfo.name}`;
+    }
+  } else {
+    console.error("Un des éléments HTML est manquant");
+  }
+}
+
+
 /**
  * Initialise les audiogrammes lorsque la fenêtre se charge.
  * Crée les graphiques d'audiogramme et configure les gestionnaires d'événements pour les formulaires d'ajout de points.
@@ -1122,6 +1157,7 @@ window.onload = function () {
   if (audiogramChartLeft && audiogramChartRight && audiogramChampLibre) {
     setupEventHandlers(audiogramChartLeft, audiogramChartRight, audiogramChampLibre, legendSelectorLeft, legendSelectorRight, legendSelectorChampLibre);
   }
+  fetchPatientInfo();
   getAudiogramData(audiogramChartLeft, 'left', legendSelectorLeft, getPatientIdFromUrl());
   getAudiogramData(audiogramChartRight, 'right', legendSelectorRight,getPatientIdFromUrl());
   getAudiogramData(audiogramChampLibre, 'champLibre', legendSelectorChampLibre,getPatientIdFromUrl())
