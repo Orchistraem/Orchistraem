@@ -510,24 +510,26 @@ async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement, son
         });
     }
 
-
     function drawDbLegends(ctx: CanvasRenderingContext2D, width: number, height: number, legendSpaceBottom: number, legendSpaceSide: number) {
-        const dbValues = Array.from({ length: 14 }, (_, i) => -10 + i * 10); // Créer un tableau de valeurs de -10 à 120 par pas de 10
+        const dbValues = Array.from({ length: 13 }, (_, i) => i * 10); // Créer un tableau de valeurs de 0 à 120 par pas de 10
         ctx.font = '12px Arial';
         ctx.fillStyle = 'white';
         ctx.textAlign = 'left';
         const offsetX = 20; // Distance horizontale depuis le bord droit du graphique d'animation
-
-        // Assurez-vous que le décalage horizontal ne fait pas sortir les légendes du cadre
+    
         const maxLegendWidth = legendSpaceSide - offsetX;
-
+    
+        const effectiveHeight = height - legendSpaceBottom; // Ajuster cette valeur pour augmenter la hauteur utilisée pour les dB
+    
         dbValues.forEach((db, index) => {
-            // Calculer la position verticale y de manière inversée
-            const y = ((db - (-10)) / (120 - (-10))) * (height - legendSpaceBottom);
-            // Assurez-vous que le texte des dB est dessiné à l'intérieur du cadre
-            ctx.fillText(`${db} dB`, width - maxLegendWidth, y);
+            const y = (1 - ((db - 0) / (120 - 0))) * effectiveHeight;
+            // Diminuer le second terme ici pour monter les légendes et réduire l'écart vertical
+            ctx.fillText(`${db} dB`, width - maxLegendWidth, y + (legendSpaceBottom / 4)); // Réduire ce terme pour rapprocher les légendes vers le bas
         });
     }
+    
+    
+    
     const draw = () => {
         requestAnimationFrame(draw);
 

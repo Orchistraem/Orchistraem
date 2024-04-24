@@ -525,6 +525,32 @@ function isPointAlreadyPresent(chart, frequency, style) {
     });
 }
 /**
+ * Vérifie si un point avec des coordonnées de fréquence, de décibels et un style spécifique existe déjà sur un graphique d'audiogramme.
+ *
+ * Cette fonction parcourt tous les datasets du graphique d'audiogramme pour chercher un point existant avec des coordonnées
+ * et un style correspondants aux valeurs fournies. Elle compare la fréquence et les décibels avec une certaine tolérance pour les
+ * différences mineures, et vérifie également si le style du point (représenté par 'circle', 'A', 'I', etc.) correspond.
+ *
+ * @param chart - L'instance de l'audiogramme Chart.js dans laquelle la recherche est effectuée.
+ * @param frequency - La fréquence du point à vérifier.
+ * @param decibels - Le niveau de décibels du point à vérifier.
+ * @param style - Le style du point (comme 'circle', 'A', 'I', etc.) à vérifier.
+ * @returns `true` si un point correspondant est trouvé, sinon `false`.
+ *
+ * @example
+ * // Vérifie si un point avec 1000 Hz, 20 dB et le style 'A' existe déjà
+ * isPointAlreadyPresentWithStyle(audiogramChart, 1000, 20, 'A');
+ */
+function isPointAlreadyPresentWithStyle(chart, frequency, style) {
+    return chart.data.datasets.some((dataset) => {
+        return dataset.data.some((point) => {
+            const isFrequencyMatch = Math.abs(point.x - frequency) < 0.1; // même fréquence
+            const isSameStyle = point.style === style; // même style
+            return isFrequencyMatch && isSameStyle; // Problème si même fréquence mais style différent
+        });
+    });
+}
+/**
  * Ajoute un point à l'audiogramme et trie le point.
  *
  * @param chart - L'instance de l'audiogramme Chart.js.
@@ -798,32 +824,6 @@ function isPointAlreadyExist(chart, frequency, decibels) {
     return chart.data.datasets.some((dataset) => {
         return dataset.data.some((point) => {
             return Math.abs(point.x - frequency) < 0.1 && Math.abs(point.y - decibels) < 0.1; // Tolérance ajustable
-        });
-    });
-}
-/**
- * Vérifie si un point avec des coordonnées de fréquence, de décibels et un style spécifique existe déjà sur un graphique d'audiogramme.
- *
- * Cette fonction parcourt tous les datasets du graphique d'audiogramme pour chercher un point existant avec des coordonnées
- * et un style correspondants aux valeurs fournies. Elle compare la fréquence et les décibels avec une certaine tolérance pour les
- * différences mineures, et vérifie également si le style du point (représenté par 'circle', 'A', 'I', etc.) correspond.
- *
- * @param chart - L'instance de l'audiogramme Chart.js dans laquelle la recherche est effectuée.
- * @param frequency - La fréquence du point à vérifier.
- * @param decibels - Le niveau de décibels du point à vérifier.
- * @param style - Le style du point (comme 'circle', 'A', 'I', etc.) à vérifier.
- * @returns `true` si un point correspondant est trouvé, sinon `false`.
- *
- * @example
- * // Vérifie si un point avec 1000 Hz, 20 dB et le style 'A' existe déjà
- * isPointAlreadyPresentWithStyle(audiogramChart, 1000, 20, 'A');
- */
-function isPointAlreadyPresentWithStyle(chart, frequency, style) {
-    return chart.data.datasets.some((dataset) => {
-        return dataset.data.some((point) => {
-            const isFrequencyMatch = Math.abs(point.x - frequency) < 0.1; // même fréquence
-            const isSameStyle = point.style === style; // même style
-            return isFrequencyMatch && isSameStyle; // Problème si même fréquence mais style différent
         });
     });
 }
