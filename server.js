@@ -97,50 +97,54 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html')); // Assurez-vous que le chemin est correct
 });
 
-// Répertoire pour stocker les données 
-const DATA_DIR = './data';
 
 // Répertoires pour stocker les données
 const LEFT_DATA_DIR = './data/left';
 const RIGHT_DATA_DIR = './data/right';
 const CHAMPLIBRE_DATA_DIR = './data/champLibre';
 
-// Point de terminaison pour stocker les données des audiogrammes de l'oreille gauche
-app.post('/audiogram/left', (req, res) => {
-  saveAudiogramData(req.body, LEFT_DATA_DIR, res);
+app.post('/patients/:id/audiogram/left', (req, res) => {
+  const patientId = req.params.id;
+  const patientDir = path.join(PATIENTS_DIR, patientId, 'left');
+  saveAudiogramData(req.body, patientDir, res);
 });
 
-// Point de terminaison pour stocker les données des audiogrammes de l'oreille droite
-app.post('/audiogram/right', (req, res) => {
-  saveAudiogramData(req.body, RIGHT_DATA_DIR, res);
+app.post('/patients/:id/audiogram/right', (req, res) => {
+  const patientId = req.params.id;
+  const patientDir = path.join(PATIENTS_DIR, patientId, 'right');
+  saveAudiogramData(req.body, patientDir, res);
 });
 
-// Point de terminaison pour stocker les données des audiogrammes du champ libre
-app.post('/audiogram/champLibre', (req, res) => {
-  saveAudiogramData(req.body, CHAMPLIBRE_DATA_DIR, res);
+app.post('/patients/:id/audiogram/champLibre', (req, res) => {
+  const patientId = req.params.id;
+  const patientDir = path.join(PATIENTS_DIR, patientId, 'champLibre');
+  saveAudiogramData(req.body, patientDir, res);
 });
 
-// Fonction pour enregistrer les données d'audiogramme
+
+// Fonction modifiée pour gérer les dossiers de patients
 function saveAudiogramData(data, directory, res) {
   try {
+    // Vérifie si le dossier existe, sinon le crée
     if (!fs.existsSync(directory)) {
       fs.mkdirSync(directory, { recursive: true });
     }
 
-    // Utilisez l'ID fourni dans les données pour nommer le fichier
-    const filename = `${data.id}.json`;
-    const filePath = `${directory}/${filename}`;
+    // Utilise l'ID de l'audiogramme pour nommer le fichier, ou crée un nom basé sur un timestamp si non fourni
+    const filename = data.id ? `${data.id}.json` : `audiogram_${Date.now()}.json`;
+    const filePath = path.join(directory, filename);
 
     fs.writeFileSync(filePath, JSON.stringify(data));
     console.log('Données enregistrées:', data);
-    res.status(200).send('Données enregistrées');
+    res.status(200).send('Données enregistrées avec succès');
   } catch (error) {
     console.error('Erreur lors de l\'enregistrement des données:', error);
     res.status(500).send('Erreur interne du serveur');
   }
 }
 
-// Point de terminaison pour stocker les données des audiogrammes
+
+/* // Point de terminaison pour stocker les données des audiogrammes
 app.post('/audiogram', (req, res) => {
   console.log("Requête reçue:", req.body); // Afficher les données reçues
 
@@ -155,7 +159,7 @@ app.post('/audiogram', (req, res) => {
     console.error('Erreur lors de l\'enregistrement des données:', error);
     res.status(500).send('Erreur interne du serveur');
   }
-});
+}); */
 
 
 app.get('/list-audios', (req, res) => {
@@ -175,58 +179,66 @@ app.get('/list-audios', (req, res) => {
   });
 });
 
-app.get('/get-audiogram-data', (req, res) => {
-  const LEFT_DATA_DIR = './data/left';
-  const RIGHT_DATA_DIR = './data/right';
-  const CHAMPLIBRE_DATA_DIR = './data/champLibre';
+app.get('/patients/:id/audiogram/:ear', (req, res) => {
+  const patientId = req.params.id;
+  const ear = req.params.ear; // Capture l'oreille depuis l'URL
+  const PATIENTS_DIR = `./data/patients/${patientId}`;
 
   // Fonction pour lire les données d'un dossier spécifique
-  function readAudiogramData(directory) {
+  function readAudiogramData(directory, subFolder) {
     let audiograms = [];
-    const files = fs.readdirSync(directory);
+    const folderPath = `${directory}/${subFolder}`;
 
-    files.forEach(file => {
-      if (file.endsWith('.json')) {
-        const data = fs.readFileSync(`${directory}/${file}`, 'utf8');
-        audiograms.push(JSON.parse(data));
-      }
-    });
+    try {
+      const files = fs.readdirSync(folderPath);
+
+      files.forEach(file => {
+        if (file.endsWith('.json')) {
+          const data = fs.readFileSync(`${folderPath}/${file}`, 'utf8');
+          audiograms.push(JSON.parse(data));
+        }
+      });
+    } catch (error) {
+      console.error(`Erreur lors de la lecture des données d'audiogramme pour ${folderPath}:`, error);
+    }
 
     return audiograms;
   }
 
-  // Lire les données des deux dossiers
+  // Lire les données du dossier spécifié par l'oreille
   try {
-    const leftAudiograms = readAudiogramData(LEFT_DATA_DIR);
-    const rightAudiograms = readAudiogramData(RIGHT_DATA_DIR);
-    const champLibreAudiograms = readAudiogramData(CHAMPLIBRE_DATA_DIR);
+    let audiograms = [];
+    if (ear === 'left' || ear === 'right' || ear === 'champLibre') {
+      audiograms = readAudiogramData(PATIENTS_DIR, ear);
+    } else {
+      throw new Error('Invalid ear parameter');
+    }
 
-    // Fusionner les données des audiogrammes gauche et droite
-    const allAudiograms = leftAudiograms.concat(rightAudiograms,champLibreAudiograms);
-
-    // Envoyer les données combinées
-    res.json(allAudiograms);
+    // Envoyer les données de l'oreille spécifiée
+    res.json(audiograms);
   } catch (error) {
-    console.error('Erreur lors de la lecture des dossiers:', error);
+    console.error('Erreur lors de la lecture du dossier du patient:', error);
     res.status(500).send('Erreur interne du serveur');
   }
 });
 
 
-// Route pour supprimer un point
-app.delete('/audiogram/:ear/:pointId', (req, res) => {
-  const { ear, pointId } = req.params;
+
+// Route pour supprimer un point spécifique pour un patient
+app.delete('/patients/:patientId/audiogram/:ear/:pointId', (req, res) => {
+  const { patientId, ear, pointId } = req.params;
+  const PATIENTS_DIR = `./data/patients/${patientId}`;
   let directory;
 
   switch (ear) {
     case 'gauche':
-      directory = LEFT_DATA_DIR;
+      directory = `${PATIENTS_DIR}/left`;
       break;
     case 'droite':
-      directory = RIGHT_DATA_DIR;
+      directory = `${PATIENTS_DIR}/right`;
       break;
     case 'champLibre':
-      directory = CHAMPLIBRE_DATA_DIR;
+      directory = `${PATIENTS_DIR}/champLibre`;
       break;
     default:
       return res.status(400).send({ error: "Côté de l'oreille non valide." });
@@ -235,7 +247,6 @@ app.delete('/audiogram/:ear/:pointId', (req, res) => {
   try {
     const files = fs.readdirSync(directory);
     const fileToDelete = files.find(file => file.includes(pointId));
-
     if (fileToDelete) {
         fs.unlinkSync(`${directory}/${fileToDelete}`);
         res.status(200).send("Point supprimé");
@@ -248,20 +259,21 @@ app.delete('/audiogram/:ear/:pointId', (req, res) => {
   }
 });
 
-// Supprimer tous les points pour une oreille spécifique ou pour le champ libre
-app.delete('/delete-all-points/:ear', (req, res) => {
-  const { ear } = req.params;
+// Route pour supprimer tous les points d'une oreille spécifique ou du champ libre pour un patient
+app.delete('/patients/:patientId/delete-all-points/:ear', (req, res) => {
+  const { patientId, ear } = req.params;
+  const PATIENTS_DIR = `./data/patients/${patientId}`;
   let directory;
 
   switch (ear) {
     case 'gauche':
-      directory = LEFT_DATA_DIR;
+      directory = `${PATIENTS_DIR}/left`;
       break;
     case 'droite':
-      directory = RIGHT_DATA_DIR;
+      directory = `${PATIENTS_DIR}/right`;
       break;
     case 'champLibre':
-      directory = CHAMPLIBRE_DATA_DIR;
+      directory = `${PATIENTS_DIR}/champLibre`;
       break;
     default:
       return res.status(400).send({ error: "Côté de l'oreille non valide." });
@@ -406,48 +418,6 @@ function generateUniqueId() {
   return Math.random().toString(36).substr(2, 9); // Exemple simple d'identifiant aléatoire
 }
 
-// Point de terminaison pour récupérer les données d'un patient spécifique
-app.get('/patients/:id', (req, res) => {
-  const patientId = req.params.id;
-  // Récupérer les données du patient depuis votre système de stockage (base de données, fichiers, etc.)
-  // Ici, vous pouvez récupérer les données du patient et les envoyer comme réponse JSON
-  const patientData = {
-    id: patientId,
-    name: 'Nom du Patient', // Exemple: Récupérer le nom du patient depuis votre source de données
-    leftAudiogram: loadAudiogramData(patientId, 'left'),
-    rightAudiogram: loadAudiogramData(patientId, 'right'),
-    champLibreAudiogram: loadAudiogramData(patientId, 'champLibre'),
-  };
-});
-
-// Fonction pour charger les données d'audiogramme d'un patient spécifique
-function loadAudiogramData(patientId, ear) {
-  const directory = getAudiogramDirectory(ear);
-  const filename = `${patientId}.json`;
-  const filePath = path.join(directory, filename);
-
-  try {
-    const data = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error(`Erreur lors du chargement des données d'audiogramme (${ear}) du patient ${patientId}:`, error);
-    return [];
-  }
-}
-
-// Fonction utilitaire pour obtenir le répertoire approprié en fonction de l'oreille spécifiée
-function getAudiogramDirectory(ear) {
-  switch (ear) {
-    case 'left':
-      return LEFT_DATA_DIR;
-    case 'right':
-      return RIGHT_DATA_DIR;
-    case 'champLibre':
-      return CHAMPLIBRE_DATA_DIR;
-    default:
-      throw new Error("Côté d'oreille non spécifié");
-  }
-}
 
 app.get('/all-patient-info', (req, res) => {
   try {

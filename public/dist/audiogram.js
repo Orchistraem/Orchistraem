@@ -63,16 +63,24 @@ function deleteAllPointsFromCharts() {
     audiogramChartRight.update();
 }
 function deleteAllPointsFromServer() {
-    // Envoyer des requêtes de suppression au serveur pour chaque oreille
-    fetch('/delete-all-points/gauche', { method: 'DELETE' })
-        .then(response => console.log('Tous les points de l\'oreille droite supprimés'))
-        .catch(error => console.error('Erreur:', error));
-    fetch('/delete-all-points/droite', { method: 'DELETE' })
-        .then(response => console.log('Tous les points de l\'oreille gauche supprimés'))
-        .catch(error => console.error('Erreur:', error));
-    fetch('/delete-all-points/champLibre', { method: 'DELETE' })
-        .then(response => console.log('Tous les points du champ libre supprimés'))
-        .catch(error => console.error('Erreur:', error));
+    let patientId = getPatientIdFromUrl();
+    const urls = [
+        `/patients/${patientId}/delete-all-points/gauche`,
+        `/patients/${patientId}/delete-all-points/droite`,
+        `/patients/${patientId}/delete-all-points/champLibre`
+    ];
+    Promise.all(urls.map(url => fetch(url, { method: 'DELETE' })))
+        .then(responses => {
+        responses.forEach((response, index) => {
+            if (response.ok) {
+                console.log(`Tous les points de l'oreille ${urls[index].split('/').pop()} supprimés`);
+            }
+            else {
+                console.error('Erreur lors de la suppression des points:', response.statusText);
+            }
+        });
+    })
+        .catch(error => console.error('Erreur lors de la suppression des points:', error));
 }
 // Fonction pour créer un canvas avec une lettre
 function createPointStyle(letter) {
@@ -203,10 +211,10 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
                             annotations: {
                                 box1: {
                                     type: 'box',
-                                    xMin: 500,
-                                    xMax: 2000,
-                                    yMin: 20,
-                                    yMax: 60,
+                                    xMin: 500, // Fréquence basse
+                                    xMax: 2000, // Fréquence haute
+                                    yMin: 20, // Intensité basse
+                                    yMax: 60, // Intensité haute
                                     backgroundColor: 'rgba(255, 99, 132, 0.25)'
                                 }
                             }
@@ -589,6 +597,14 @@ function setupEventHandlers(chartLeft, chartRight, chartChampLibre, legendSelect
         }
     });
 }
+function getPatientIdFromUrl() {
+    // Crée un objet URLSearchParams à partir de l'URL actuelle
+    const urlParams = new URLSearchParams(window.location.search);
+    // Récupère l'ID du patient à partir des paramètres de l'URL
+    const patientId = urlParams.get('id');
+    // Retourne l'ID du patient ou une chaîne vide si non trouvé
+    return patientId || '';
+}
 function addPointToLeftAudiogram(frequency, decibels, id, style) {
     // Vérifiez que cette fonction ajoute des points seulement à l'audiogramme gauche
     addDataPointAndSort(audiogramChartLeft, frequency, decibels, id, style);
@@ -608,21 +624,21 @@ function addPointToChampLibre(frequency, decibels, id, style) {
  * @throws {Error} - Lance une erreur si l'envoi des données échoue.
  */
 function sendDataToServer(audiogramData) {
+    const patientId = getPatientIdFromUrl(); // Obtenir l'ID du patient
     let url;
     switch (audiogramData.ear) {
         case 'gauche':
-            url = '/audiogram/left';
+            url = `/patients/${patientId}/audiogram/left`; // Utiliser l'ID dans l'URL
             break;
         case 'droite':
-            url = '/audiogram/right';
+            url = `/patients/${patientId}/audiogram/right`;
             break;
         case 'champLibre':
-            url = '/audiogram/champLibre';
+            url = `/patients/${patientId}/audiogram/champLibre`;
             break;
         default:
             throw new Error("Côté d'oreille non spécifié");
     }
-    // La requête POST est envoyée à l'URL appropriée
     fetch(url, {
         method: 'POST',
         headers: {
@@ -632,29 +648,24 @@ function sendDataToServer(audiogramData) {
     })
         .then(response => {
         if (response.ok) {
-            return response.text();
+            return response.json(); // Assure-toi de gérer le JSON si le serveur renvoie JSON
         }
         throw new Error('Erreur dans l\'envoi des données');
     })
-        .then(data => console.log(data))
+        .then(data => console.log('Données enregistrées:', data))
         .catch(error => console.error('Erreur:', error));
 }
 /**
- * Récupère les données d'audiogramme du serveur et met à jour le graphique d'audiogramme correspondant.
- *
- * Cette fonction envoie une requête au serveur pour obtenir les données des audiogrammes. Une fois les données récupérées,
- * elle appelle `updateAudiogramWithData` pour mettre à jour le graphique d'audiogramme spécifié avec les nouvelles données.
- * Elle utilise également un sélecteur de légende pour déterminer le style de point à appliquer.
+ * Récupère les données d'audiogramme d'un patient spécifique du serveur et met à jour le graphique d'audiogramme correspondant.
  *
  * @param chart - L'instance de l'audiogramme Chart.js à mettre à jour avec les données récupérées.
+ * @param ear - La partie de l'audiogramme à récupérer ('gauche', 'droite', 'champLibre').
  * @param legendSelector - Le sélecteur HTML pour choisir le style de point à appliquer aux nouveaux points.
- *
- * @example
- * // Appel de la fonction pour le graphique de l'oreille gauche avec son sélecteur de légende
- * getAudiogramData(audiogramChartLeft, document.getElementById('legendSelectorLeft'));
+ * @param patientId - L'ID du patient dont les données d'audiogramme doivent être récupérées.
  */
-function getAudiogramData(chart, ear, legendSelector) {
-    fetch('/get-audiogram-data')
+function getAudiogramData(chart, ear, legendSelector, patientId) {
+    const url = `/patients/${patientId}/audiogram/${ear}`;
+    fetch(url)
         .then(response => {
         if (!response.ok) {
             throw new Error('Erreur de réseau lors de la récupération des données');
@@ -662,30 +673,21 @@ function getAudiogramData(chart, ear, legendSelector) {
         return response.json();
     })
         .then(data => {
-        const filteredData = data.filter((point) => point.ear === ear);
-        const pointStyle = legendSelector.value;
-        updateAudiogramWithData(filteredData, chart);
+        updateAudiogramWithData(data, chart);
     })
         .catch(error => console.error('Erreur lors de la récupération des données:', error));
 }
+/**
+ * Met à jour le graphique d'audiogramme avec les nouvelles données.
+ *
+ * @param data - Les données à ajouter au graphique.
+ * @param chart - Le graphique à mettre à jour.
+ * @param pointStyle - Le style de point à appliquer (par exemple 'circle', 'A', 'I').
+ */
 function updateAudiogramWithData(data, chart) {
-    data.forEach((point) => {
+    data.forEach(point => {
         if (!isPointAlreadyPresentWithStyle(chart, point.frequency, point.decibels, point.style)) {
-            if (point.ear === 'gauche' && audiogramChartLeft) {
-                if (!isPointAlreadyExist(audiogramChartLeft, point)) {
-                    addDataPointAndSort(audiogramChartLeft, point.frequency, point.decibels, point.id, point.style);
-                }
-            }
-            else if (point.ear === 'droite' && audiogramChartRight) {
-                if (!isPointAlreadyExist(audiogramChartRight, point)) {
-                    addDataPointAndSort(audiogramChartRight, point.frequency, point.decibels, point.id, point.style);
-                }
-            }
-            else if (point.ear === 'champLibre' && audiogramChampLibre) {
-                if (!isPointAlreadyExist(audiogramChampLibre, point)) {
-                    addDataPointAndSort(audiogramChampLibre, point.frequency, point.decibels, point.id, point.style);
-                }
-            }
+            addDataPointAndSort(chart, point.frequency, point.decibels, point.id, point.style);
         }
     });
 }
@@ -850,17 +852,16 @@ function setupClickListeners(chart, ear, legendSelector) {
  * removeDataPoint(audiogramChart, 2, 'gauche', '123456789'); // Supprime le point d'index 2 pour l'oreille gauche avec l'ID '123456789'
  */
 function removeDataPoint(chart, index, ear, pointId) {
-    // Identifier le dataset contenant le point à supprimer
     chart.data.datasets.forEach((dataset) => {
         const pointIndex = dataset.data.findIndex((point) => point.id === pointId);
         if (pointIndex !== -1) {
-            // Supprimer le point de ce dataset spécifique
             dataset.data.splice(pointIndex, 1);
+            chart.update();
         }
     });
-    chart.update();
-    // Construire l'URL pour la requête DELETE
-    const url = `/audiogram/${ear}/${pointId}`;
+    let patientId = getPatientIdFromUrl();
+    // Mise à jour de l'URL pour inclure l'identifiant du patient
+    const url = `/patients/${patientId}/audiogram/${ear}/${pointId}`;
     // Envoyer la requête DELETE au serveur
     fetch(url, {
         method: 'DELETE'
@@ -1002,9 +1003,9 @@ window.onload = function () {
     if (audiogramChartLeft && audiogramChartRight && audiogramChampLibre) {
         setupEventHandlers(audiogramChartLeft, audiogramChartRight, audiogramChampLibre, legendSelectorLeft, legendSelectorRight, legendSelectorChampLibre);
     }
-    getAudiogramData(audiogramChartLeft, 'gauche', legendSelectorLeft);
-    getAudiogramData(audiogramChartRight, 'droite', legendSelectorRight);
-    getAudiogramData(audiogramChampLibre, 'champLibre', legendSelectorChampLibre);
+    getAudiogramData(audiogramChartLeft, 'left', legendSelectorLeft, getPatientIdFromUrl());
+    getAudiogramData(audiogramChartRight, 'right', legendSelectorRight, getPatientIdFromUrl());
+    getAudiogramData(audiogramChampLibre, 'champLibre', legendSelectorChampLibre, getPatientIdFromUrl());
     setupClickListeners(audiogramChartLeft, 'gauche', legendSelectorLeft);
     setupClickListeners(audiogramChartRight, 'droite', legendSelectorRight);
     setupClickListeners(audiogramChampLibre, 'champLibre', legendSelectorChampLibre);
