@@ -32,7 +32,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 if (response.ok) {
                     const result = yield response.json();
-                    alert(`Patient ajouté avec succès. Identifiant : ${result.patientId}`);
+                    Swal.fire({
+                        title: 'Succès !',
+                        text: `Patient ajouté avec succès. Identifiant : ${result.patientId}`,
+                        icon: 'success',
+                        confirmButtonText: 'Fermer'
+                    });
                 }
                 else {
                     throw new Error('Erreur lors de la création du patient');
@@ -40,7 +45,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             catch (error) {
                 console.error('Erreur lors de l\'envoi du formulaire:', error);
-                alert('Erreur lors de l\'envoi du formulaire');
+                // Utilisez Swal.fire pour afficher les erreurs également
+                Swal.fire({
+                    title: 'Erreur !',
+                    text: 'Erreur lors de l\'envoi du formulaire',
+                    icon: 'error',
+                    confirmButtonText: 'Fermer'
+                });
             }
         });
     });

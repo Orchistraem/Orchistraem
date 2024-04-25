@@ -1,3 +1,4 @@
+declare var Swal: any;
   document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('patientForm') as HTMLFormElement;
     form.addEventListener('submit', async function(event) {
@@ -25,13 +26,24 @@
 
             if (response.ok) {
                 const result = await response.json();
-                alert(`Patient ajouté avec succès. Identifiant : ${result.patientId}`);
-            } else {
-                throw new Error('Erreur lors de la création du patient');
-            }
+                Swal.fire({
+                    title: 'Succès !',
+                    text: `Patient ajouté avec succès. Identifiant : ${result.patientId}`,
+                    icon: 'success',
+                    confirmButtonText: 'Fermer'
+                  });
+                } else {
+                  throw new Error('Erreur lors de la création du patient');
+                }
         } catch (error) {
             console.error('Erreur lors de l\'envoi du formulaire:', error);
-            alert('Erreur lors de l\'envoi du formulaire');
+            // Utilisez Swal.fire pour afficher les erreurs également
+            Swal.fire({
+              title: 'Erreur !',
+              text: 'Erreur lors de l\'envoi du formulaire',
+              icon: 'error',
+              confirmButtonText: 'Fermer'
+            });
         }
     });
 });
