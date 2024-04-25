@@ -116,6 +116,10 @@
 
 #soundSelectorChampLibre {
     margin-bottom: 0.5em;
+    min-width: 200px; /* ou la largeur qui convient le mieux */
+    font-size: 1rem; /* ajustez selon les besoins */
+    padding: .375rem 2.25rem .375rem .75rem; /* ajustez le padding droit si l'icône de la flèche est trop proche du texte */
+
 }
 
 #frequenciesThird  {
