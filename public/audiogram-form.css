@@ -18,7 +18,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: -5em;
+    margin-bottom: -2em;
 }
 
 .audiogram-container {
@@ -75,8 +75,11 @@
     margin-bottom: 0.2em;
 }
 
-#legendSelectorLeft {
-    margin-right: 0.3em;
+#legendSelector {
+    margin-bottom: 0.5em;
+    min-width: 200px; /* ou la largeur qui convient le mieux */
+    font-size: 1rem; /* ajustez selon les besoins */
+    padding: .375rem 2.25rem .375rem .75rem; /* ajustez le padding droit si l'icône de la flèche est trop proche du texte */
 }
 
 .form-select {
@@ -87,13 +90,19 @@
 }
 
 .edit {
+    columns: 4;
+    margin: auto; 
     width: min-content;
-    margin-bottom: 10em !important;
 }
 
 
 .edit button {
     margin: 2%;
+    width: min-content;
+}
+
+#soundSelectorChampLibre{
+    width:50%;
 }
 
 .AfficherAudioLibre {
@@ -116,6 +125,9 @@
 
 #soundSelectorChampLibre {
     margin-bottom: 0.5em;
+    min-width: 200px; /* ou la largeur qui convient le mieux */
+    font-size: 1rem; /* ajustez selon les besoins */
+    padding: .375rem 2.25rem .375rem .75rem; /* ajustez le padding droit si l'icône de la flèche est trop proche du texte */
 }
 
 #frequenciesThird  {

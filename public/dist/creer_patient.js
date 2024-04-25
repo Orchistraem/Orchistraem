@@ -32,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 if (response.ok) {
                     const result = yield response.json();
-                    alert(`Patient ajouté avec succès. Identifiant : ${result.patientId}`);
                 }
                 else {
                     throw new Error('Erreur lors de la création du patient');
@@ -40,7 +39,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             catch (error) {
                 console.error('Erreur lors de l\'envoi du formulaire:', error);
-                alert('Erreur lors de l\'envoi du formulaire');
             }
         });
     });
