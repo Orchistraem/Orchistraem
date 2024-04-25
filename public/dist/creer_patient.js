@@ -45,6 +45,36 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById('patientForm');
+    const profilePics = document.querySelectorAll('.profile_pic');
+    form.addEventListener('submit', (event) => {
+        event.preventDefault(); // Empêcher la soumission automatique du formulaire
+        // Réinitialiser le formulaire
+        form.reset();
+        // Enlever les styles de tous les images de profil et réinitialiser la couleur du fond
+        profilePics.forEach(picElement => {
+            const pic = picElement; // Assurer que pic est traité comme HTMLElement
+            const img = pic.querySelector('img');
+            img.style.border = 'none'; // Enlever la bordure des images
+            pic.style.backgroundColor = ''; // Réinitialiser la couleur de fond
+        });
+        // Ajouter ici le code pour la soumission des données si nécessaire
+    });
+    // Gestionnaire pour les clics sur les images de profil
+    profilePics.forEach(picElement => {
+        const pic = picElement; // Assurer que pic est traité comme HTMLElement
+        pic.addEventListener('click', () => {
+            // Réinitialiser la couleur de fond de tous les divs de profil avant de définir la nouvelle
+            profilePics.forEach(otherPicElement => {
+                const otherPic = otherPicElement; // Assurer que otherPic est traité comme HTMLElement
+                otherPic.style.backgroundColor = ''; // Réinitialiser la couleur de fond
+            });
+            // Mettre à jour la couleur de fond du div cliqué
+            pic.style.backgroundColor = "#0cff00";
+        });
+    });
+});
 // Sélectionnez le div parent de tous les boutons radio
 const chooseProfilPic = document.getElementById("chooseProfilPic");
 // Vérifiez si l'élément parent existe
