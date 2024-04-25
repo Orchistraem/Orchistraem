@@ -63,3 +63,6 @@ div .form-control {
     margin-top: 1%;
 }
 
+.profile_pic input{
+    display: none;
+}

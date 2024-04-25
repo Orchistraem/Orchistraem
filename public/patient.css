@@ -1,0 +1,16 @@
+#patientName {
+    font-size: 24px; /* Taille de la police */
+    color: white; /* Couleur du texte */
+    text-align: center; /* Centrage du texte */
+    margin-top: 20px; /* Espacement au-dessus du nom */
+    margin-bottom: 10px; /* Espacement en dessous du nom */
+  }
+  
+  #patientImage {
+    width: 5%; /* Largeur fixe */
+    border-radius: 75px; /* Bordure arrondie pour créer un cercle */
+    border: 3px solid #0077b6; /* Bordure solide avec couleur */
+    display: block; /* Assure que l'élément est traité comme un bloc */
+    margin: 10px auto; /* Centrage horizontal et petite marge autour */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ombre légère pour un effet de profondeur */
+  }
