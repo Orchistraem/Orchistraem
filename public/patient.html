@@ -67,7 +67,9 @@
     <div class="audiogram-container">
       <!-- Left Audiogram -->
       <div class="chartBox">
+        <div class="chart-container" style="position: relative; height:40vh; width:40vw">
         <canvas id="audiogramLeft" class="audiogram"></canvas>
+      </div>
               <!-- Left form Audiogram -->
               <div class="form-container">
                 <form id="addPointFormLeft">
@@ -98,10 +100,11 @@
           <!-- Les options seront ajoutées dynamiquement via JavaScript -->
         </select>
         <div class="legend">
-          <select id="legendSelectorLeft" class="form-select">
+          <select id="legendSelector" class="form-select">
             <option value="circle">Cercle</option>
             <option value="A">A</option>
             <option value="I">I</option>
+            <option value="AI">A+I</option>
             <img
               src="./src/Images/gomme.png"
               id="cursorGomme"
@@ -109,12 +112,6 @@
               alt="Eraser Icon"
               style="display: none"
             />
-          </select>
-
-          <select id="legendSelectorRight" class="form-select">
-            <option value="circle">Cercle</option>
-            <option value="A">A</option>
-            <option value="I">I</option>
           </select>
         </div>
 
@@ -133,26 +130,40 @@
 
         <script>
           function toggleAudiogramVisibility() {
-            const toggleChampLibre =
-              document.getElementById("toggleChampLibre");
-            const audiogramChampLibre = document.getElementById(
-              "audiogramChampLibre"
-            );
+            const toggleChampLibre = document.getElementById("toggleChampLibre");
+            const audiogramChampLibre = document.getElementById("audiogramChampLibre");
             const formThird = document.getElementById("addPointFormThird");
-
+            
+            const audiogramLeft = document.getElementById("audiogramLeft");
+            const formLeft = document.getElementById("addPointFormLeft");
+            
+            const audiogramRight = document.getElementById("audiogramRight");
+            const formRight = document.getElementById("addPointFormRight");
+        
             if (toggleChampLibre.checked) {
+              // Afficher Champ Libre
               audiogramChampLibre.style.display = "block";
               formThird.style.display = "block";
+              
+              // Masquer les autres
+              audiogramLeft.style.display = "none";
+              formLeft.style.display = "none";
+              audiogramRight.style.display = "none";
+              formRight.style.display = "none";
             } else {
+              // Si Champ Libre n'est pas coché, réinitialiser tous les affichages
               audiogramChampLibre.style.display = "none";
               formThird.style.display = "none";
+              audiogramLeft.style.display = "block";
+              formLeft.style.display = "block";
+              audiogramRight.style.display = "block";
+              formRight.style.display = "block";
             }
           }
-          document.addEventListener(
-            "DOMContentLoaded",
-            toggleAudiogramVisibility
-          );
+        
+          document.addEventListener("DOMContentLoaded", toggleAudiogramVisibility);
         </script>
+        
         <div class="AfficherAudioLibre">
           <label class="form-check-label" for="toggleChampLibre">
             Afficher l'Audiogramme Champ Libre
@@ -170,7 +181,9 @@
 
       <!-- Right Audiogram -->
       <div class="chartBox">
+        <div class="chart-container" style="position: relative; height:40vh; width:40vw">
         <canvas id="audiogramRight" class="audiogram"></canvas>
+        </div>
         <!-- Form for Right Audiogram -->
         <div class="form-container">
           <form id="addPointFormRight">
@@ -206,10 +219,6 @@
             <div class="input-group">
               <input type="text" id="frequenciesThird" class="form-control" placeholder="Fréquence" name="frequency" />
               <input type="text" id="decibelsThird" class="form-control" placeholder="dB" name="decibels" />
-              <select id="legendSelectorChampLibre" class="form-select">
-                <option value="circle">Cercle</option>
-                <option value="A">A</option>
-              </select>
             </div>
             <br />
             <button type="submit" class="btn btn-outline-primary">Ajouter</button>
@@ -218,6 +227,7 @@
       </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script src="dist/audiogram.js"></script>
   </body>
 </html>

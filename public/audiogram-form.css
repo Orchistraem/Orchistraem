@@ -6,9 +6,10 @@
 
 /* Style des graphiques (ne pas toucher le quadrillage) */
 .audiogram {
-    width: 720px !important;
-    height: 380px ;
-    background-color: white; /* Définit le fond des graphiques en blanc */
+    width: 100%;
+    max-width: 720px;
+    height: 50vh; /* Utilise 50% de la hauteur de l'écran */
+    background-color: white;
     border-radius: 1%;
 }
 
@@ -45,7 +46,9 @@
 }
 
 .chartBox canvas {
-    max-width: 745px; 
+    width: 100%;
+    height: 100%;
+    position: relative;
     border-radius: 20px;
     border: solid 3px rgba(54, 162, 235, 1);
     background: white;
@@ -106,6 +109,11 @@
     margin-left: 5.5em;
 }
 
+.form-check .form-check-input {
+    float: left;
+    margin-left: -2.5em !important;
+}
+
 #soundSelectorChampLibre {
     margin-bottom: 0.5em;
 }
@@ -117,3 +125,4 @@
 #decibelsThird {
     margin-right: 0.2em;
 }
+
