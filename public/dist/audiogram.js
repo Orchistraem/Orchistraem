@@ -247,6 +247,7 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
                             },
                             padding: {
                                 top: 10,
+                                bottom: 30
                             },
                         },
                         annotation: {
