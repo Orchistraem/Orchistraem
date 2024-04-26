@@ -715,6 +715,9 @@ function setupEventHandlers(chartLeft: any, chartRight: any, chartChampLibre: an
                 const uniqueId = Date.now().toString(); // Générer un ID unique ici
                 const pointStyle = legendSelector.value;
                 addDataPointAndSort(chartLeft, frequency, decibel, uniqueId, pointStyle);
+
+          (document.getElementById('frequenciesLeft') as HTMLInputElement).value = '';
+          (document.getElementById('decibelsLeft') as HTMLInputElement).value = '';
           const audiogramDataLeft = {
             ear: 'gauche',
             frequency: frequency,
@@ -757,7 +760,9 @@ function setupEventHandlers(chartLeft: any, chartRight: any, chartChampLibre: an
         const uniqueId = Date.now().toString(); // Générer un ID unique ici
         const pointStyle = legendSelector.value;
         addDataPointAndSort(chartRight, frequency, decibel, uniqueId, pointStyle);
-  
+
+        (document.getElementById('frequenciesRight') as HTMLInputElement).value = '';
+        (document.getElementById('decibelsRight') as HTMLInputElement).value = '';
           const audiogramDataRight = {
             ear: 'droite',
             frequency: frequency,
@@ -787,6 +792,8 @@ function setupEventHandlers(chartLeft: any, chartRight: any, chartChampLibre: an
       const pointStyle = legendSelector.value;
       addDataPointAndSort(chartChampLibre, frequency, decibel, uniqueId, pointStyle);
 
+      (document.getElementById('frequenciesThird') as HTMLInputElement).value = '';
+      (document.getElementById('decibelsThird') as HTMLInputElement).value = '';
       const audiogramDataChampLibre = {
         ear: 'champLibre',
         frequency: frequency,
