@@ -76,157 +76,83 @@
           placeholder="Age"
         />
       </div>
-      <label>Choisir une image de profil :</label>
-      <div id="chooseProfilPic">
-        <!-- Garçons -->
-        <div class="profile_pic">
-          <img src="src/Images/profile_pics/garcon.png" alt="Garçon 1" /><br />
-          <input
-            type="radio"
-            id="garcon1"
-            name="profile_pic"
-            value="garcon1.png"
-          />
-        </div>
-        <div class="profile_pic">
-          <img src="src/Images/profile_pics/garcon2.png" alt="Garçon 2" /><br />
-          <input
-            type="radio"
-            id="garcon2"
-            name="profile_pic"
-            value="garcon2.png"
-          />
-        </div>
-        <div class="profile_pic">
-          <img src="src/Images/profile_pics/garcon3.png" alt="Garçon 3" /><br />
-          <input
-            type="radio"
-            id="garcon3"
-            name="profile_pic"
-            value="garcon3.png"
-          />
-        </div>
 
-        <!-- Filles -->
-        <div class="profile_pic">
-          <img src="src/Images/profile_pics/fille.png" alt="Fille 1" /><br />
-          <input
-            type="radio"
-            id="fille1"
-            name="profile_pic"
-            value="fille1.png"
-          />
+        <label>Choisir une image de profil :</label>
+        <div id="chooseProfilPic">
+            <!-- Garçons -->
+            <div class="profile_pic">
+                <img src="src/Images/profile_pics/garcon.png" alt="Garçon 1" /><br>
+                <input type="radio" id="garcon1" name="profile_pic" value="garcon.png">
+            </div>
+            <div class="profile_pic">
+                <img src="src/Images/profile_pics/garcon2.png" alt="Garçon 2" /><br>
+                <input type="radio" id="garcon2" name="profile_pic" value="garcon2.png">
+            </div>
+            <div class="profile_pic">
+                <img src="src/Images/profile_pics/garcon3.png" alt="Garçon 3" /><br>
+                <input type="radio" id="garcon3" name="profile_pic" value="garcon3.png">
+            </div>
+        
+            <!-- Filles -->
+            <div class="profile_pic">
+                <img src="src/Images/profile_pics/fille.png" alt="Fille 1" /><br>
+                <input type="radio" id="fille1" name="profile_pic" value="fille.png">
+            </div>
+            <div class="profile_pic">
+                <img src="src/Images/profile_pics/fille2.png" alt="Fille 2" /><br>
+                <input type="radio" id="fille2" name="profile_pic" value="fille2.png">
+            </div>
+            <div class="profile_pic">
+                <img src="src/Images/profile_pics/fille3.png" alt="Fille 3" /><br>
+                <input type="radio" id="fille3" name="profile_pic" value="fille3.png">
+            </div>
+        
+            <!-- Hommes -->
+            <div class="profile_pic">
+                <img src="src/Images/profile_pics/homme.png" alt="Homme 1" /><br>
+                <input type="radio" id="homme1" name="profile_pic" value="homme.png">
+            </div>
+            <div class="profile_pic">
+                <img src="src/Images/profile_pics/homme2.png" alt="Homme 2" /><br>
+                <input type="radio" id="homme2" name="profile_pic" value="homme2.png">
+            </div>
+            <div class="profile_pic">
+                <img src="src/Images/profile_pics/homme3.png" alt="Homme 3" /><br>
+                <input type="radio" id="homme3" name="profile_pic" value="homme3.png">
+            </div>
+        
+            <!-- Femmes -->
+            <div class="profile_pic">
+                <img src="src/Images/profile_pics/femme.png" alt="Femme 1" /><br>
+                <input type="radio" id="femme1" name="profile_pic" value="femme.png">
+            </div>
+            <div class="profile_pic">
+                <img src="src/Images/profile_pics/femme2.png" alt="Femme 2" /><br>
+                <input type="radio" id="femme2" name="profile_pic" value="femme2.png">
+            </div>
+            <div class="profile_pic">
+                <img src="src/Images/profile_pics/femme3.png" alt="Femme 3" /><br>
+                <input type="radio" id="femme3" name="profile_pic" value="femme3.png">
+            </div>
+        
+            <!-- Autres -->
+            <div class="profile_pic">
+                <img src="src/Images/profile_pics/autre.png" alt="Autre 1" /><br>
+                <input type="radio" id="autre1" name="profile_pic" value="autre.png">
+            </div>
+            <div class="profile_pic">
+                <img src="src/Images/profile_pics/autre2.png" alt="Autre 2" /><br>
+                <input type="radio" id="autre2" name="profile_pic" value="autre2.png">
+            </div>
+            <div class="profile_pic">
+                <img src="src/Images/profile_pics/autre3.png" alt="Autre 3" /><br>
+                <input type="radio" id="autre3" name="profile_pic" value="autre3.png">
+            </div>
         </div>
-        <div class="profile_pic">
-          <img src="src/Images/profile_pics/fille2.png" alt="Fille 2" /><br />
-          <input
-            type="radio"
-            id="fille2"
-            name="profile_pic"
-            value="fille2.png"
-          />
+        
+        <div>
+          <button type="submit" class="btn btn-primary" onclick="resetFormAndRemoveHighlight()">Créer</button>
         </div>
-        <div class="profile_pic">
-          <img src="src/Images/profile_pics/fille3.png" alt="Fille 3" /><br />
-          <input
-            type="radio"
-            id="fille3"
-            name="profile_pic"
-            value="fille3.png"
-          />
-        </div>
-
-        <!-- Hommes -->
-        <div class="profile_pic">
-          <img src="src/Images/profile_pics/homme.png" alt="Homme 1" /><br />
-          <input
-            type="radio"
-            id="homme1"
-            name="profile_pic"
-            value="homme1.png"
-          />
-        </div>
-        <div class="profile_pic">
-          <img src="src/Images/profile_pics/homme2.png" alt="Homme 2" /><br />
-          <input
-            type="radio"
-            id="homme2"
-            name="profile_pic"
-            value="homme2.png"
-          />
-        </div>
-        <div class="profile_pic">
-          <img src="src/Images/profile_pics/homme3.png" alt="Homme 3" /><br />
-          <input
-            type="radio"
-            id="homme3"
-            name="profile_pic"
-            value="homme3.png"
-          />
-        </div>
-
-        <!-- Femmes -->
-        <div class="profile_pic">
-          <img src="src/Images/profile_pics/femme.png" alt="Femme 1" /><br />
-          <input
-            type="radio"
-            id="femme1"
-            name="profile_pic"
-            value="femme1.png"
-          />
-        </div>
-        <div class="profile_pic">
-          <img src="src/Images/profile_pics/femme2.png" alt="Femme 2" /><br />
-          <input
-            type="radio"
-            id="femme2"
-            name="profile_pic"
-            value="femme2.png"
-          />
-        </div>
-        <div class="profile_pic">
-          <img src="src/Images/profile_pics/femme3.png" alt="Femme 3" /><br />
-          <input
-            type="radio"
-            id="femme3"
-            name="profile_pic"
-            value="femme3.png"
-          />
-        </div>
-
-        <!-- Autres -->
-        <div class="profile_pic">
-          <img src="src/Images/profile_pics/autre.png" alt="Autre 1" /><br />
-          <input
-            type="radio"
-            id="autre1"
-            name="profile_pic"
-            value="autre1.png"
-          />
-        </div>
-        <div class="profile_pic">
-          <img src="src/Images/profile_pics/autre2.png" alt="Autre 2" /><br />
-          <input
-            type="radio"
-            id="autre2"
-            name="profile_pic"
-            value="autre2.png"
-          />
-        </div>
-        <div class="profile_pic">
-          <img src="src/Images/profile_pics/autre3.png" alt="Autre 3" /><br />
-          <input
-            type="radio"
-            id="autre3"
-            name="profile_pic"
-            value="autre3.png"
-          />
-        </div>
-      </div>
-
-      <div>
-        <button type="submit" class="btn btn-primary">Créer</button>
-      </div>
     </form>
 
     <script src="dist/creer_patient.js"></script>

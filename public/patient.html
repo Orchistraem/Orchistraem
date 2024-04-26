@@ -64,7 +64,7 @@
       <img id="patientImage" src="path_to_default_image.jpg" alt="Photo de profil du patient" />
     </div>
 
-    <div class="audiogram-container">
+    <div id="LRAudiogram" class="audiogram-container">
       <!-- Left Audiogram -->
       <div class="chartBox">
         <div class="chart-container" style="position: relative; height:40vh; width:40vw">
@@ -93,91 +93,6 @@
                 </form>
               </div>
         </div>
-
-
-      <div class="edit">
-        <select id="soundSelectorChampLibre" class="form-select">
-          <!-- Les options seront ajoutées dynamiquement via JavaScript -->
-        </select>
-        <div class="legend">
-          <select id="legendSelector" class="form-select">
-            <option value="circle">Cercle</option>
-            <option value="A">A</option>
-            <option value="I">I</option>
-            <option value="AI">A+I</option>
-            <img
-              src="./src/Images/gomme.png"
-              id="cursorGomme"
-              class="eraser-icon"
-              alt="Eraser Icon"
-              style="display: none"
-            />
-          </select>
-        </div>
-
-        <button
-          id="toggleDeletionMode"
-          class="btn btn-primary"
-          data-toggle="button"
-          aria-pressed="false"
-          autocomplete="off"
-        >
-          Activer/Desactiver Mode Suppression
-        </button>
-        <button id="deleteAllPoints" class="btn btn-outline-primary">
-          Supprimer Tous les Points
-        </button>
-
-        <script>
-          function toggleAudiogramVisibility() {
-            const toggleChampLibre = document.getElementById("toggleChampLibre");
-            const audiogramChampLibre = document.getElementById("audiogramChampLibre");
-            const formThird = document.getElementById("addPointFormThird");
-            
-            const audiogramLeft = document.getElementById("audiogramLeft");
-            const formLeft = document.getElementById("addPointFormLeft");
-            
-            const audiogramRight = document.getElementById("audiogramRight");
-            const formRight = document.getElementById("addPointFormRight");
-        
-            if (toggleChampLibre.checked) {
-              // Afficher Champ Libre
-              audiogramChampLibre.style.display = "block";
-              formThird.style.display = "block";
-              
-              // Masquer les autres
-              audiogramLeft.style.display = "none";
-              formLeft.style.display = "none";
-              audiogramRight.style.display = "none";
-              formRight.style.display = "none";
-            } else {
-              // Si Champ Libre n'est pas coché, réinitialiser tous les affichages
-              audiogramChampLibre.style.display = "none";
-              formThird.style.display = "none";
-              audiogramLeft.style.display = "block";
-              formLeft.style.display = "block";
-              audiogramRight.style.display = "block";
-              formRight.style.display = "block";
-            }
-          }
-        
-          document.addEventListener("DOMContentLoaded", toggleAudiogramVisibility);
-        </script>
-        
-        <div class="AfficherAudioLibre">
-          <label class="form-check-label" for="toggleChampLibre">
-            Afficher l'Audiogramme Champ Libre
-          </label>
-          <div class="form-check">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              id="toggleChampLibre"
-              onclick="toggleAudiogramVisibility()"
-            />
-          </div>
-        </div>
-      </div>
 
       <!-- Right Audiogram -->
       <div class="chartBox">
@@ -211,7 +126,7 @@
   </div>
 
     <!-- Third Audiogram on a new line -->
-    <div class="audiogram-container">
+    <div id ="CLAudiogram" class="audiogram-container">
       <div class="chartBox">
         <canvas id="audiogramChampLibre" class="audiogram" style="display: none"></canvas>
         <div class="form-container" id="test">
@@ -223,6 +138,81 @@
             <br />
             <button type="submit" class="btn btn-outline-primary">Ajouter</button>
           </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="edit">
+      <select id="soundSelectorChampLibre" class="form-select">
+        <!-- Les options seront ajoutées dynamiquement via JavaScript -->
+      </select>
+      <div class="legend">
+        <select id="legendSelector" class="form-select">
+          <option value="circle">Cercle</option>
+          <option value="A">A</option>
+          <option value="I">I</option>
+          <option value="AI">A+I</option>
+          <img
+            src="./src/Images/gomme.png"
+            id="cursorGomme"
+            class="eraser-icon"
+            alt="Eraser Icon"
+            style="display: none"
+          />
+        </select>
+      </div>
+
+      <button
+        id="toggleDeletionMode"
+        class="btn btn-primary"
+        data-toggle="button"
+        aria-pressed="false"
+        autocomplete="off"
+      >
+        Activer/Desactiver Mode Suppression
+      </button>
+      <button id="deleteAllPoints" class="btn btn-outline-primary">
+        Supprimer Tous les Points
+      </button>
+
+      <script>
+        function toggleAudiogramVisibility() {
+          const toggleChampLibre = document.getElementById("toggleChampLibre");
+          const audiogramChampLibre = document.getElementById("audiogramChampLibre");
+          const formThird = document.getElementById("addPointFormThird");
+          
+          const audiogramLR = document.getElementById("LRAudiogram");
+          
+      
+          if (toggleChampLibre.checked) {
+            // Afficher Champ Libre
+            audiogramChampLibre.style.display = "block";
+            formThird.style.display = "block";
+            
+            // Masquer les autres
+            audiogramLR.style.display = "none";
+          } else {
+            // Si Champ Libre n'est pas coché, réinitialiser tous les affichages
+            audiogramChampLibre.style.display = "none";
+            formThird.style.display = "none";
+            audiogramLR.style.display = "flex";
+          }
+        }
+      
+        document.addEventListener("DOMContentLoaded", toggleAudiogramVisibility);
+      </script>
+      
+      <div class="AfficherAudioLibre">
+        <label class="form-check-label" for="toggleChampLibre">
+          Afficher l'Audiogramme Champ Libre
+        </label>
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            id="toggleChampLibre"
+            onclick="toggleAudiogramVisibility()"
+          />
         </div>
       </div>
     </div>
