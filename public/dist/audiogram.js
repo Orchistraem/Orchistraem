@@ -443,7 +443,7 @@ function initAudiogramChampLibre(canvasID, pointColor, borderColor, earSide) {
                             pointStyle: 'circle',
                         },
                         {
-                            label: 'Oreille apareillé',
+                            label: 'Aide auditive',
                             data: [],
                             showLine: true,
                             backgroundColor: 'rgb(255,0,0)',
@@ -451,6 +451,26 @@ function initAudiogramChampLibre(canvasID, pointColor, borderColor, earSide) {
                             borderWidth: 1,
                             pointRadius: 5,
                             pointStyle: createPointStyle('A'),
+                        },
+                        {
+                            label: 'Implant',
+                            data: [],
+                            showLine: true,
+                            backgroundColor: 'rgb(0,128,0)',
+                            borderColor: 'rgb(0,128,0)',
+                            borderWidth: 1,
+                            pointRadius: 5,
+                            pointStyle: createPointStyle('I'),
+                        },
+                        {
+                            label: 'Aide auditive + Implant',
+                            data: [],
+                            showLine: true,
+                            backgroundColor: 'rgb(0,0,255)',
+                            borderColor: 'rgb(0,0,255)',
+                            borderWidth: 1,
+                            pointRadius: 5,
+                            pointStyle: createPointStyle('AI'),
                         }
                     ]
                 },
@@ -1039,19 +1059,43 @@ function snapToDecibelLevels(decibels) {
     console.log(`Décibels ajustés: ${snappedDecibels}`); // Ajouter pour le débogage
     return snappedDecibels;
 }
+function toggleAnnotation(chart, annotationId) {
+    var _a, _b;
+    // Vérifier si l'annotation est déjà présente
+    const annotation = (_b = (_a = chart.options.plugins) === null || _a === void 0 ? void 0 : _a.annotation) === null || _b === void 0 ? void 0 : _b.annotations[annotationId];
+    if (annotation) {
+        // Si elle est présente, la supprimer
+        delete chart.options.plugins.annotation.annotations[annotationId];
+    }
+    else {
+        // Sinon, la créer
+        chart.options.plugins = chart.options.plugins || {};
+        chart.options.plugins.annotation = chart.options.plugins.annotation || { annotations: {} };
+        chart.options.plugins.annotation.annotations[annotationId] = {
+            type: 'box',
+            xMin: 500,
+            xMax: 2000,
+            yMin: 20,
+            yMax: 60,
+            backgroundColor: 'rgba(255, 99, 132, 0.25)'
+        };
+    }
+    // Mettre à jour le graphique pour refléter les changements
+    chart.update();
+}
 // Cette fonction est appelée au chargement de la page pour remplir le sélecteur de sons
 function fillSoundSelector() {
     fetch('/list-audios')
         .then(response => response.json())
         .then((sounds) => {
         const soundSelector = document.getElementById('soundSelectorChampLibre');
+        ;
         // Vérification pour s'assurer que soundSelector n'est pas null
         if (soundSelector) {
             // Ajouter une option par défaut qui n'est pas sélectionnable
             const defaultOption = document.createElement('option');
             defaultOption.textContent = 'Sélectionner un son'; // Texte d'incitation à choisir
             defaultOption.value = ''; // Valeur vide pour indiquer qu'aucune sélection n'a été faite
-            defaultOption.disabled = true; // Rendre l'option non sélectionnable
             defaultOption.selected = true; // Faire de cette option la sélection par défaut
             soundSelector.appendChild(defaultOption);
             // Ajouter les sons disponibles comme options
@@ -1061,12 +1105,44 @@ function fillSoundSelector() {
                 option.textContent = sound; // Affiche le nom du fichier comme texte de l'option
                 soundSelector.appendChild(option);
             });
+            // Ajouter un écouteur d'événements pour gérer les changements
+            soundSelector.addEventListener('change', () => {
+                if (soundSelector.value === '') {
+                    // Si l'option par défaut est sélectionnée, supprimer l'annotation
+                    toggleAnnotation(audiogramChartLeft, 'box1');
+                    toggleAnnotation(audiogramChartRight, 'box1');
+                    toggleAnnotation(audiogramChampLibre, 'box1');
+                }
+                else {
+                    // Sinon, afficher ou ajuster l'annotation selon le son sélectionné
+                    updateAnnotation(audiogramChartLeft, 'box1', soundSelector.value);
+                    updateAnnotation(audiogramChartRight, 'box1', soundSelector.value);
+                    updateAnnotation(audiogramChampLibre, 'box1', soundSelector.value);
+                }
+            });
         }
         else {
             console.error('Le sélecteur de sons est introuvable.');
         }
     })
         .catch(error => console.error('Erreur lors de la récupération des sons:', error));
+}
+function updateAnnotation(chart, annotationId, sound) {
+    // Mettre à jour l'annotation en fonction du son sélectionné (ici, simplifié)
+    if (!chart.options.plugins.annotation.annotations[annotationId]) {
+        chart.options.plugins.annotation.annotations[annotationId] = {
+            type: 'box',
+            xMin: 500, // Ces valeurs devraient être ajustées en fonction du son
+            xMax: 2000,
+            yMin: 20,
+            yMax: 60,
+            backgroundColor: 'rgba(255, 99, 132, 0.25)'
+        };
+    }
+    else {
+        // Ajuster les valeurs de l'annotation existante selon le son
+    }
+    chart.update();
 }
 // Assurez-vous d'appeler fillSoundSelector lorsque la page est chargée
 document.addEventListener('DOMContentLoaded', fillSoundSelector);
