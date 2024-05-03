@@ -141,6 +141,22 @@ type DataPoint = {
   y: number; // Decibels
 };
 
+/**
+ * Calcule l'écart de décibels pour chaque point et, optionnellement, l'affiche en console.
+ * 
+ * @param points - Tableau des points d'audiogramme.
+ * @param log - Booléen indiquant si l'écart doit être affiché en console.
+ * @returns Un tableau de tuples représentant l'écart de décibels pour chaque point.
+ */
+// Fonction pour calculer et afficher l'écart en décibel pour un point unique
+function calculateAndLogDecibelRange(point: DataPoint, log: boolean = false): void {
+  const decibelRange = [point.y -15, point.y +30];
+  if (log) {
+    console.log(`Écart de décibels pour ${point.y} dB: (${decibelRange[0]}, ${decibelRange[1]})`);
+  }
+}
+
+
 // Fonction pour créer un canvas avec une lettre
 function createPointStyle(letter: string): HTMLCanvasElement | string {
   const pointSize = 20;
@@ -678,6 +694,9 @@ function addDataPointAndSort(chart: any, frequency: number, decibels: number, id
     style: style === 'circle' ? 'circle' : createPointStyle(style),
     styleLabel: style
   };
+
+  // Calcule et affiche l'écart de décibels
+  calculateAndLogDecibelRange(newDataPoint, true)
 
   // Déterminer l'index du dataset en fonction du style
   let datasetIndex = style === 'circle' ? 0 : 
