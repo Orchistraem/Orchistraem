@@ -428,6 +428,59 @@ async function analyseAudioExtremesConsole(audioFile: Blob): Promise<{xMin: numb
   });
 }
 
+document.getElementById("findSoundsButton")?.addEventListener("click", async () => {
+  const frequencyInput = document.getElementById("frequencyInput") as HTMLInputElement;
+  const decibelInput = document.getElementById("decibelInput") as HTMLInputElement;
+  const resultsDiv = document.getElementById("results");
+
+  if (frequencyInput && decibelInput && resultsDiv) {
+      const freqPoint = parseInt(frequencyInput.value, 10);
+      const dbPoint = parseInt(decibelInput.value, 10);
+
+      // Récupérer la liste des fichiers audio depuis le serveur
+      try {
+          const response = await fetch('/list-audios'); // Utiliser la route correcte pour les fichiers audio
+          if (!response.ok) {
+              throw new Error(`Failed to fetch sound files: ${response.statusText}`);
+          }
+          const soundFiles: string[] = await response.json();
+
+          // Maintenant que nous avons les fichiers, procédons à la recherche des fichiers correspondants
+          const result = await findSoundsWithPoint(freqPoint, dbPoint, soundFiles);
+          resultsDiv.textContent = "Fichiers correspondants: " + result.join(", ");
+      } catch (error) {
+          console.error("Erreur lors de la récupération ou de la recherche des fichiers audio:", error);
+          resultsDiv.textContent = "Erreur lors de la recherche des fichiers.";
+      }
+  } else {
+      console.error("Erreur: certains éléments d'entrée ou d'affichage sont introuvables dans le DOM.");
+  }
+});
+
+async function findSoundsWithPoint(freqPoint: number, dbPoint: number, sounds: string[]): Promise<string[]> {
+  console.log("J'utilise la fonction findSoundsWithPoint");
+  let matchingSounds: string[] = [];
+
+  for (let sound of sounds) {
+      try {
+          const audioUrl = `/uploads/${sound}`; // Chemin vers le fichier audio
+          const audioResponse = await fetch(audioUrl);
+          const audioBlob = await audioResponse.blob();
+
+          const values = await analyseAudioExtremesConsole(audioBlob);
+
+          if (freqPoint >= values.xMin && freqPoint <= values.xMax &&
+              dbPoint >= values.yMin && dbPoint <= values.yMax) {
+              matchingSounds.push(sound);
+          }
+      } catch (error) {
+          console.error('Erreur lors du chargement ou de l\'analyse du fichier audio:', error);
+      }
+  }
+
+  return matchingSounds;
+}
+
 
 
 
