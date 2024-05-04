@@ -1,12 +1,5 @@
-/**
- * Configure le formulaire pour le téléchargement de fichiers audio.
- *
- * Cette fonction prépare le formulaire pour télécharger des fichiers audio. 
- * Elle définit un gestionnaire d'événements pour le formulaire et gère l'envoi du fichier audio sélectionné au serveur.
- * @returns aucune valeur n'est retourné
- */
 
-// Assurez-vous que les catégories sont correctement typées.
+
 interface Category {
     name: string;
 }
@@ -15,7 +8,13 @@ let categories: Category[] = []; // Initialisez les catégories, vous devrez les
 
 
 
-// Configure le formulaire pour le téléchargement de fichiers audio.
+/**
+ * Configure le formulaire pour le téléchargement de fichiers audio.
+ *
+ * Cette fonction prépare le formulaire pour télécharger des fichiers audio. 
+ * Elle définit un gestionnaire d'événements pour le formulaire et gère l'envoi du fichier audio sélectionné au serveur.
+ * @returns aucune valeur n'est retourné
+ */
 function setupUploadAudioForm(): void {
     // Récupère les éléments du formulaire et du champ de fichier audio.
     const uploadAudioForm = document.getElementById('uploadAudioForm') as HTMLFormElement | null;
@@ -226,7 +225,16 @@ function displayAudioList() {
       .catch(error => console.error('Erreur lors de la récupération des catégories:', error));
   }
   
-
+/**
+ * Supprime un élément canvas spécifique de son conteneur.
+ *
+ * Cette fonction recherche et supprime un élément canvas identifié par son ID dans un conteneur HTML donné.
+ * Elle est utilisée pour nettoyer l'interface utilisateur en retirant des éléments graphiques qui ne sont plus nécessaires,
+ * comme dans le cas où un affichage sonogramme n'est plus requis. La suppression est conditionnelle à la présence effective
+ * du canvas dans le conteneur.
+ *
+ * @param audioContainer - Le conteneur HTML (div) dans lequel le canvas est potentiellement inséré.
+ */
 function closeCanvas(audioContainer: HTMLDivElement) {
     const canvas = audioContainer.querySelector('#sonogramCanvas') as HTMLCanvasElement;
     if (canvas) {
@@ -460,6 +468,20 @@ async function analyseAudio(audioFile: Blob, audioContainer: HTMLDivElement): Pr
     requestAnimationFrame(checkAudioProcessing);
 }
 
+/**
+ * Dessine un sonogramme à partir d'un fichier audio et l'affiche dans un élément canvas.
+ *
+ * Cette fonction crée un sonogramme en analysant les données audio à l'aide d'un contexte AudioContext et
+ * d'un analyseur de fréquence. Elle génère un affichage graphique des fréquences et des intensités détectées
+ * dans le fichier audio et affiche ce sonogramme dans un élément canvas. Des légendes sont également dessinées
+ * pour les fréquences et les niveaux de décibels.
+ *
+ * @param audioFile - Le fichier audio sous forme de Blob à analyser.
+ * @param audioContainer - Le conteneur HTML (div) qui hébergera l'élément canvas.
+ * @param sonogramCanvas - L'élément canvas existant ou un nouvel élément créé pour le sonogramme.
+ * @returns Une promesse qui se résout lorsque le sonogramme a commencé à être dessiné. La fonction continue de dessiner
+ *          le sonogramme en temps réel jusqu'à ce que la source audio soit épuisée.
+ */
 async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement, sonogramCanvas: HTMLCanvasElement): Promise<void> {
     const audioContext = new AudioContext();
     const arrayBuffer = await audioFile.arrayBuffer();
@@ -563,7 +585,16 @@ async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement, son
 
 
 
-// Charge et affiche la liste des catégories depuis le serveur
+/**
+ * Charge et affiche la liste des catégories depuis le serveur.
+ *
+ * Cette fonction effectue une requête HTTP GET pour récupérer les catégories du serveur et les affiche
+ * dans un conteneur HTML spécifié. Pour chaque catégorie, un élément div est créé pour afficher le nom
+ * de la catégorie ainsi qu'un bouton pour la supprimer. Si le conteneur n'est pas trouvé dans le DOM,
+ * la fonction s'arrête prématurément.
+ *
+ * @returns Une promesse qui se résout lorsque toutes les catégories ont été traitées et affichées.
+ */
 async function loadAndDisplayCategories(): Promise<void> {
     // Récupère le conteneur HTML pour afficher les catégories
     const categoriesListDiv = document.getElementById('categoriesList') as HTMLDivElement; // Assertion de type pour éviter les erreurs de nullabilité.
@@ -595,7 +626,16 @@ async function loadAndDisplayCategories(): Promise<void> {
     });
 }
 
-// Ajoute une nouvelle catégorie côté client et la sauvegarde sur le serveur
+/**
+ * Ajoute une nouvelle catégorie côté client et la sauvegarde sur le serveur.
+ *
+ * Cette fonction récupère le nom d'une nouvelle catégorie à partir d'un élément d'input HTML, puis envoie
+ * une requête POST au serveur pour enregistrer cette nouvelle catégorie. Si la requête réussit, la catégorie
+ * est ajoutée à la liste des catégories côté client et le champ d'input est vidé. La liste des catégories est
+ * également mise à jour pour inclure la nouvelle entrée.
+ *
+ * @returns Une promesse qui se résout lorsque la catégorie a été ajoutée et la liste mise à jour, ou affiche une alerte en cas d'échec.
+ */
 async function addCategory(): Promise<void> {
     const newCategoryNameInput = document.getElementById('newCategoryName') as HTMLInputElement | null;
     if (!newCategoryNameInput) return; // Arrête la fonction si l'input n'est pas trouvé
@@ -631,7 +671,17 @@ async function addCategory(): Promise<void> {
     }
 }
 
-// Supprime une catégorie existante côté client et sur le serveur
+/**
+ * Supprime une catégorie existante à la fois côté client et sur le serveur.
+ *
+ * Cette fonction envoie une requête DELETE au serveur pour supprimer une catégorie spécifiée par son nom.
+ * Si la suppression est réussie, elle recharge la liste des catégories et met à jour l'interface utilisateur
+ * en supprimant l'option correspondante dans tous les sélecteurs de catégories présents. Elle peut également,
+ * si nécessaire, réassigner à "Non catégorisé" les fichiers audio qui étaient classés sous cette catégorie.
+ *
+ * @param categoryName - Le nom de la catégorie à supprimer.
+ * @returns Une promesse qui se résout quand la catégorie a été supprimée et que l'interface utilisateur a été mise à jour.
+ */
 async function deleteCategory(categoryName: string): Promise<void> {
     // Effectue une requête DELETE vers "/categories/{categoryName}" pour supprimer la catégorie
     const response = await fetch(`/categories/${categoryName}`, { method: 'DELETE' });
@@ -658,7 +708,16 @@ async function deleteCategory(categoryName: string): Promise<void> {
 
 
 
-// Affecte une catégorie à un fichier audio spécifique
+/**
+ * Affecte une catégorie à un fichier audio spécifique et met à jour l'interface utilisateur pour refléter ce changement.
+ *
+ * Cette fonction envoie une requête POST à un serveur pour associer une catégorie spécifiée à un fichier audio donné.
+ * Le serveur est supposé accepter et traiter cette association via l'URL fournie. En cas de réussite, l'interface utilisateur
+ * est mise à jour pour afficher la nouvelle catégorie du fichier audio. En cas d'échec, une erreur est affichée dans la console.
+ *
+ * @param fileName - Le nom du fichier audio auquel la catégorie doit être affectée.
+ * @param categoryName - Le nom de la catégorie à affecter au fichier audio.
+ */
 async function assignCategoryToFile(fileName: string, categoryName: string) {
     try {
         const url = `http://localhost:3000/assign-category`;

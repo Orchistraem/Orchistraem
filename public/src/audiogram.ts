@@ -13,6 +13,15 @@ let isDeletionModeActive = false;
 // Recupération du bouton de suppression
 let toggleDeletionMode = document.getElementById('toggleDeletionMode');
 
+/**
+ * Affiche une notification à l'utilisateur.
+ *
+ * Cette fonction affiche un message temporaire à l'écran en utilisant un élément HTML spécifié par son ID.
+ * Le message disparaîtra automatiquement après un délai spécifié.
+ *
+ * @param message - Le message à afficher dans la notification.
+ * @param duration - La durée pendant laquelle la notification reste visible en millisecondes (1500 par défaut).
+ */
 function showNotification(message: string, duration: number = 1500) {
   const notification = document.getElementById('notification');
   if (notification) {
@@ -25,6 +34,8 @@ function showNotification(message: string, duration: number = 1500) {
     }, duration);
   }
 }
+
+
 const gomme = document.getElementById('cursorGomme');
 // Ajout de l'écouteur
 if (toggleDeletionMode) {
@@ -72,6 +83,15 @@ if (deleteAllPointsButton) {
 }
 
 
+/**
+ * Active ou désactive l'effet de secousse sur les graphiques d'audiogrammes.
+ *
+ * Cette fonction ajuste visuellement les graphiques d'audiogrammes en modifiant le rayon des points de données.
+ * L'effet est appliqué à trois graphiques spécifiques : audiogramChartLeft, audiogramChartRight, et audiogramChampLibre.
+ * Un rayon plus grand est utilisé pour "activer" l'effet de secousse, tandis qu'un rayon normal est restauré lorsque l'effet est "désactivé".
+ *
+ * @param enable - Un booléen ou toute valeur qui peut être évaluée à vrai ou faux, indiquant si l'effet de secousse doit être activé (true) ou désactivé (false).
+ */
 function toggleShakeEffect(enable:any) {
   [audiogramChartLeft, audiogramChartRight, audiogramChampLibre].forEach(chart => {
     if (chart) {
@@ -90,6 +110,13 @@ function toggleShakeEffect(enable:any) {
 }
 
 
+/**
+ * Supprime tous les points de données de plusieurs graphiques d'audiogrammes.
+ *
+ * Cette fonction nettoie les jeux de données de trois graphiques spécifiques : audiogramChartLeft, audiogramChartRight, et audiogramChampLibre.
+ * Après avoir vidé les points de données de chaque jeu de données, elle met à jour les graphiques pour refléter les changements.
+ * Cela entraîne l'affichage de graphiques sans aucun point de données.
+ */
 function deleteAllPointsFromCharts() {
   // Supprimer tous les points des graphiques
   audiogramChartLeft.data.datasets.forEach((dataset: any) => dataset.data = []);
@@ -100,6 +127,13 @@ function deleteAllPointsFromCharts() {
   audiogramChartRight.update();
 }
 
+/**
+ * Supprime tous les points de données des graphiques d'audiogramme d'un patient sur le serveur.
+ *
+ * Cette fonction lance des requêtes de suppression pour chaque côté de l'oreille d'un patient spécifique (gauche, droite, champ libre).
+ * Elle extrait l'ID du patient depuis l'URL de la page, construit les URL de suppression appropriées, et envoie les requêtes DELETE.
+ * Les réponses sont gérées pour confirmer la suppression ou signaler une erreur.
+ */
 function deleteAllPointsFromServer() {
   let patientId = getPatientIdFromUrl()
   const urls = [
@@ -157,7 +191,16 @@ function calculateAndLogDecibelRange(point: DataPoint, log: boolean = false): vo
 }
 
 
-// Fonction pour créer un canvas avec une lettre
+/**
+ * Crée un élément canvas HTML personnalisé affichant une lettre ou un texte spécifique.
+ *
+ * Cette fonction génère un élément canvas sur lequel une lettre ou une combinaison de lettres est dessinée.
+ * Elle est utilisée pour créer des styles de points visuels, par exemple dans des graphiques ou des visualisations où
+ * chaque point peut être représenté par une lettre pour une identification rapide.
+ *
+ * @param letter - La lettre ou le texte à dessiner sur le canvas. Si 'AI' est fourni, le texte 'A+I' est dessiné.
+ * @returns Un élément canvas HTML avec le texte dessiné dessus. Le canvas est retourné directement, ou une chaîne vide si le contexte du canvas n'est pas disponible.
+ */
 function createPointStyle(letter: string): HTMLCanvasElement | string {
   const pointSize = 20;
   const canvas = document.createElement('canvas');
@@ -313,6 +356,21 @@ function initAudiogram(canvasID: string, pointColor: string, borderColor: string
   return null; // Retourne null si le canvas ou le contexte 2D n'existe pas
 }
 
+/**
+ * Ajuste les fréquences et intensités pour qu'elles respectent les limites prédéfinies d'un graphique.
+ *
+ * Cette fonction est conçue pour s'assurer que les valeurs de fréquence et d'intensité d'entrée sont ajustées
+ * pour respecter les limites maximales et minimales définies pour un graphique. Elle empêche les valeurs
+ * d'excéder ou de descendre en dessous des seuils fixés, garantissant ainsi que les données affichées
+ * restent dans une plage visible et pertinente sur le graphique.
+ *
+ * @param minFrequency - La fréquence minimale de l'entrée à ajuster.
+ * @param maxFrequency - La fréquence maximale de l'entrée à ajuster.
+ * @param minIntensityDb - L'intensité minimale en décibels de l'entrée à ajuster.
+ * @param maxIntensityDb - L'intensité maximale en décibels de l'entrée à ajuster.
+ * @returns Un objet contenant les valeurs ajustées pour la fréquence minimale (xMin), la fréquence maximale (xMax),
+ *          l'intensité minimale (yMin) et l'intensité maximale (yMax).
+ */
 function adjustValuesToGraphLimits(minFrequency:number, maxFrequency:number, minIntensityDb:number, maxIntensityDb:number) {
   const graphMinFrequency = 125; // Limite minimale de la fréquence sur le graphique
   const graphMaxFrequency = 8000; // Limite maximale de la fréquence sur le graphique
@@ -356,7 +414,17 @@ if (select) {
 
 
 
-
+/**
+ * Analyse les valeurs extrêmes de fréquence et d'intensité dans un fichier audio.
+ *
+ * Cette fonction utilise l'API Web Audio pour créer un contexte audio et analyser les données de fréquence
+ * d'un fichier audio. Elle calcule les fréquences minimales et maximales où des données sont présentes,
+ * ainsi que les intensités minimales et maximales. Les valeurs sont ensuite ajustées pour respecter les limites
+ * prédéfinies du graphique d'audiogramme.
+ *
+ * @param audioFile - Le fichier audio sous forme de Blob à analyser.
+ * @returns Une promesse qui résout en un objet contenant les valeurs extrêmes de fréquence et d'intensité (xMin, xMax, yMin, yMax).
+ */
 async function analyseAudioExtremesConsole(audioFile: Blob): Promise<{xMin: number, xMax: number, yMin: number, yMax: number}> {
   const audioContext = new AudioContext();
   const arrayBuffer = await audioFile.arrayBuffer();
@@ -457,6 +525,19 @@ document.getElementById("findSoundsButton")?.addEventListener("click", async () 
   }
 });
 
+
+/**
+ * Trouve et liste les fichiers sonores contenant des points spécifiés de fréquence et de décibels dans leurs valeurs extrêmes.
+ *
+ * Cette fonction prend un point de fréquence et un point de décibel et les compare avec une liste de fichiers audio pour déterminer
+ * lesquels contiennent ces points dans leurs gammes extrêmes de fréquence et d'intensité. Elle utilise la fonction `analyseAudioExtremesConsole`
+ * pour récupérer et analyser les extrêmes de fréquence et d'intensité de chaque fichier audio.
+ *
+ * @param freqPoint - Le point de fréquence spécifique à vérifier dans les fichiers audio.
+ * @param dbPoint - Le point de décibel spécifique à vérifier dans les fichiers audio.
+ * @param sounds - Un tableau de chaînes représentant les noms des fichiers audio à analyser.
+ * @returns Une promesse qui se résout en un tableau de chaînes, chacune un nom de fichier audio correspondant aux critères.
+ */
 async function findSoundsWithPoint(freqPoint: number, dbPoint: number, sounds: string[]): Promise<string[]> {
   console.log("J'utilise la fonction findSoundsWithPoint");
   let matchingSounds: string[] = [];
@@ -483,7 +564,16 @@ async function findSoundsWithPoint(freqPoint: number, dbPoint: number, sounds: s
 
 
 
-
+/**
+ * Met à jour les annotations des graphiques d'audiogrammes avec de nouvelles valeurs.
+ *
+ * Cette fonction met à jour les graphiques d'audiogrammes pour les oreilles droite et gauche ainsi que pour le champ libre
+ * en appliquant de nouvelles annotations basées sur les valeurs fournies. Les annotations délimitent une zone rectangulaire
+ * indiquant une plage de fréquences et d'intensités sur les graphiques. Chaque graphique est mis à jour pour refléter
+ * ces nouvelles annotations. Si une instance de graphique n'est pas définie, une erreur est enregistrée dans la console.
+ *
+ * @param values - Un objet contenant les valeurs `xMin`, `xMax`, `yMin` et `yMax` pour définir les limites des annotations sur les graphiques.
+ */
 function updateAudiogramWithNewValues(values:any) {
   // Check if the right audiogram chart instance is defined
   if (!audiogramChartRight) {
@@ -675,6 +765,19 @@ function initAudiogramChampLibre(canvasID: string, pointColor: string, borderCol
   return null; // Retourne null si le canvas ou le contexte 2D n'existe pas
 }
 
+
+/**
+ * Détermine si un point avec une fréquence spécifique et un style donné est déjà présent sur un graphique.
+ *
+ * Cette fonction parcourt les jeux de données d'un graphique pour vérifier si un point ayant la même fréquence
+ * et le même style spécifiés existe déjà. Elle est utile pour éviter les doublons de points sur le graphique
+ * lors de l'ajout de nouvelles données.
+ *
+ * @param chart - L'instance du graphique dans laquelle chercher le point.
+ * @param frequency - La fréquence du point à vérifier.
+ * @param style - Le style visuel du point à vérifier.
+ * @returns `true` si un point avec la fréquence et le style donnés est trouvé, sinon `false`.
+ */
 function isPointAlreadyPresent(chart: any, frequency: number, style: string): boolean {
   return chart.data.datasets.some((dataset:any) => {
     return dataset.data.some((point:any) => {
@@ -685,6 +788,7 @@ function isPointAlreadyPresent(chart: any, frequency: number, style: string): bo
     });
   });
 }
+
 
 /**
  * Vérifie si un point avec des coordonnées de fréquence, de décibels et un style spécifique existe déjà sur un graphique d'audiogramme.
@@ -901,6 +1005,16 @@ function setupEventHandlers(chartLeft: any, chartRight: any, chartChampLibre: an
   });
 }
 
+
+/**
+ * Extrait l'ID du patient à partir des paramètres de l'URL de la page actuelle.
+ *
+ * Cette fonction utilise l'objet URLSearchParams pour analyser les paramètres de requête de l'URL actuelle
+ * et tente de récupérer l'ID du patient. Elle est utilisée pour obtenir l'identifiant du patient à partir de l'URL
+ * dans des applications web où l'ID est passé comme paramètre de requête.
+ *
+ * @returns L'ID du patient sous forme de chaîne de caractères. Si l'ID n'est pas trouvé, retourne une chaîne vide.
+ */
 function getPatientIdFromUrl(): string {
   // Crée un objet URLSearchParams à partir de l'URL actuelle
   const urlParams = new URLSearchParams(window.location.search);
@@ -913,22 +1027,61 @@ function getPatientIdFromUrl(): string {
 }
 
 
-
-
+/**
+ * Ajoute un point à l'audiogramme de l'oreille gauche.
+ *
+ * Cette fonction est spécifiquement destinée à ajouter des points de données à l'audiogramme de l'oreille gauche.
+ * Elle utilise une fonction d'aide pour ajouter un point de données et s'assure qu'il est correctement trié
+ * en fonction de sa fréquence. Les points peuvent avoir un style particulier, ce qui est utile pour les distinctions
+ * visuelles sur l'audiogramme.
+ *
+ * @param frequency - La fréquence du point en Hz.
+ * @param decibels - L'intensité du point en décibels.
+ * @param id - Un identifiant pour le point, utile pour les références ultérieures ou le traitement.
+ * @param style - Un objet ou une chaîne décrivant le style visuel du point (par exemple, couleur, taille).
+ */
 function addPointToLeftAudiogram(frequency:number, decibels:number, id:any, style:any) {
   // Vérifiez que cette fonction ajoute des points seulement à l'audiogramme gauche
   addDataPointAndSort(audiogramChartLeft, frequency, decibels, id, style);
 }
 
+/**
+ * Ajoute un point à l'audiogramme de l'oreille droite.
+ *
+ * Cette fonction est spécifiquement conçue pour ajouter des points de données à l'audiogramme de l'oreille droite.
+ * Elle utilise une fonction d'aide pour insérer le point de données et pour s'assurer qu'il est correctement trié
+ * en fonction de sa fréquence. Les points peuvent comporter un style spécifique, ce qui est utile pour les distinctions
+ * visuelles importantes sur l'audiogramme.
+ *
+ * @param frequency - La fréquence du point en Hz, indiquant la fréquence auditive représentée par le point.
+ * @param decibels - L'intensité du point en décibels, indiquant le niveau de perte auditive à cette fréquence.
+ * @param id - Un identifiant pour le point, utilisé pour le suivi ou la manipulation spécifique du point dans les interactions futures.
+ * @param style - Un objet ou une chaîne définissant le style visuel du point, qui peut inclure des aspects comme la couleur ou la taille du point.
+ */
 function addPointToRightAudiogram(frequency:number, decibels:number, id:any, style:any)  {
   // Vérifiez que cette fonction ajoute des points seulement à l'audiogramme droit
   addDataPointAndSort(audiogramChartRight, frequency, decibels, id, style);
 }
 
+
+/**
+ * Ajoute un point à l'audiogramme de champ libre.
+ *
+ * Cette fonction est destinée à l'ajout de points de données sur l'audiogramme de champ libre, qui est utilisé pour
+ * tester l'audition sans différencier l'oreille gauche de l'oreille droite. Elle intègre une fonction d'aide pour
+ * insérer le point de données et pour s'assurer que celui-ci est correctement trié selon sa fréquence. Le style du point
+ * peut être personnalisé pour faciliter les distinctions visuelles sur l'audiogramme.
+ *
+ * @param frequency - La fréquence du point en Hz, indiquant la fréquence auditive représentée par le point.
+ * @param decibels - L'intensité du point en décibels, indiquant le niveau de perte auditive à cette fréquence.
+ * @param id - Un identifiant pour le point, utilisé pour le suivi ou la manipulation spécifique du point dans des interactions futures.
+ * @param style - Un objet ou une chaîne définissant le style visuel du point, qui peut inclure des aspects comme la couleur ou la taille du point.
+ */
 function addPointToChampLibre(frequency:number, decibels:number, id:any, style:any)  {
   // Vérifiez que cette fonction ajoute des points seulement à l'audiogramme droit
   addDataPointAndSort(audiogramChampLibre, frequency, decibels, id, style);
 }
+
 /**
  * Envoie les données d'audiogramme au serveur via une requête POST.
  * 
@@ -1053,10 +1206,8 @@ for (let i = -10; i <= 120; i += 10) {
   decibelLevels.push(i);
 }
 
-// Assurez-vous que la liste est triée et unique
 const uniqueDecibelLevels = Array.from(new Set(decibelLevels)).sort((a, b) => a - b);
 
-console.log(uniqueDecibelLevels); // Affiche la liste triée pour vérification
 
 
 /**
@@ -1291,7 +1442,14 @@ function toggleAnnotation(chart: any, annotationId: string) {
 }
 
 
-// Cette fonction est appelée au chargement de la page pour remplir le sélecteur de sons
+/**
+ * Remplit le sélecteur de sons avec les options disponibles lors du chargement de la page.
+ *
+ * Cette fonction récupère la liste des fichiers audio disponibles depuis le serveur via une requête GET à `/list-audios`.
+ * Elle ajoute ensuite ces fichiers sous forme d'options dans un élément de sélection HTML (`<select>`). Une option par défaut
+ * est également ajoutée pour inciter l'utilisateur à faire une sélection. Des écouteurs d'événements sont ajoutés pour gérer
+ * les interactions avec le sélecteur de sons.
+ */
 function fillSoundSelector(): void {
   fetch('/list-audios') 
       .then(response => response.json())
@@ -1337,6 +1495,18 @@ function fillSoundSelector(): void {
 .catch(error => console.error('Erreur lors de la récupération des sons:', error));
 }
 
+/**
+ * Met à jour une annotation spécifique sur un graphique d'audiogramme en fonction d'un son sélectionné.
+ *
+ * Cette fonction ajuste les paramètres d'une annotation sur un graphique d'audiogramme, tels que les limites de fréquence
+ * et d'intensité (décibels), en fonction du son sélectionné. L'annotation est identifiée par un ID unique et est utilisée
+ * pour visualiser graphiquement une plage spécifique sur le graphique. Les valeurs d'exemple sont fixées ici pour simplifier,
+ * mais devraient être dynamiquement ajustées selon les caractéristiques du son sélectionné.
+ *
+ * @param chart - L'instance du graphique Chart.js sur laquelle l'annotation doit être mise à jour.
+ * @param annotationId - L'identifiant de l'annotation à mettre à jour.
+ * @param sound - Le nom du fichier sonore sélectionné qui détermine les valeurs des annotations.
+ */
 function updateAnnotation(chart: any, annotationId: string, sound: string) {
   // Mettre à jour l'annotation en fonction du son sélectionné (ici, simplifié)
   if (!chart.options.plugins.annotation.annotations[annotationId]) {
@@ -1380,6 +1550,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+/**
+ * Récupère les informations d'un patient à partir d'un serveur et les affiche.
+ *
+ * Cette fonction extrait l'ID du patient de l'URL de la page actuelle, construit une URL pour accéder aux informations
+ * du patient, et envoie une requête pour récupérer ces données. Si les informations sont récupérées avec succès,
+ * elles sont passées à une fonction d'affichage. En cas d'échec de la requête, une erreur est enregistrée dans la console.
+ */
 function fetchPatientInfo() {
   let patientId = getPatientIdFromUrl()
   const url = `/patients/${patientId}/info.json`;
@@ -1399,9 +1576,19 @@ function fetchPatientInfo() {
       });
 }
 
+
+/**
+ * Affiche les informations d'un patient sur l'interface utilisateur.
+ *
+ * Cette fonction met à jour les éléments HTML avec les informations du patient, telles que son nom et sa photo de profil.
+ * Elle requiert que les éléments HTML pour afficher le nom et la photo du patient soient présents dans le DOM. Si les
+ * informations ou les éléments HTML nécessaires sont manquants, une erreur est enregistrée dans la console.
+ *
+ * @param patientInfo - Un objet contenant les informations du patient, notamment son nom (`name`) et l'URL de sa photo de profil (`pic`).
+ */
 function displayPatientInfo(patientInfo: any) {
   const patientNameElement = document.getElementById('patientName');
-  const patientImageElement = document.getElementById('patientImage') as HTMLImageElement | null; // Assertion de type
+  const patientImageElement = document.getElementById('patientImage') as HTMLImageElement | null;
 
   if (patientNameElement && patientImageElement) { // Vérification que les éléments ne sont pas null
     patientNameElement.textContent = patientInfo.name;
