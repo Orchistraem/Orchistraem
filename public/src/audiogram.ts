@@ -1414,6 +1414,45 @@ function displayPatientInfo(patientInfo: any) {
   }
 }
 
+/**
+ * Vérifie si un point sur les audiogrammes correspond au décibel du son en cours avec un écart spécifié de (+30 dB à -15 dB).
+ * 
+ * @param audioValues - Les valeurs extrêmes (min et max) des décibels du son analysé.
+ * @param charts - Tableau des instances des audiogrammes (gauche, droit, champ libre).
+ * @returns boolean - Retourne true si un point correspondant est trouvé dans n'importe quel graphique, sinon false.
+ */
+function isMatchingDecibelRange(audioValues: {yMin: number, yMax: number}, charts: any[]): boolean {
+  const decibelRangeUpper = audioValues.yMax + 30;
+  const decibelRangeLower = audioValues.yMin - 15;
+
+  return charts.some(chart => {
+    if (!chart || !chart.data) {
+      console.error('Un des graphiques n\'est pas initialisé ou n\'est pas disponible.');
+      return false;
+    }
+    return chart.data.datasets.some((dataset: any) => dataset.data.some((point: any) => {
+      return point.y >= decibelRangeLower && point.y <= decibelRangeUpper;
+    }));
+  });
+}
+/*
+// Exemple d'utilisation:
+document.getElementById("analyzeButton")?.addEventListener("click", async () => {
+  const audioUrl = '/uploads/soundfile.mp3'; // Remplacez par l'URL du son à analyser
+
+  try {
+      const audioResponse = await fetch(audioUrl);
+      const audioBlob = await audioResponse.blob();
+      analyseAudioExtremesConsole(audioBlob).then((audioValues) => {
+          const charts = [audiogramChartLeft, audiogramChartRight, audiogramChampLibre];
+          const hasMatchingPoints = isMatchingDecibelRange(audioValues, charts);
+          console.log("Des points correspondants existent-ils ? ", hasMatchingPoints);
+      });
+  } catch (error) {
+      console.error('Erreur lors du chargement ou de l\'analyse du fichier audio:', error);
+  }
+});
+*/
 
 /**
  * Initialise les audiogrammes lorsque la fenêtre se charge.
