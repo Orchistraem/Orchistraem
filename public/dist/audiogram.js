@@ -211,10 +211,10 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
                             annotations: {
                                 box1: {
                                     type: 'box',
-                                    xMin: 500, // Fréquence basse
-                                    xMax: 2000, // Fréquence haute
-                                    yMin: 20, // Intensité basse
-                                    yMax: 60, // Intensité haute
+                                    xMin: 500,
+                                    xMax: 2000,
+                                    yMin: 20,
+                                    yMax: 60,
                                     backgroundColor: 'rgba(255, 99, 132, 0.25)'
                                 }
                             }

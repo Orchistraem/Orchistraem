@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error('Erreur lors de l\'envoi du formulaire:', error);
                 alert('Erreur lors de l\'envoi du formulaire');
             }
+            window.location.reload();
         });
     });
 });
