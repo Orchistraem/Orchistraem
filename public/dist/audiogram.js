@@ -445,33 +445,47 @@ function analyseAudioExtremesConsole(audioFile) {
         });
     });
 }
-(_a = document.getElementById("findSoundsButton")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => __awaiter(void 0, void 0, void 0, function* () {
-    const frequencyInput = document.getElementById("frequencyInput");
-    const decibelInput = document.getElementById("decibelInput");
-    const resultsDiv = document.getElementById("results");
-    if (frequencyInput && decibelInput && resultsDiv) {
-        const freqPoint = parseInt(frequencyInput.value, 10);
-        const dbPoint = parseInt(decibelInput.value, 10);
-        // Récupérer la liste des fichiers audio depuis le serveur
-        try {
-            const response = yield fetch('/list-audios'); // Utiliser la route correcte pour les fichiers audio
-            if (!response.ok) {
-                throw new Error(`Failed to fetch sound files: ${response.statusText}`);
-            }
-            const soundFiles = yield response.json();
-            // Maintenant que nous avons les fichiers, procédons à la recherche des fichiers correspondants
-            const result = yield findSoundsWithPoint(freqPoint, dbPoint, soundFiles);
-            resultsDiv.textContent = "Fichiers correspondants: " + result.join(", ");
+(_a = document.getElementById("findSoundsButton")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", function () { return __awaiter(_this, void 0, void 0, function () {
+    var frequencyInput, decibelInput, resultsDiv, freqPoint, dbPoint, response, soundFiles, results, error_2;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                frequencyInput = document.getElementById("frequencyInput");
+                decibelInput = document.getElementById("decibelInput");
+                resultsDiv = document.getElementById("results");
+                if (!(frequencyInput && decibelInput && resultsDiv)) return [3 /*break*/, 7];
+                freqPoint = parseInt(frequencyInput.value, 10);
+                dbPoint = parseInt(decibelInput.value, 10);
+                _a.label = 1;
+            case 1:
+                _a.trys.push([1, 5, , 6]);
+                return [4 /*yield*/, fetch('/list-audios')];
+            case 2:
+                response = _a.sent();
+                if (!response.ok) {
+                    throw new Error("Failed to fetch sound files: ".concat(response.statusText));
+                }
+                return [4 /*yield*/, response.json()];
+            case 3:
+                soundFiles = _a.sent();
+                return [4 /*yield*/, findSoundsWithPoint(freqPoint, dbPoint, soundFiles)];
+            case 4:
+                results = _a.sent();
+                resultsDiv.textContent = "Fichiers correspondants: " + results.map(function (sound) { return "".concat(sound.name, " (dB min: ").concat(sound.dBMin, ", dB max: ").concat(sound.dBMax, ")"); }).join(", ");
+                return [3 /*break*/, 6];
+            case 5:
+                error_2 = _a.sent();
+                console.error("Erreur lors de la récupération ou de la recherche des fichiers audio:", error_2);
+                resultsDiv.textContent = "Erreur lors de la recherche des fichiers.";
+                return [3 /*break*/, 6];
+            case 6: return [3 /*break*/, 8];
+            case 7:
+                console.error("Erreur: certains éléments d'entrée ou d'affichage sont introuvables dans le DOM.");
+                _a.label = 8;
+            case 8: return [2 /*return*/];
         }
-        catch (error) {
-            console.error("Erreur lors de la récupération ou de la recherche des fichiers audio:", error);
-            resultsDiv.textContent = "Erreur lors de la recherche des fichiers.";
-        }
-    }
-    else {
-        console.error("Erreur: certains éléments d'entrée ou d'affichage sont introuvables dans le DOM.");
-    }
-}));
+    });
+}); });
 /**
  * Trouve et liste les fichiers sonores contenant des points spécifiés de fréquence et de décibels dans leurs valeurs extrêmes.
  *
@@ -485,25 +499,50 @@ function analyseAudioExtremesConsole(audioFile) {
  * @returns Une promesse qui se résout en un tableau de chaînes, chacune un nom de fichier audio correspondant aux critères.
  */
 function findSoundsWithPoint(freqPoint, dbPoint, sounds) {
-    return __awaiter(this, void 0, void 0, function* () {
-        console.log("J'utilise la fonction findSoundsWithPoint");
-        let matchingSounds = [];
-        for (let sound of sounds) {
-            try {
-                const audioUrl = `/uploads/${sound}`; // Chemin vers le fichier audio
-                const audioResponse = yield fetch(audioUrl);
-                const audioBlob = yield audioResponse.blob();
-                const values = yield analyseAudioExtremesConsole(audioBlob);
-                if (freqPoint >= values.xMin && freqPoint <= values.xMax &&
-                    dbPoint >= values.yMin && dbPoint <= values.yMax) {
-                    matchingSounds.push(sound);
-                }
+    return __awaiter(this, void 0, void 0, function () {
+        var matchingSounds, _i, sounds_1, sound, audioUrl, audioResponse, audioBlob, values, error_3;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    console.log("J'utilise la fonction findSoundsWithPoint");
+                    matchingSounds = [];
+                    _i = 0, sounds_1 = sounds;
+                    _a.label = 1;
+                case 1:
+                    if (!(_i < sounds_1.length)) return [3 /*break*/, 8];
+                    sound = sounds_1[_i];
+                    _a.label = 2;
+                case 2:
+                    _a.trys.push([2, 6, , 7]);
+                    audioUrl = "/uploads/".concat(sound);
+                    return [4 /*yield*/, fetch(audioUrl)];
+                case 3:
+                    audioResponse = _a.sent();
+                    return [4 /*yield*/, audioResponse.blob()];
+                case 4:
+                    audioBlob = _a.sent();
+                    return [4 /*yield*/, analyseAudioExtremesConsole(audioBlob)];
+                case 5:
+                    values = _a.sent();
+                    if (freqPoint >= values.xMin && freqPoint <= values.xMax &&
+                        dbPoint >= values.yMin && dbPoint <= values.yMax) {
+                        matchingSounds.push({
+                            name: sound,
+                            dBMin: values.yMin.toFixed(2),
+                            dBMax: values.yMax.toFixed(2)
+                        });
+                    }
+                    return [3 /*break*/, 7];
+                case 6:
+                    error_3 = _a.sent();
+                    console.error('Erreur lors du chargement ou de l\'analyse du fichier audio:', error_3);
+                    return [3 /*break*/, 7];
+                case 7:
+                    _i++;
+                    return [3 /*break*/, 1];
+                case 8: return [2 /*return*/, matchingSounds];
             }
-            catch (error) {
-                console.error('Erreur lors du chargement ou de l\'analyse du fichier audio:', error);
-            }
-        }
-        return matchingSounds;
+        });
     });
 }
 /**
