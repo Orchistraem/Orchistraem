@@ -378,7 +378,8 @@ function analyseAudioExtremesConsole(audioFile) {
         });
     });
 }
-(_a = document.getElementById("findSoundsButton")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => __awaiter(void 0, void 0, void 0, function* () {
+//(_a = document.getElementById("findSoundsButton")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => __awaiter(void 0, void 0, void 0, function* () {
+document.getElementById("findSoundsButton")?.addEventListener("click", async () => {
     const frequencyInput = document.getElementById("frequencyInput");
     const decibelInput = document.getElementById("decibelInput");
     const resultsDiv = document.getElementById("results");
@@ -387,45 +388,42 @@ function analyseAudioExtremesConsole(audioFile) {
         const dbPoint = parseInt(decibelInput.value, 10);
         // Récupérer la liste des fichiers audio depuis le serveur
         try {
-            const response = yield fetch('/list-audios'); // Utiliser la route correcte pour les fichiers audio
+            const response = await fetch('/list-audios'); // Utiliser la route correcte pour les fichiers audio
             if (!response.ok) {
                 throw new Error(`Failed to fetch sound files: ${response.statusText}`);
             }
-            const soundFiles = yield response.json();
+            const soundFiles = await response.json();
             // Maintenant que nous avons les fichiers, procédons à la recherche des fichiers correspondants
-            const result = yield findSoundsWithPoint(freqPoint, dbPoint, soundFiles);
-            resultsDiv.textContent = "Fichiers correspondants: " + result.join(", ");
-        }
-        catch (error) {
+            const results = await findSoundsWithPoint(freqPoint, dbPoint, soundFiles);
+            resultsDiv.textContent = "Fichiers correspondants: " + results.map(sound => `${sound.name} (dB min: ${sound.dBMin}, dB max: ${sound.dBMax})`).join(", ");
+        } catch (error) {
             console.error("Erreur lors de la récupération ou de la recherche des fichiers audio:", error);
             resultsDiv.textContent = "Erreur lors de la recherche des fichiers.";
         }
-    }
-    else {
+    } else {
         console.error("Erreur: certains éléments d'entrée ou d'affichage sont introuvables dans le DOM.");
     }
-}));
-function findSoundsWithPoint(freqPoint, dbPoint, sounds) {
-    return __awaiter(this, void 0, void 0, function* () {
-        console.log("J'utilise la fonction findSoundsWithPoint");
-        let matchingSounds = [];
-        for (let sound of sounds) {
-            try {
-                const audioUrl = `/uploads/${sound}`; // Chemin vers le fichier audio
-                const audioResponse = yield fetch(audioUrl);
-                const audioBlob = yield audioResponse.blob();
-                const values = yield analyseAudioExtremesConsole(audioBlob);
-                if (freqPoint >= values.xMin && freqPoint <= values.xMax &&
-                    dbPoint >= values.yMin && dbPoint <= values.yMax) {
-                    matchingSounds.push(sound);
-                }
+});
+async function findSoundsWithPoint(freqPoint, dbPoint, sounds) {
+    console.log("J'utilise la fonction findSoundsWithPoint");
+    let matchingSounds = [];
+    for (let sound of sounds) {
+        try {
+            const audioUrl = `/uploads/${sound}`; // Chemin vers le fichier audio
+            const audioResponse = await fetch(audioUrl);
+            const audioBlob = await audioResponse.blob();
+
+            const values = await analyseAudioExtremesConsole(audioBlob);
+
+            if (freqPoint >= values.xMin && freqPoint <= values.xMax &&
+                dbPoint >= values.yMin && dbPoint <= values.yMax) {
+                matchingSounds.push({ name: sound, dBMin: values.yMin, dBMax: values.yMax });
             }
-            catch (error) {
-                console.error('Erreur lors du chargement ou de l\'analyse du fichier audio:', error);
-            }
+        } catch (error) {
+            console.error('Erreur lors du chargement ou de l\'analyse du fichier audio:', error);
         }
-        return matchingSounds;
-    });
+    }
+    return matchingSounds;
 }
 function updateAudiogramWithNewValues(values) {
     // Check if the right audiogram chart instance is defined

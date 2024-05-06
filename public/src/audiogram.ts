@@ -446,8 +446,8 @@ document.getElementById("findSoundsButton")?.addEventListener("click", async () 
           const soundFiles: string[] = await response.json();
 
           // Maintenant que nous avons les fichiers, procédons à la recherche des fichiers correspondants
-          const result = await findSoundsWithPoint(freqPoint, dbPoint, soundFiles);
-          resultsDiv.textContent = "Fichiers correspondants: " + result.join(", ");
+          const results = await findSoundsWithPoint(freqPoint, dbPoint, soundFiles);
+          resultsDiv.textContent = "Fichiers correspondants: " + results.map(sound => `${sound.name} (dB min: ${sound.dBMin}, dB max: ${sound.dBMax})`).join(", ");
       } catch (error) {
           console.error("Erreur lors de la récupération ou de la recherche des fichiers audio:", error);
           resultsDiv.textContent = "Erreur lors de la recherche des fichiers.";
@@ -457,9 +457,9 @@ document.getElementById("findSoundsButton")?.addEventListener("click", async () 
   }
 });
 
-async function findSoundsWithPoint(freqPoint: number, dbPoint: number, sounds: string[]): Promise<string[]> {
+async function findSoundsWithPoint(freqPoint: number, dbPoint: number, sounds: string[]): Promise<{name: string, dBMin: number, dBMax: number}[]>{
   console.log("J'utilise la fonction findSoundsWithPoint");
-  let matchingSounds: string[] = [];
+  let matchingSounds: {name: string, dBMin: number, dBMax: number}[] = [];
 
   for (let sound of sounds) {
       try {
@@ -471,7 +471,7 @@ async function findSoundsWithPoint(freqPoint: number, dbPoint: number, sounds: s
 
           if (freqPoint >= values.xMin && freqPoint <= values.xMax &&
               dbPoint >= values.yMin && dbPoint <= values.yMax) {
-              matchingSounds.push(sound);
+              matchingSounds.push({ name: sound, dBMin: values.yMin, dBMax: values.yMax });
           }
       } catch (error) {
           console.error('Erreur lors du chargement ou de l\'analyse du fichier audio:', error);
@@ -480,9 +480,6 @@ async function findSoundsWithPoint(freqPoint: number, dbPoint: number, sounds: s
 
   return matchingSounds;
 }
-
-
-
 
 function updateAudiogramWithNewValues(values:any) {
   // Check if the right audiogram chart instance is defined
