@@ -5,6 +5,7 @@
     <title>Création Patient</title>
     <link rel="stylesheet" href="header.css" />
     <link rel="stylesheet" href="creer_patient.css" />
+    <link rel="stylesheet" href="liste_patient.css" />
     <link rel="stylesheet" href="base.css" />
     <link rel="stylesheet" href="layout.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -25,7 +26,7 @@
   <body>
     <div class="header">
       <div class="tab1">
-        <a href="test_list_patient.html">
+        <a href="creer_patient.html">
           <img src="src/Images/Patients.png" />
         </a>
       </div>
@@ -38,7 +39,113 @@
         <a href="index.html">Orchistraem</a>
       </div>
     </div>
+    <div id="corps">
+    
+    <div id="liste_patient">
+        <h1>Liste des Patients</h1>
+        <input type="text" id="searchInput" class="form-control" placeholder="Rechercher un patient...">
+        <ul id="patientsList">
+            <!-- Les éléments de la liste des patients seront ajoutés ici dynamiquement -->
+        </ul>
 
+        <script>
+            async function fetchAllPatientInfo() {
+                try {
+                    const response = await fetch('/all-patient-info');
+                    if (response.ok) {
+                        return await response.json();
+                    } else {
+                        console.error('Erreur lors de la récupération des informations des patients:', response.statusText);
+                        return [];
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la récupération des informations des patients:', error);
+                    return [];
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', async () => {
+                const patientsList = document.getElementById('patientsList');
+
+                // Récupérer les informations de tous les patients
+                const patientInfos = await fetchAllPatientInfo();
+
+                // Ajouter les éléments de liste pour chaque patient
+                patientInfos.forEach(patient => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${patient.name}`;
+                    patientsList.appendChild(listItem);
+                });
+
+                // Ajouter un gestionnaire d'événement pour rediriger vers la page patient.html avec l'ID du patient
+                patientsList.addEventListener('click', (event) => {
+                    const listItem = event.target;
+                    const patientIndex = Array.from(patientsList.children).indexOf(listItem);
+
+                    if (patientIndex !== -1) {
+                        const patientId = patientInfos[patientIndex].id;
+                        window.location.href = `patient.html?id=${patientId}`;
+                    }
+                });
+            });
+
+            document.addEventListener('DOMContentLoaded', async () => {
+            const patientsList = document.getElementById('patientsList');
+            const searchInput = document.getElementById('searchInput');
+
+            async function fetchAllPatientInfo() {
+                try {
+                    const response = await fetch('/all-patient-info');
+                    if (response.ok) {
+                        return await response.json();
+                    } else {
+                        console.error('Erreur lors de la récupération des informations des patients:', response.statusText);
+                        return [];
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la récupération des informations des patients:', error);
+                    return [];
+                }
+            }
+
+            function renderPatientList(patients) {
+                patientsList.innerHTML = '';
+                patients.forEach(patient => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${patient.name}`;
+                    patientsList.appendChild(listItem);
+                });
+            }
+
+            // Récupérer les informations de tous les patients
+            let allPatientInfos = await fetchAllPatientInfo();
+
+            // Afficher la liste initiale de patients
+            renderPatientList(allPatientInfos);
+
+            // Ajouter un gestionnaire d'événement pour la recherche
+            searchInput.addEventListener('input', () => {
+                const searchTerm = searchInput.value.toLowerCase();
+                const filteredPatients = allPatientInfos.filter(patient => patient.name.toLowerCase().includes(searchTerm));
+                renderPatientList(filteredPatients);
+            });
+
+            // Ajouter un gestionnaire d'événement pour rediriger vers la page patient.html avec l'ID du patient
+            patientsList.addEventListener('click', (event) => {
+                const listItem = event.target;
+                const patientIndex = Array.from(patientsList.children).indexOf(listItem);
+
+                if (patientIndex !== -1) {
+                    const patientId = allPatientInfos[patientIndex].id;
+                    window.location.href = `patient.html?id=${patientId}`;
+                }
+            });
+        });
+
+        </script>
+    </div>
+
+    <div id="creer_patient">
     <h2 id="title-list">Création de patient</h2>
     <form
       action="/create-patient"
@@ -154,6 +261,9 @@
           <button type="submit" class="btn btn-primary" onclick="resetFormAndRemoveHighlight()">Créer</button>
         </div>
     </form>
+    </div>
+
+  </div>
 
     <script src="dist/creer_patient.js"></script>
   </body>

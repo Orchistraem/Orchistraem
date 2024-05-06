@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     confirmButtonText: 'Fermer'
                 });
             }
+            window.location.reload();
         });
     });
 });

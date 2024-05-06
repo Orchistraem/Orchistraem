@@ -45,6 +45,7 @@ declare var Swal: any;
               confirmButtonText: 'Fermer'
             });
         }
+        window.location.reload();
     });
 });
 
