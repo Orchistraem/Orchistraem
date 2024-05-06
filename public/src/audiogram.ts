@@ -505,7 +505,6 @@ document.getElementById("findSoundsButton")?.addEventListener("click", async () 
       const freqPoint = parseInt(frequencyInput.value, 10);
       const dbPoint = parseInt(decibelInput.value, 10);
 
-      // Récupérer la liste des fichiers audio depuis le serveur
       try {
           const response = await fetch('/list-audios'); // Utiliser la route correcte pour les fichiers audio
           if (!response.ok) {
@@ -513,9 +512,8 @@ document.getElementById("findSoundsButton")?.addEventListener("click", async () 
           }
           const soundFiles: string[] = await response.json();
 
-          // Maintenant que nous avons les fichiers, procédons à la recherche des fichiers correspondants
-          const result = await findSoundsWithPoint(freqPoint, dbPoint, soundFiles);
-          resultsDiv.textContent = "Fichiers correspondants: " + result.join(", ");
+          const results = await findSoundsWithPoint(freqPoint, dbPoint, soundFiles);
+          resultsDiv.textContent = "Fichiers correspondants: " + results.map(sound => `${sound.name} (dB min: ${sound.dBMin}, dB max: ${sound.dBMax})`).join(", ");
       } catch (error) {
           console.error("Erreur lors de la récupération ou de la recherche des fichiers audio:", error);
           resultsDiv.textContent = "Erreur lors de la recherche des fichiers.";
@@ -525,6 +523,11 @@ document.getElementById("findSoundsButton")?.addEventListener("click", async () 
   }
 });
 
+interface SoundInfo {
+  name: string;
+  dBMin: string;
+  dBMax: string;
+}
 
 /**
  * Trouve et liste les fichiers sonores contenant des points spécifiés de fréquence et de décibels dans leurs valeurs extrêmes.
@@ -538,9 +541,9 @@ document.getElementById("findSoundsButton")?.addEventListener("click", async () 
  * @param sounds - Un tableau de chaînes représentant les noms des fichiers audio à analyser.
  * @returns Une promesse qui se résout en un tableau de chaînes, chacune un nom de fichier audio correspondant aux critères.
  */
-async function findSoundsWithPoint(freqPoint: number, dbPoint: number, sounds: string[]): Promise<string[]> {
+async function findSoundsWithPoint(freqPoint: number, dbPoint: number, sounds: string[]): Promise<SoundInfo[]> {
   console.log("J'utilise la fonction findSoundsWithPoint");
-  let matchingSounds: string[] = [];
+  let matchingSounds: SoundInfo[] = [];
 
   for (let sound of sounds) {
       try {
@@ -552,7 +555,11 @@ async function findSoundsWithPoint(freqPoint: number, dbPoint: number, sounds: s
 
           if (freqPoint >= values.xMin && freqPoint <= values.xMax &&
               dbPoint >= values.yMin && dbPoint <= values.yMax) {
-              matchingSounds.push(sound);
+              matchingSounds.push({
+                  name: sound,
+                  dBMin: values.yMin.toFixed(2),
+                  dBMax: values.yMax.toFixed(2)
+              });
           }
       } catch (error) {
           console.error('Erreur lors du chargement ou de l\'analyse du fichier audio:', error);
@@ -561,6 +568,7 @@ async function findSoundsWithPoint(freqPoint: number, dbPoint: number, sounds: s
 
   return matchingSounds;
 }
+
 
 
 
