@@ -450,6 +450,7 @@ function analyseAudioExtremesConsole(audioFile) {
 toggleRecommandationMode === null || toggleRecommandationMode === void 0 ? void 0 : toggleRecommandationMode.addEventListener("click", () => __awaiter(void 0, void 0, void 0, function* () {
     if (isRecommandationMode) {
         isRecommandationMode = false;
+        document.body.style.cursor = isRecommandationMode ? 'url("./src/Images/cursor.cur"), auto' : 'default';
     }
     else {
         isRecommandationMode = true;
@@ -1131,7 +1132,7 @@ function setupClickListeners(chart, ear, legendSelector) {
                 const index = points[0].index;
                 const pointData = chart.data.datasets[datasetIndex].data[index];
                 console.log(pointData);
-                callRecommdandation(pointData.x, pointData.y);
+                callRecommendation(pointData.x, pointData.y);
             }
         }
         // Si le mode de suppression est actif, supprimer le point
@@ -1162,29 +1163,45 @@ function setupClickListeners(chart, ear, legendSelector) {
         }
     });
 }
-function callRecommdandation(freqPoint, dbPoint) {
+function callRecommendation(freqPoint, dbPoint) {
     return __awaiter(this, void 0, void 0, function* () {
-        const resultsDiv = document.getElementById("results");
-        if (resultsDiv) {
-            // Récupérer la liste des fichiers audio depuis le serveur
-            try {
-                const response = yield fetch('/list-audios'); // Utiliser la route correcte pour les fichiers audio
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch sound files: ${response.statusText}`);
-                }
-                const soundFiles = yield response.json();
-                // Maintenant que nous avons les fichiers, procédons à la recherche des fichiers correspondants
-                const result = yield findSoundsWithPoint(freqPoint, dbPoint, soundFiles);
-                resultsDiv.textContent = "Fichiers correspondants: " + result.join(", ");
+        const modal = document.getElementById("resultModal");
+        const modalText = document.getElementById("modalText");
+        const closeSpan = document.querySelector(".close_reco");
+        if (!modal || !modalText || !closeSpan) {
+            console.error("Erreur: certains éléments d'interface utilisateur ne sont pas trouvés.");
+            return; // Stop the function if necessary elements are missing
+        }
+        try {
+            const response = yield fetch('/list-audios');
+            if (!response.ok) {
+                throw new Error(`Failed to fetch sound files: ${response.statusText}`);
             }
-            catch (error) {
-                console.error("Erreur lors de la récupération ou de la recherche des fichiers audio:", error);
-                resultsDiv.textContent = "Erreur lors de la recherche des fichiers.";
+            const soundFiles = yield response.json();
+            const result = yield findSoundsWithPoint(freqPoint, dbPoint, soundFiles);
+            if (result.length == 0) {
+                modalText.textContent = "Aucun fichiers ne correspond";
+                modal.style.display = "block"; // Show the modal
+            }
+            else {
+                modalText.textContent = "Fichiers correspondants: " + result.join(", ");
+                modal.style.display = "block"; // Show the modal
             }
         }
-        else {
-            console.error("Erreur: certains éléments d'entrée ou d'affichage sont introuvables dans le DOM.");
+        catch (error) {
+            console.error("Erreur lors de la récupération ou de la recherche des fichiers audio:", error);
+            modalText.textContent = "Erreur lors de la recherche des fichiers.";
         }
+        // When the user clicks on <span> (x), close the modal
+        closeSpan.onclick = function () {
+            modal.style.display = "none";
+        };
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
     });
 }
 /**

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="patient.css" />
     <link rel="stylesheet" href="base.css" />
     <link rel="stylesheet" href="layout.css" />
+    <link rel="stylesheet" href="recommendation.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2/dist/chartjs-plugin-annotation.min.js"></script>
     <link
@@ -63,11 +64,7 @@
       <img id="patientImage" src="" alt="Photo de profil du patient" />
     </div>
 
-    <div class="patient-recommandation">
-    <h1>Recherche de sons pour thérapie</h1>
-    <button id="findSoundsButton" class="btn btn-outline-primary">Trouver des Sons</button>
-    <div id="results"></div>
-  </div>
+    
 
     <div id="LRAudiogram" class="audiogram-container">
       <!-- Left Audiogram -->
@@ -166,7 +163,20 @@
           />
         </select>
       </div>
-
+      <div class="patient-recommandation">
+        <button id="findSoundsButton"
+        class="btn btn-primary"
+        data-toggle="button"
+        aria-pressed="false"
+        autocomplete="off">Activer/Desactiver Mode Recommandation</button>
+        <!-- Modal structure -->
+        <div id="resultModal" class="modal_reco">
+        <div class="modal-content_reco">
+          <span class="close_reco">&times;</span>
+          <p id="modalText">Aucun résultat à afficher.</p>
+        </div>
+    </div>
+      </div>
       <button
         id="toggleDeletionMode"
         class="btn btn-primary"
