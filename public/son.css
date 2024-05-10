@@ -74,5 +74,67 @@ div .col-3{
 }
 
 #ajout button{
-    height : 20%;
+    height : 25%;
+}
+
+.main-container {
+    display: flex;
+    justify-content: center; /* Centrer les conteneurs principaux */
+    gap: 40px; /* Espacement entre les sections audio et de gestion */
+    padding: 20px; /* Padding autour du conteneur principal pour éviter le collage aux bords de la page */
+}
+
+.audio-section, .management-section {
+    flex: 1;
+    max-width: 50%; /* Limiter la largeur de chaque section à 50% */
+}
+
+.management-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Espacement entre les blocs d'ajout et de catégorie */
+}
+
+#ajout, #categoriesManagement {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centrer les éléments dans les blocs verticalement */
+}
+
+#uploadAudioForm, #categoriesManagement {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Aligner les éléments à gauche */
+    width: 100%; /* Utiliser toute la largeur disponible */
+}
+
+#newCategoryName, #addCategoryBtn {
+    width: 100%; /* Les éléments de formulaire prennent toute la largeur du bloc */
+    margin: 10px 0; /* Espacement vertical entre les contrôles de formulaire */
+}
+
+#addCategoryBtn {
+    align-self: center; /* Centrer le bouton horizontalement dans son conteneur */
+    padding: 8px 20px; /* Padding approprié pour le bouton */
+}
+
+.audio-container, #audioList {
+    margin: 10px auto; /* Centrage horizontal et espacement vertical */
+    padding: 20px;
+    border-radius: 8px; /* Coins arrondis */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Ombre discrète pour un effet de profondeur */
+    width: 90%; /* Définir une largeur consistante pour la liste */
+}
+
+#title-list {
+    color: #333; /* Couleur de texte sombre pour une meilleure lisibilité */
+    font-size: 2.5rem; /* Taille de police ajustée */
+    text-align: center;
+    margin: 20px 0; /* Espacement au-dessus et en dessous du titre */
+}
+
+.editSon button, .categSon button, #ajout button {
+    margin: 5px; /* Espacement uniforme autour des boutons */
+    padding: 6px 12px; /* Padding interne pour les boutons */
 }
