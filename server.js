@@ -413,11 +413,33 @@ app.post('/patients', (req, res) => {
   }
 });
 
+app.post('/toggle-archive/:patientId', (req, res) => {
+  const { patientId } = req.params;
+  const dataPath = path.join(__dirname, 'data', 'patients', patientId,`info.json`);
+
+  fs.readFile(dataPath, (err, data) => {
+      if (err) {
+          console.error('Error reading file:', err);
+          return res.status(500).send('Error reading file');
+      }
+
+      let patientData = JSON.parse(data);
+      patientData.archived = !patientData.archived; // Toggle the archived status
+
+      fs.writeFile(dataPath, JSON.stringify(patientData, null, 2), (err) => {
+          if (err) {
+              console.error('Error writing file:', err);
+              return res.status(500).send('Error writing file');
+          }
+          res.json({ newStatus: patientData.archived });
+      });
+  });
+});
+
 // Fonction utilitaire pour générer un identifiant unique
 function generateUniqueId() {
   return Math.random().toString(36).substr(2, 9); // Exemple simple d'identifiant aléatoire
 }
-
 
 app.get('/all-patient-info', (req, res) => {
   try {

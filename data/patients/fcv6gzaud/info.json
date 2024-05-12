@@ -1,1 +1,7 @@
-{"id":"fcv6gzaud","name":"Gabriel Abrantes","age":50,"pic":"femme.png"}
+{
+  "id": "fcv6gzaud",
+  "name": "Gabriel Abrantes",
+  "age": 50,
+  "pic": "femme.png",
+  "archived": false
+}

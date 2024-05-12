@@ -1,1 +1,7 @@
-{"id":"4i8lq9cku","name":"Adam Jbilou","age":41,"pic":"garcon.png"}
+{
+  "id": "4i8lq9cku",
+  "name": "Adam Jbilou",
+  "age": 41,
+  "pic": "garcon.png",
+  "archived": true
+}

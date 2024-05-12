@@ -1,71 +1,145 @@
-interface PatientInfo {
+interface Patient {
     id: string;
     name: string;
-    age?: number;
-    profile_pic?: string;
+    archived: boolean;
 }
 
-/**
- * Récupère les informations de tous les patients stockées dans des fichiers JSON spécifiques à chaque dossier de patient.
- *
- * Cette fonction itère sur les dossiers de patients stockés dans un répertoire spécifié, extrait les informations
- * de chaque patient à partir d'un fichier JSON et retourne un tableau contenant ces informations. Chaque entrée
- * du tableau représente un patient et inclut son identifiant (basé sur le nom du dossier) et son nom (extrait du fichier JSON).
- * En cas d'erreur lors de la récupération des fichiers ou des données, une erreur est enregistrée et un tableau vide est retourné.
- *
- * @returns Une promesse qui résout en un tableau d'objets `PatientInfo`, où chaque objet contient l'identifiant et le nom d'un patient.
- *          Si une erreur se produit, retourne un tableau vide.
- */
-async function fetchAllPatientInfo(): Promise<PatientInfo[]> {
-    const patientsDir = './data/patients';
-    const patientInfos: PatientInfo[] = [];
 
+
+async function fetchAllPatientInfo(): Promise<Patient[]> {
     try {
-        const patientFolderNames = await fetchPatientFolders(patientsDir);
-        
-        for (const folderName of patientFolderNames) {
-            const infoFilePath = `${patientsDir}/${folderName}/info.json`;
-            const response = await fetch(infoFilePath);
-
-            if (response.ok) {
-                const patientData = await response.json();
-                const patientInfo: PatientInfo = { id: folderName, name: patientData.name };
-                patientInfos.push(patientInfo);
-            } else {
-                console.error(`Erreur lors de la récupération des informations du patient ${folderName}: ${response.statusText}`);
-            }
+        const response = await fetch('/all-patient-info');
+        if (!response.ok) {
+            console.error('Erreur lors de la récupération des informations des patients:', response.statusText);
+            return [];
         }
-
-        return patientInfos;
+        return await response.json() as Patient[];
     } catch (error) {
         console.error('Erreur lors de la récupération des informations des patients:', error);
         return [];
     }
 }
 
-/**
- * Récupère les noms des dossiers des patients à partir d'un répertoire spécifié.
- *
- * Cette fonction envoie une requête HTTP pour accéder au contenu d'un répertoire spécifié et récupérer les noms des dossiers
- * qu'il contient. Ces noms sont supposés représenter des patients individuels. En cas de succès, elle retourne un tableau de chaînes
- * avec les noms des dossiers. Si la requête échoue ou si une erreur survient pendant le processus, elle retourne un tableau vide
- * et enregistre une erreur dans la console.
- *
- * @param patientsDir - Le chemin du répertoire contenant les dossiers des patients.
- * @returns Une promesse qui résout en un tableau de chaînes contenant les noms des dossiers des patients, ou un tableau vide en cas d'erreur.
- */
-async function fetchPatientFolders(patientsDir: string): Promise<string[]> {
-    try {
-        const response = await fetch(patientsDir);
-        if (response.ok) {
-            const folderNames = await response.json();
-            return folderNames;
-        } else {
-            console.error(`Erreur lors de la récupération des dossiers patients: ${response.statusText}`);
-            return [];
-        }
-    } catch (error) {
-        console.error('Erreur lors de la récupération des dossiers patients:', error);
-        return [];
+document.addEventListener('DOMContentLoaded', function() {
+    const patientId = getPatientIdFromUrl();
+    fetch(`/patients/${patientId}/info.json`)
+        .then(response => response.json())
+        .then(patientData => {
+            const archiveButton = document.getElementById('archiverPatient');
+            if(archiveButton){
+            updateArchiveButton(archiveButton, patientData.archived);
+            }
+        });
+
+    const archiveButton = document.getElementById('archiverPatient');
+    if(archiveButton) archiveButton.addEventListener('click', function() {
+        console.log("click bouton archive")
+        toggleArchiveStatus(patientId);
+    });
+});
+
+function updateArchiveButton(button : HTMLElement, isArchived : Boolean) {
+    if (isArchived) {
+        button.textContent = 'Désarchiver ce patient';
+    } else {
+        button.textContent = 'Archiver ce patient';
     }
 }
+
+function toggleArchiveStatus(patientId : String) {
+    fetch(`/toggle-archive/${patientId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error('Failed to toggle archive status');
+        }
+    })
+    .then(data => {
+        
+         const archiveButton = document.getElementById('archiverPatient');
+         if(archiveButton)updateArchiveButton(archiveButton, data.newStatus);
+    })
+    .catch(error => {
+        console.error(error);
+    });
+}
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const patientsList = document.getElementById('patientsList');
+
+    const patientInfos = await fetchAllPatientInfo();
+
+    patientInfos.forEach((patient: { name: any; }) => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${patient.name}`;
+        if(patientsList) patientsList.appendChild(listItem);
+    });
+    
+    if(patientsList)
+    patientsList.addEventListener('click', (event) => {
+        const listItem = event.target as Element;
+        const patientIndex = Array.from(patientsList.children).indexOf(listItem);
+
+        if (patientIndex !== -1) {
+            const patientId = patientInfos[patientIndex].id;
+            window.location.href = `patient.html?id=${patientId}`;
+        }
+    });
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const patientsList = document.getElementById('patientsList') as HTMLUListElement;
+    const searchInput = document.getElementById('searchInput') as HTMLInputElement;
+    const showArchived = document.getElementById('showArchived') as HTMLInputElement;
+
+    let allPatientInfos = await fetchAllPatientInfo();
+
+    function renderPatientList(patients: Patient[]): void {
+        if (patientsList) {
+            patientsList.innerHTML = '';
+            patients.forEach(patient => {
+                if (!patient.archived || showArchived.checked) {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = patient.name;
+                    listItem.dataset.archived = patient.archived?.toString() || 'false';
+                    patientsList.appendChild(listItem);
+                }
+            });
+        }
+    }
+
+    renderPatientList(allPatientInfos);
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filteredPatients = allPatientInfos.filter((patient: { name: string; }) => patient.name.toLowerCase().includes(searchTerm));
+            renderPatientList(filteredPatients);
+        });
+    }
+
+    if (showArchived) {
+        showArchived.addEventListener('change', () => {
+            renderPatientList(allPatientInfos); // Re-rendre la liste avec le nouveau filtre
+        });
+    }
+
+    if (patientsList) {
+        patientsList.addEventListener('click', (event) => {
+            const listItem = event.target as Element;
+            const patientIndex = Array.from(patientsList.children).indexOf(listItem);
+
+            if (patientIndex !== -1) {
+                const patientId = allPatientInfos[patientIndex].id;
+                window.location.href = `patient.html?id=${patientId}`;
+            }
+        });
+    }
+});
