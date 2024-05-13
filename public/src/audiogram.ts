@@ -10,6 +10,11 @@ let audiogramChampLibre: any = null;
 // Mode de suppression désactivé par défaut
 let isDeletionModeActive = false;
 
+// Mode de recommandation desactivé par défaut
+let isRecommandationMode = false;
+
+let toggleRecommandationMode = document.getElementById('findSoundsButton')
+
 // Recupération du bouton de suppression
 let toggleDeletionMode = document.getElementById('toggleDeletionMode');
 
@@ -496,32 +501,18 @@ async function analyseAudioExtremesConsole(audioFile: Blob): Promise<{xMin: numb
   });
 }
 
-document.getElementById("findSoundsButton")?.addEventListener("click", async () => {
-  const frequencyInput = document.getElementById("frequencyInput") as HTMLInputElement;
-  const decibelInput = document.getElementById("decibelInput") as HTMLInputElement;
-  const resultsDiv = document.getElementById("results");
+toggleRecommandationMode?.addEventListener("click", async () => {
+  if(isRecommandationMode){
 
-  if (frequencyInput && decibelInput && resultsDiv) {
-      const freqPoint = parseInt(frequencyInput.value, 10);
-      const dbPoint = parseInt(decibelInput.value, 10);
-
-      // Récupérer la liste des fichiers audio depuis le serveur
-      try {
-          const response = await fetch('/list-audios'); // Utiliser la route correcte pour les fichiers audio
-          if (!response.ok) {
-              throw new Error(`Failed to fetch sound files: ${response.statusText}`);
-          }
-          const soundFiles: string[] = await response.json();
-
-          // Maintenant que nous avons les fichiers, procédons à la recherche des fichiers correspondants
-          const result = await findSoundsWithPoint(freqPoint, dbPoint, soundFiles);
-          resultsDiv.textContent = "Fichiers correspondants: " + result.join(", ");
-      } catch (error) {
-          console.error("Erreur lors de la récupération ou de la recherche des fichiers audio:", error);
-          resultsDiv.textContent = "Erreur lors de la recherche des fichiers.";
-      }
-  } else {
-      console.error("Erreur: certains éléments d'entrée ou d'affichage sont introuvables dans le DOM.");
+    isRecommandationMode = false;
+    document.body.style.cursor = isRecommandationMode ? 'url("./src/Images/cursor.cur"), auto' : 'default';
+  }
+  else {
+    isRecommandationMode = true;
+    toggleShakeEffect(isRecommandationMode);
+     // Change le curseur
+     document.body.style.cursor = isRecommandationMode ? 'url("./src/Images/cursor.cur"), auto' : 'default';
+    console.log("Je suis dans le mode recommandation")
   }
 });
 
@@ -539,7 +530,6 @@ document.getElementById("findSoundsButton")?.addEventListener("click", async () 
  * @returns Une promesse qui se résout en un tableau de chaînes, chacune un nom de fichier audio correspondant aux critères.
  */
 async function findSoundsWithPoint(freqPoint: number, dbPoint: number, sounds: string[]): Promise<string[]> {
-  console.log("J'utilise la fonction findSoundsWithPoint");
   let matchingSounds: string[] = [];
 
   for (let sound of sounds) {
@@ -1268,8 +1258,20 @@ function setupClickListeners(chart: any, ear: string, legendSelector: HTMLSelect
   const canvas = chart.canvas;
   canvas.addEventListener('click', function(event: MouseEvent) {
 
+     if(isRecommandationMode){
+      const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+      if (points.length) {
+        const datasetIndex = points[0].datasetIndex;
+        const index = points[0].index;
+        const pointData = chart.data.datasets[datasetIndex].data[index];
+        console.log(pointData);
+        callRecommendation(pointData.x,pointData.y)
+      }
+
+    }
+
      // Si le mode de suppression est actif, supprimer le point
-     if (isDeletionModeActive) {
+    else if (isDeletionModeActive) {
       const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
       if (points.length) {
         const datasetIndex = points[0].datasetIndex;
@@ -1296,6 +1298,51 @@ function setupClickListeners(chart: any, ear: string, legendSelector: HTMLSelect
     }
   });  
 }
+
+
+async function callRecommendation(freqPoint : number, dbPoint:number) {
+  const modal = document.getElementById("resultModal") as HTMLDivElement | null;
+  const modalText = document.getElementById("modalText") as HTMLParagraphElement | null;
+  const closeSpan = document.querySelector(".close_reco") as HTMLSpanElement | null;
+
+  if (!modal || !modalText || !closeSpan) {
+    console.error("Erreur: certains éléments d'interface utilisateur ne sont pas trouvés.");
+    return; // Stop the function if necessary elements are missing
+  }
+
+  try {
+    const response = await fetch('/list-audios');
+    if (!response.ok) {
+      throw new Error(`Failed to fetch sound files: ${response.statusText}`);
+    }
+    const soundFiles = await response.json();
+    const result = await findSoundsWithPoint(freqPoint, dbPoint, soundFiles);
+    if(result.length == 0){
+      modalText.textContent = "Aucun fichiers ne correspond";
+      modal.style.display = "block"; // Show the modal
+    } else {
+      modalText.textContent = "Fichiers correspondants: " + result.join(", ");
+      modal.style.display = "block"; // Show the modal
+    }
+
+  } catch (error) {
+    console.error("Erreur lors de la récupération ou de la recherche des fichiers audio:", error);
+    modalText.textContent = "Erreur lors de la recherche des fichiers.";
+  }
+
+  // When the user clicks on <span> (x), close the modal
+  closeSpan.onclick = function() {
+    modal.style.display = "none";
+  }
+
+  // When the user clicks anywhere outside of the modal, close it
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+}
+
 
 /**
  * Supprime un point de l'audiogramme et met à jour le graphique.
