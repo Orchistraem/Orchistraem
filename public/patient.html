@@ -90,6 +90,19 @@
           />
         </select>
       </div>
+      <div class="patient-recommandation">
+        <button id="findSoundsButton"
+        class="btn btn-primary"
+        data-toggle="button"
+        aria-pressed="false"
+        autocomplete="off">Activer/Desactiver Mode Recommandation</button>
+        <!-- Modal structure -->
+        <div id="resultModal" class="modal_reco">
+        <div class="modal-content_reco">
+          <span class="close_reco">&times;</span>
+          <p id="modalText">Aucun résultat à afficher.</p>
+        </div>
+      </div>
 
       <button
         id="toggleDeletionMode"
