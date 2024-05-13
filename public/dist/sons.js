@@ -225,6 +225,16 @@ function closeCanvas(audioContainer) {
         canvas.remove();
     }
 }
+window.addEventListener('DOMContentLoaded', () => {
+    const audioList = document.getElementById('audioList');
+    audioList === null || audioList === void 0 ? void 0 : audioList.addEventListener('click', function (event) {
+        const target = event.target; // Assurer que target est traité comme un HTMLElement
+        if (target && target.classList.contains('audio-container')) {
+            target.classList.toggle('minimized');
+            target.classList.toggle('expanded');
+        }
+    });
+});
 /**
  * Modifie le nom d'un fichier audio.
  * @param currentFileName Le nom actuel du fichier audio.

@@ -179,6 +179,8 @@ function displayAudioList() {
                     });
                     editSon.appendChild(analyseButton);
 
+                    
+
                     // Ajouter le div "editSon" au conteneur principal
                     audioContainer.appendChild(editSon);
 
@@ -225,6 +227,7 @@ function displayAudioList() {
       .catch(error => console.error('Erreur lors de la récupération des catégories:', error));
   }
   
+
 /**
  * Supprime un élément canvas spécifique de son conteneur.
  *
@@ -241,6 +244,18 @@ function closeCanvas(audioContainer: HTMLDivElement) {
         canvas.remove(); 
     }
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+    const audioList = document.getElementById('audioList');
+
+    audioList?.addEventListener('click', function(event) {
+        const target = event.target as HTMLElement; // Assurer que target est traité comme un HTMLElement
+        if (target && target.classList.contains('audio-container')) {
+            target.classList.toggle('minimized');
+            target.classList.toggle('expanded');
+        }
+    });
+});
 
 /**
  * Modifie le nom d'un fichier audio.
