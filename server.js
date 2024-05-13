@@ -413,6 +413,24 @@ app.post('/patients', (req, res) => {
   }
 });
 
+// Route pour supprimer un patient spécifique
+app.delete('/patients/:id', (req, res) => {
+  const { id } = req.params; // Extraction de l'ID du patient à partir de l'URL
+
+  try {
+      const patientDir = path.join(__dirname, 'data', 'patients', id);
+
+      // Fonction récursive pour supprimer le répertoire du patient
+      fs.rmdirSync(patientDir, { recursive: true });
+
+      res.status(200).json({ message: 'Patient supprimé avec succès' });
+  } catch (error) {
+      console.error('Erreur lors de la suppression du patient:', error);
+      res.status(500).json({ error: 'Erreur interne du serveur' });
+  }
+});
+
+
 // Fonction utilitaire pour générer un identifiant unique
 function generateUniqueId() {
   return Math.random().toString(36).substr(2, 9); // Exemple simple d'identifiant aléatoire
