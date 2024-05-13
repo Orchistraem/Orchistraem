@@ -119,23 +119,20 @@
       <script>
         function toggleAudiogramVisibility() {
           const toggleChampLibre = document.getElementById("toggleChampLibre");
-          const audiogramChampLibre = document.getElementById("audiogramChampLibre");
-          const formThird = document.getElementById("addPointFormThird");
+          const CLAudiogram = document.getElementById("CLAudiogram");
           
           const audiogramLR = document.getElementById("LRAudiogram");
           
       
           if (toggleChampLibre.checked) {
             // Afficher Champ Libre
-            audiogramChampLibre.style.display = "block";
-            formThird.style.display = "block";
+            CLAudiogram.style.display = "block";
             
             // Masquer les autres
             audiogramLR.style.display = "none";
           } else {
             // Si Champ Libre n'est pas coché, réinitialiser tous les affichages
-            audiogramChampLibre.style.display = "none";
-            formThird.style.display = "none";
+            CLAudiogram.style.display = "none";
             audiogramLR.style.display = "flex";
           }
         }
@@ -217,39 +214,25 @@
         </div>
       </div>
     </div>
-  
 
     <!-- Third Audiogram on a new line -->
-    <div id ="CLAudiogram" class="audiogram-container">
+    <div id ="CLAudiogram" class="audiogram-container" style="display: none">
       <div class="chartBox">
         <div class="chart-container" style="position: relative; height:40vh; width:40vw">
-        <canvas id="audiogramChampLibre" class="audiogram" style="display: none"></canvas>
+        <canvas id="audiogramChampLibre" class="audiogram" ></canvas></div>
         <div class="form-container" id="test">
-          <form id="addPointFormThird" style="display: none">
-            <div class="input-group">
+          <form id="addPointFormThird">
               <input type="text" id="frequenciesThird" class="form-control" placeholder="Fréquence" name="frequency" />
+              <br />
               <input type="text" id="decibelsThird" class="form-control" placeholder="dB" name="decibels" />
-            </div>
             <br />
             <button type="submit" class="btn btn-outline-primary">Ajouter</button>
           </form>
         </div>
       </div>
-      </div>
     </div>
   </div>
 </div>
-
-  <div class="patient-recommandation">
-    <h1>Recherche de sons pour thérapie</h1>
-    <label for="frequencyInput">Fréquence (Hz):</label>
-    <input type="number" id="frequencyInput" placeholder="250" min="0" max="8000">
-    <label for="decibelInput">Intensité (dB):</label>
-    <input type="number" id="decibelInput" placeholder="40" min="0" max="120">
-    <button id="findSoundsButton">Trouver des Sons</button>
-    <div id="results"></div>
-  </div>
-    
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script src="dist/audiogram.js"></script>
