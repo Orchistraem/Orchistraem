@@ -86,48 +86,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-document.addEventListener('DOMContentLoaded', function() {
-    const deleteButton = document.getElementById('deletePatientButton'); // Assurez-vous que l'ID correspond à votre bouton de suppression dans le HTML
-    if (deleteButton) {
-    deleteButton.addEventListener('click', function() {
-        const patientId = this.getAttribute('data-patient-id'); // Assurez-vous que le bouton a un attribut data-patient-id
-
-        Swal.fire({
-            title: 'Êtes-vous sûr?',
-            text: "Vous ne pourrez pas revenir en arrière!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Oui, supprimez-le!'
-        }).then((result:any) => {
-            if (result.isConfirmed) {
-                // Envoyez la requête DELETE au serveur
-                fetch(`/patients/${patientId}`, {
-                    method: 'DELETE'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    Swal.fire(
-                        'Supprimé!',
-                        'Le patient a été supprimé.',
-                        'success'
-                    );
-                    // Vous pouvez ici rafraîchir la liste des patients ou rediriger l'utilisateur
-                })
-                .catch(error => {
-                    console.error('Erreur lors de la suppression du patient:', error);
-                    Swal.fire(
-                        'Erreur!',
-                        'Le patient n\'a pas pu être supprimé.',
-                        'error'
-                    );
-                });
-            }
-        });
-    });
-});
-
 
 
 
