@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const patientInfos = await fetchAllPatientInfo();
 
-    patientInfos.forEach((patient: { name: any; }) => {
+    patientInfos.forEach((patient) => {
         const listItem = document.createElement('li');
         listItem.textContent = `${patient.name}`;
         if(patientsList) patientsList.appendChild(listItem);
@@ -101,16 +101,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let allPatientInfos = await fetchAllPatientInfo();
 
-    function renderPatientList(patients: Patient[]): void {
+    function renderPatientList(patients: Patient[]) {
         if (patientsList) {
-            patientsList.innerHTML = '';
-            patients.forEach(patient => {
+            patientsList.innerHTML = ''; 
+            patients.forEach((patient) => {
                 if (!patient.archived || showArchived.checked) {
                     const listItem = document.createElement('li');
                     listItem.textContent = patient.name;
+                    listItem.setAttribute('data-patient-id', patient.id);
                     listItem.dataset.archived = patient.archived?.toString() || 'false';
                     patientsList.appendChild(listItem);
                 }
+
             });
         }
     }
@@ -127,17 +129,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (showArchived) {
         showArchived.addEventListener('change', () => {
-            renderPatientList(allPatientInfos); // Re-rendre la liste avec le nouveau filtre
+            renderPatientList(allPatientInfos); 
         });
     }
 
     if (patientsList) {
         patientsList.addEventListener('click', (event) => {
-            const listItem = event.target as Element;
-            const patientIndex = Array.from(patientsList.children).indexOf(listItem);
-
-            if (patientIndex !== -1) {
-                const patientId = allPatientInfos[patientIndex].id;
+            const listItem = event.target as HTMLElement; 
+            const patientId = listItem.getAttribute('data-patient-id'); 
+    
+            if (patientId) {
                 window.location.href = `patient.html?id=${patientId}`;
             }
         });

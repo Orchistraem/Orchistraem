@@ -1,1 +1,7 @@
-{"id":"w8sw0hqy1","name":"Ziyad Messaoud","age":25,"pic":"fille.png"}
+{
+  "id": "w8sw0hqy1",
+  "name": "Ziyad Messaoud",
+  "age": 25,
+  "pic": "fille.png",
+  "archived": false
+}

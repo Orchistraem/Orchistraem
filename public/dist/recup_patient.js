@@ -100,11 +100,12 @@ document.addEventListener('DOMContentLoaded', () => __awaiter(void 0, void 0, vo
     function renderPatientList(patients) {
         if (patientsList) {
             patientsList.innerHTML = '';
-            patients.forEach(patient => {
+            patients.forEach((patient) => {
                 var _a;
                 if (!patient.archived || showArchived.checked) {
                     const listItem = document.createElement('li');
                     listItem.textContent = patient.name;
+                    listItem.setAttribute('data-patient-id', patient.id);
                     listItem.dataset.archived = ((_a = patient.archived) === null || _a === void 0 ? void 0 : _a.toString()) || 'false';
                     patientsList.appendChild(listItem);
                 }
@@ -121,15 +122,14 @@ document.addEventListener('DOMContentLoaded', () => __awaiter(void 0, void 0, vo
     }
     if (showArchived) {
         showArchived.addEventListener('change', () => {
-            renderPatientList(allPatientInfos); // Re-rendre la liste avec le nouveau filtre
+            renderPatientList(allPatientInfos);
         });
     }
     if (patientsList) {
         patientsList.addEventListener('click', (event) => {
             const listItem = event.target;
-            const patientIndex = Array.from(patientsList.children).indexOf(listItem);
-            if (patientIndex !== -1) {
-                const patientId = allPatientInfos[patientIndex].id;
+            const patientId = listItem.getAttribute('data-patient-id');
+            if (patientId) {
                 window.location.href = `patient.html?id=${patientId}`;
             }
         });
