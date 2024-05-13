@@ -212,7 +212,7 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
             return new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000],
+                    labels: [125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, 8000],
                     datasets: [{
                             label: 'Oreille nue',
                             data: [],
@@ -285,7 +285,7 @@ function initAudiogram(canvasID, pointColor, borderColor, earSide) {
                                 }
                             },
                             afterBuildTicks: function (chart) {
-                                chart.ticks = [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000];
+                                chart.ticks = [125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, 8000];
                                 chart.ticks.forEach(function (value, index, array) {
                                     array[index] = { value: value.toString() };
                                 });
@@ -571,7 +571,7 @@ function initAudiogramChampLibre(canvasID, pointColor, borderColor, earSide) {
             return new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000],
+                    labels: [125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, 8000],
                     datasets: [{
                             label: 'Oreille nue',
                             data: [],
@@ -642,7 +642,7 @@ function initAudiogramChampLibre(canvasID, pointColor, borderColor, earSide) {
                                 }
                             },
                             afterBuildTicks: function (chart) {
-                                chart.ticks = [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000];
+                                chart.ticks = [125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, 8000];
                                 chart.ticks.forEach(function (value, index, array) {
                                     array[index] = { value: value.toString() };
                                 });
@@ -1064,7 +1064,7 @@ function isPointAlreadyExist(chart, frequency, decibels) {
         });
     });
 }
-const standardFrequencies = [125, 250, 500, 1000, 2000, 4000, 8000];
+const standardFrequencies = [125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, 8000];
 const decibelLevels = [];
 // Cette boucle crée une liste de -10 à 120 avec un pas de 10
 for (let i = -10; i <= 120; i += 10) {
@@ -1277,17 +1277,13 @@ function findNearestFrequency(frequency, standardFrequencies) {
         const lower = standardFrequencies[i];
         const upper = standardFrequencies[i + 1];
         const middle = (lower + upper) / 2;
-        if (frequency === middle) {
-            // Si la fréquence est exactement au milieu, on la retourne
-            return frequency;
-        }
-        else if (frequency > lower && frequency < middle) {
+        if (frequency > lower && frequency < middle) {
             // Si la fréquence est plus proche de la borne inférieure, on retourne la borne inférieure
             return lower;
         }
         else if (frequency > middle && frequency < upper) {
             // Si la fréquence est plus proche de la borne supérieure, on retourne le milieu
-            return middle;
+            return upper;
         }
     }
     // Par sécurité, si aucune condition n'est remplie, on retourne la fréquence la plus basse
