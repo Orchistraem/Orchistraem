@@ -90,15 +90,26 @@
 }
 
 .edit {
-    columns: 4;
-    margin: auto; 
     width: min-content;
+    margin-top: 1%;
+    margin-left: 2%;
+    margin-right: 2%;
 }
 
 
 .edit button {
     margin: 2%;
-    width: min-content;
+    width: fit-content;
+}
+
+.btn-primary{
+    background-color: #03045e !important;
+    border-color: #03045e !important;
+}
+
+.btn-danger {
+    background-color: red !important;
+    border-color: red !important;
 }
 
 #soundSelectorChampLibre{

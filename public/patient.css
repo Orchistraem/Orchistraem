@@ -14,3 +14,8 @@
     margin: 10px auto; /* Centrage horizontal et petite marge autour */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ombre légère pour un effet de profondeur */
   }
+
+#audios{
+  display: flex;
+  width:fit-content;
+}
