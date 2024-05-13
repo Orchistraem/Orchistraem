@@ -144,7 +144,34 @@ function displayAudioList() {
                         analyseButton.classList.add('btn', 'btn-info');
                         analyseButton.addEventListener('click', (event) => {
                             event.stopPropagation();
-                            // Logique d'analyse ici
+                            // Vérifie si le canvas existe déjà, sinon crée un nouveau canvas
+                            let canvas = audioContainer.querySelector('#sonogramCanvas');
+                            if (!canvas) {
+                                canvas = document.createElement('canvas');
+                                canvas.id = 'sonogramCanvas';
+                                canvas.width = 500; // Taille de l'exemple, ajustez selon vos besoins
+                                canvas.height = 300;
+                                audioContainer.appendChild(canvas);
+                            }
+                            // Vérifie si le bouton de fermeture existe déjà, sinon crée un nouveau bouton
+                            let closeButton = audioContainer.querySelector('#closeButtonAnalyse');
+                            if (!closeButton) {
+                                closeButton = document.createElement('button');
+                                closeButton.textContent = 'Fermer';
+                                closeButton.classList.add('btn', 'btn-secondary');
+                                closeButton.id = 'closeButtonAnalyse';
+                                closeButton.addEventListener('click', () => {
+                                    if (canvas) {
+                                        canvas.remove(); // Supprime le canvas
+                                    }
+                                    if (closeButton) {
+                                        closeButton.remove();
+                                    }
+                                });
+                                editSon.appendChild(closeButton);
+                            }
+                            // Assurez-vous d'appeler ici votre fonction d'analyse audio si nécessaire
+                            // analyseAudioFile(audioFile, canvas);
                         });
                         editSon.appendChild(analyseButton);
                         audioContainer.appendChild(editSon);
@@ -187,6 +214,20 @@ function displayAudioList() {
             .catch(error => console.error('Erreur lors de la récupération des métadonnées audio:', error));
     })
         .catch(error => console.error('Erreur lors de la récupération des catégories:', error));
+}
+function analyseAudioFile(audioFile, canvas) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const audioContext = new AudioContext();
+        const arrayBuffer = yield audioFile.arrayBuffer();
+        const audioBuffer = yield audioContext.decodeAudioData(arrayBuffer);
+        const analyser = audioContext.createAnalyser();
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(analyser);
+        analyser.fftSize = 2048;
+        // Commencez à dessiner le sonogramme ou à analyser l'audio ici
+        drawSonogram(source, analyser, canvas);
+    });
 }
 /**
  * Supprime un élément canvas spécifique de son conteneur.
