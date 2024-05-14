@@ -1053,6 +1053,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   })
                   .then(() => {
                       Swal.fire('Supprimé!', 'Le patient a été supprimé avec succès.', 'success');
+                      window.location.href = '/creer_patient.html'; 
                       // Rediriger l'utilisateur ou rafraîchir la page si nécessaire
                   })
                   .catch(error => {
@@ -1064,6 +1065,8 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   }
 });
+
+
 /**
  * Ajoute un point à l'audiogramme de l'oreille gauche.
  *
