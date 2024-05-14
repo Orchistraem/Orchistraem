@@ -923,6 +923,45 @@ function getPatientIdFromUrl() {
     // Retourne l'ID du patient ou une chaîne vide si non trouvé
     return patientId || '';
 }
+document.addEventListener('DOMContentLoaded', function () {
+    const patientId = getPatientIdFromUrl(); // Utiliser la fonction existante pour récupérer l'ID
+    const deleteButton = document.getElementById('deletePatientButton');
+    if (deleteButton && patientId) { // S'assurer que le bouton existe et que l'ID est non nul
+        deleteButton.setAttribute('data-patient-id', patientId); // Assigner l'ID au bouton
+        deleteButton.addEventListener('click', function () {
+            Swal.fire({
+                title: 'Êtes-vous sûr de vouloir supprimer ce patient ?',
+                text: "Cette action est irréversible!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Oui, supprimer !'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/patients/${patientId}`, {
+                        method: 'DELETE'
+                    })
+                        .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Problème lors de la suppression du patient');
+                        }
+                        return response.json();
+                    })
+                        .then(() => {
+                        Swal.fire('Supprimé!', 'Le patient a été supprimé avec succès.', 'success');
+                        window.location.href = '/creer_patient.html';
+                        // Rediriger l'utilisateur ou rafraîchir la page si nécessaire
+                    })
+                        .catch(error => {
+                        console.error('Erreur lors de la suppression:', error);
+                        Swal.fire('Erreur', 'La suppression n\'a pas pu être effectuée', 'error');
+                    });
+                }
+            });
+        });
+    }
+});
 /**
  * Ajoute un point à l'audiogramme de l'oreille gauche.
  *
