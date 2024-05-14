@@ -13,7 +13,7 @@ let isDeletionModeActive = false;
 // Mode de recommandation desactivé par défaut
 let isRecommandationMode = false;
 
-let toggleRecommandationMode = document.getElementById('findSoundsButton')
+let toggleRecommandationMode = document.getElementById('findSoundsButton') as HTMLButtonElement;
 
 // Recupération du bouton de suppression
 let toggleDeletionMode = document.getElementById('toggleDeletionMode');
@@ -46,8 +46,16 @@ const gomme = document.getElementById('cursorGomme');
 if (toggleDeletionMode) {
   toggleDeletionMode.addEventListener('click', function() {
     isDeletionModeActive = !isDeletionModeActive;
+    if(isDeletionModeActive){
+      if(toggleRecommandationMode){
+        toggleRecommandationMode.disabled = true;
+        toggleRecommandationMode.classList.add("disabled");
+        } 
+    } else {
+      toggleRecommandationMode.disabled = false;
+      toggleRecommandationMode.classList.remove("disabled");
+    }
     const status = isDeletionModeActive ? "activé" : "désactivé";
-    console.log("Mode de suppression est maintenant " + status);
     if(gomme){
         // Afficher ou masquer l'image de la gomme
         gomme.style.display = isDeletionModeActive ? "block" : "none";
@@ -58,7 +66,9 @@ if (toggleDeletionMode) {
     showNotification("Mode de suppression " + status, 3000);
     
     // Change le curseur
-    document.body.style.cursor = isDeletionModeActive ? 'url("./src/Images/gomme.png"), auto' : 'default';
+
+    document.body.style.cursor = isDeletionModeActive && !isRecommandationMode ? 'url("./src/Images/gomme.png"), auto' : 'default';
+    
   });
 }
 
@@ -501,19 +511,25 @@ async function analyseAudioExtremesConsole(audioFile: Blob): Promise<{xMin: numb
   });
 }
 
-toggleRecommandationMode?.addEventListener("click", async () => {
-  if(isRecommandationMode){
+let buttonDeletionToggle = document.getElementById("toggleDeletionMode") as HTMLButtonElement;
 
+toggleRecommandationMode?.addEventListener("click", async () => {
+  const status = isRecommandationMode ? "désactivé" : "activé";
+  if(isRecommandationMode){
+    buttonDeletionToggle.disabled = false;
+    buttonDeletionToggle.classList.remove("disabled");
     isRecommandationMode = false;
     document.body.style.cursor = isRecommandationMode ? 'url("./src/Images/cursor.cur"), auto' : 'default';
   }
   else {
+    buttonDeletionToggle.disabled = true;
+    buttonDeletionToggle.classList.add("disabled");
     isRecommandationMode = true;
     toggleShakeEffect(isRecommandationMode);
-     // Change le curseur
      document.body.style.cursor = isRecommandationMode ? 'url("./src/Images/cursor.cur"), auto' : 'default';
-    console.log("Je suis dans le mode recommandation")
-  }
+    }
+  showNotification("Mode de recommandation " + status, 3000);
+
 });
 
 
@@ -1259,27 +1275,35 @@ function setupClickListeners(chart: any, ear: string, legendSelector: HTMLSelect
   canvas.addEventListener('click', function(event: MouseEvent) {
 
      if(isRecommandationMode){
+      if(isDeletionModeActive){
+
+        showNotification("Le mode de suppression est déjà activé");
+      }else {
       const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
       if (points.length) {
         const datasetIndex = points[0].datasetIndex;
         const index = points[0].index;
         const pointData = chart.data.datasets[datasetIndex].data[index];
-        console.log(pointData);
         callRecommendation(pointData.x,pointData.y)
       }
+    }
 
     }
 
      // Si le mode de suppression est actif, supprimer le point
     else if (isDeletionModeActive) {
-      const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
-      if (points.length) {
-        const datasetIndex = points[0].datasetIndex;
-        const index = points[0].index;
-        const pointData = chart.data.datasets[datasetIndex].data[index];
-        console.log(pointData);
-          removeDataPoint(chart, index, ear, pointData.id);
-      }
+      if(isRecommandationMode){
+        showNotification("Le mode de recommandation est déjà activé");
+      }else {
+        const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+        if (points.length) {
+          const datasetIndex = points[0].datasetIndex;
+          const index = points[0].index;
+          const pointData = chart.data.datasets[datasetIndex].data[index];
+          console.log(pointData);
+            removeDataPoint(chart, index, ear, pointData.id);
+        }
+    }
     } else {
         const rect = canvas.getBoundingClientRect();
         const x = event.clientX - rect.left;
