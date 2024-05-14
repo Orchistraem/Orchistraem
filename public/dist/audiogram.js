@@ -44,8 +44,17 @@ const gomme = document.getElementById('cursorGomme');
 if (toggleDeletionMode) {
     toggleDeletionMode.addEventListener('click', function () {
         isDeletionModeActive = !isDeletionModeActive;
+        if (isDeletionModeActive) {
+            if (toggleRecommandationMode) {
+                toggleRecommandationMode.disabled = true;
+                toggleRecommandationMode.classList.add("disabled");
+            }
+        }
+        else {
+            toggleRecommandationMode.disabled = false;
+            toggleRecommandationMode.classList.remove("disabled");
+        }
         const status = isDeletionModeActive ? "activé" : "désactivé";
-        console.log("Mode de suppression est maintenant " + status);
         if (gomme) {
             // Afficher ou masquer l'image de la gomme
             gomme.style.display = isDeletionModeActive ? "block" : "none";
@@ -54,7 +63,7 @@ if (toggleDeletionMode) {
         // Afficher une notification avec le statut du mode de suppression
         showNotification("Mode de suppression " + status, 3000);
         // Change le curseur
-        document.body.style.cursor = isDeletionModeActive ? 'url("./src/Images/gomme.png"), auto' : 'default';
+        document.body.style.cursor = isDeletionModeActive && !isRecommandationMode ? 'url("./src/Images/gomme.png"), auto' : 'default';
     });
 }
 const deleteAllPointsButton = document.getElementById('deleteAllPoints');
@@ -447,18 +456,23 @@ function analyseAudioExtremesConsole(audioFile) {
         });
     });
 }
+let buttonDeletionToggle = document.getElementById("toggleDeletionMode");
 toggleRecommandationMode === null || toggleRecommandationMode === void 0 ? void 0 : toggleRecommandationMode.addEventListener("click", () => __awaiter(void 0, void 0, void 0, function* () {
+    const status = isRecommandationMode ? "désactivé" : "activé";
     if (isRecommandationMode) {
+        buttonDeletionToggle.disabled = false;
+        buttonDeletionToggle.classList.remove("disabled");
         isRecommandationMode = false;
         document.body.style.cursor = isRecommandationMode ? 'url("./src/Images/cursor.cur"), auto' : 'default';
     }
     else {
+        buttonDeletionToggle.disabled = true;
+        buttonDeletionToggle.classList.add("disabled");
         isRecommandationMode = true;
         toggleShakeEffect(isRecommandationMode);
-        // Change le curseur
         document.body.style.cursor = isRecommandationMode ? 'url("./src/Images/cursor.cur"), auto' : 'default';
-        console.log("Je suis dans le mode recommandation");
     }
+    showNotification("Mode de recommandation " + status, 3000);
 }));
 /**
  * Trouve et liste les fichiers sonores contenant des points spécifiés de fréquence et de décibels dans leurs valeurs extrêmes.
@@ -1126,24 +1140,33 @@ function setupClickListeners(chart, ear, legendSelector) {
     const canvas = chart.canvas;
     canvas.addEventListener('click', function (event) {
         if (isRecommandationMode) {
-            const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
-            if (points.length) {
-                const datasetIndex = points[0].datasetIndex;
-                const index = points[0].index;
-                const pointData = chart.data.datasets[datasetIndex].data[index];
-                console.log(pointData);
-                callRecommendation(pointData.x, pointData.y);
+            if (isDeletionModeActive) {
+                showNotification("Le mode de suppression est déjà activé");
+            }
+            else {
+                const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+                if (points.length) {
+                    const datasetIndex = points[0].datasetIndex;
+                    const index = points[0].index;
+                    const pointData = chart.data.datasets[datasetIndex].data[index];
+                    callRecommendation(pointData.x, pointData.y);
+                }
             }
         }
         // Si le mode de suppression est actif, supprimer le point
         else if (isDeletionModeActive) {
-            const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
-            if (points.length) {
-                const datasetIndex = points[0].datasetIndex;
-                const index = points[0].index;
-                const pointData = chart.data.datasets[datasetIndex].data[index];
-                console.log(pointData);
-                removeDataPoint(chart, index, ear, pointData.id);
+            if (isRecommandationMode) {
+                showNotification("Le mode de recommandation est déjà activé");
+            }
+            else {
+                const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+                if (points.length) {
+                    const datasetIndex = points[0].datasetIndex;
+                    const index = points[0].index;
+                    const pointData = chart.data.datasets[datasetIndex].data[index];
+                    console.log(pointData);
+                    removeDataPoint(chart, index, ear, pointData.id);
+                }
             }
         }
         else {
