@@ -76,156 +76,167 @@ function refreshAudioList(): void {
  * Affiche la liste des fichiers audio.
  * @returns aucune valeur n'est retourné
  */
+/**
+ * Affiche la liste des fichiers audio.
+ * @returns aucune valeur n'est retourné
+ */
 function displayAudioList() {
     // Récupérez les catégories disponibles depuis le serveur.
     fetch('/categories')
-      .then(response => response.json())
-      .then(categories => {
-        // Récupérez ensuite les métadonnées audio pour connaître les catégories assignées à chaque fichier
-        fetch('/audio-metadata')
-          .then(response => response.json())
-          .then(audioMetadata => {
-            // Ensuite, récupérez la liste des fichiers audio depuis le serveur.
-            fetch('/list-audios')
-              .then(response => response.json())
-              .then(audioFiles => {
-                const audioListContainer = document.getElementById('audioList');
-                if (audioListContainer) {
-                  audioListContainer.innerHTML = ''; // Vider la liste existante
+        .then(response => response.json())
+        .then(categories => {
+            // Récupérez ensuite les métadonnées audio pour connaître les catégories assignées à chaque fichier
+            fetch('/audio-metadata')
+                .then(response => response.json())
+                .then(audioMetadata => {
+                    // Ensuite, récupérez la liste des fichiers audio depuis le serveur.
+                    fetch('/list-audios')
+                        .then(response => response.json())
+                        .then(audioFiles => {
+                            const audioListContainer = document.getElementById('audioList');
+                            if (audioListContainer) {
+                                audioListContainer.innerHTML = ''; // Vider la liste existante
 
-                  // Parcourt chaque fichier audio pour créer et afficher les éléments HTML correspondants.
-                  audioFiles.forEach((file : any) => {
-                    const audioContainer = document.createElement('div');
-                    audioContainer.classList.add('audio-container');
-                    audioContainer.setAttribute('data-file', file);
-                    audioContainer.addEventListener('click', () => {
-                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    });                
-                    
-                    // Affiche le nom du fichier audio sans l'extension .mp3 et remplace les caractères spéciaux par des espaces.
-                    const fileNameParagraph = document.createElement('p');
-                    fileNameParagraph.textContent = file.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
-                    audioContainer.appendChild(fileNameParagraph);
-                    
-                    // Récupère et affiche la catégorie du fichier à partir des métadonnées ou l'indique comme "Non catégorisé".
-                    const fileMetadata = audioMetadata.find((meta : any) => meta.name === file);
-                    const fileCategory = fileMetadata ? fileMetadata.category : 'Non catégorisé';
-                    const fileCategoryParagraph = document.createElement('p');
-                    fileCategoryParagraph.textContent = `Catégorie: ${fileCategory}`;
-                    audioContainer.appendChild(fileCategoryParagraph);
-                    
-                    // Crée et affiche un lecteur audio pour écouter le fichier.
-                    const audioElement = document.createElement('audio');
-                    audioElement.setAttribute('controls', '');
-                    audioElement.src = `/uploads/${file}`;
-                    audioElement.addEventListener('play', () => {
-                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    });
-                    audioContainer.appendChild(audioElement);
-  
-                    // Créer le div "editSon"
-                    const editSon = document.createElement('div');
-                    editSon.classList.add('editSon');
+                                // Parcourt chaque fichier audio pour créer et afficher les éléments HTML correspondants.
+                                audioFiles.forEach((file: any) => {
+                                    const audioContainer = document.createElement('div');
+                                    audioContainer.classList.add('audio-container');
+                                    audioContainer.setAttribute('data-file', file);
+                                    audioContainer.addEventListener('click', () => {
+                                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                    });
 
-                    // Bouton Modifier
-                    const modifyButton = document.createElement('button');
-                    modifyButton.textContent = 'Modifier';
-                    modifyButton.classList.add('btn', 'btn-primary');
-                    modifyButton.onclick = () => modifyName(file);
-                    editSon.appendChild(modifyButton);
-                    modifyButton.addEventListener('click', () => {
-                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    });
+                                    // Ajouter une classe spécifique pour le titre
+                                    const fileNameParagraph = document.createElement('p');
+                                    fileNameParagraph.classList.add('audio-title'); // Classe pour le titre
+                                    fileNameParagraph.textContent = file.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
+                                    audioContainer.appendChild(fileNameParagraph);
 
-                    // Bouton Supprimer
-                    const deleteButton = document.createElement('button');
-                    deleteButton.textContent = 'Supprimer';
-                    deleteButton.classList.add('btn', 'btn-danger');
-                    deleteButton.onclick = () => deleteSong(file);
-                    editSon.appendChild(deleteButton);
-                    deleteButton.addEventListener('click', () => {
-                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    });
+                                    // Ajouter une classe spécifique pour la catégorie
+                                    const fileMetadata = audioMetadata.find((meta: any) => meta.name === file);
+                                    const fileCategory = fileMetadata ? fileMetadata.category : 'Non catégorisé';
+                                    const fileCategoryParagraph = document.createElement('p');
+                                    fileCategoryParagraph.classList.add('category-label'); // Classe pour la catégorie
+                                    fileCategoryParagraph.textContent = ` ${fileCategory}`;
+                                    audioContainer.appendChild(fileCategoryParagraph);
 
-                    // Ajouter le bouton d'analyse des sons
-                    const analyseButton = document.createElement('button');
-                    analyseButton.textContent = 'Analyser';
-                    analyseButton.classList.add('btn', 'btn-info');
-                    analyseButton.addEventListener('click', () => {
-                        const canvas = audioContainer.querySelector('#sonogramCanvas') as HTMLCanvasElement;
-                        let closeButton = audioContainer.querySelector('#closeButtonAnalyse');
-                        if (!closeButton) {
-                            closeButton = document.createElement('button');
-                            closeButton.textContent = 'Fermer';
-                            closeButton.classList.add('btn', 'btn-secondary');
-                            closeButton.id = 'closeButtonAnalyse';
-                            closeButton.addEventListener('click', () => {
-                                closeCanvas(audioContainer);
-                                if(closeButton)
-                                closeButton.remove();
-                            });
-                            editSon.appendChild(closeButton);
-                        }
-                        
-                        const audioUrl = `/uploads/${file}`; // URL du fichier audio
-                        fetch(audioUrl)
-                            .then(response => response.blob())
-                            .then(blob => {
-                                drawSonogram(blob, editSon,canvas);
-                            });
-                    });
-                    analyseButton.addEventListener('click', () => {
-                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    });
-                    editSon.appendChild(analyseButton);
+                                    // Crée et affiche un lecteur audio pour écouter le fichier.
+                                    const audioElement = document.createElement('audio');
+                                    audioElement.setAttribute('controls', '');
+                                    audioElement.src = `/uploads/${file}`;
+                                    audioElement.addEventListener('play', () => {
+                                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                    });
+                                    audioContainer.appendChild(audioElement);
 
-                    
+                                    // Créer le div "editSon"
+                                    const editSon = document.createElement('div');
+                                    editSon.classList.add('editSon');
 
-                    // Ajouter le div "editSon" au conteneur principal
-                    audioContainer.appendChild(editSon);
+                                    // Bouton Modifier
+                                    const modifyButton = document.createElement('button');
+                                    modifyButton.textContent = 'Modifier';
+                                    modifyButton.classList.add('btn', 'btn-primary');
+                                    modifyButton.onclick = () => modifyName(file);
+                                    editSon.appendChild(modifyButton);
+                                    modifyButton.addEventListener('click', () => {
+                                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                    });
 
-                    // Créer le div "categSon"
-                    const categSon = document.createElement('div');
-                    categSon.classList.add('categSon');
-  
-                    // Menu déroulant pour les catégories
-                    const categorySelect = document.createElement('select');
-                    categories.forEach((category : any) => {
-                      const option = document.createElement('option');
-                      option.value = category.name;
-                      option.textContent = category.name;
-                      categorySelect.appendChild(option);
-                    });
-                    categorySelect.value = fileCategory; // Sélectionner la catégorie actuelle
-                    categSon.appendChild(categorySelect);
-                    categorySelect.addEventListener('click', () => {
-                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    });
-  
-                    // Bouton pour assigner la catégorie
-                    const assignCategoryButton = document.createElement('button');
-                    assignCategoryButton.textContent = 'Assigner Catégorie';
-                    assignCategoryButton.classList.add('btn', 'btn-secondary');
-                    assignCategoryButton.onclick = () => {
-                      assignCategoryToFile(file, categorySelect.value);
-                      fileCategoryParagraph.textContent = `Catégorie: ${categorySelect.value}`; // Mise à jour immédiate de l'affichage de la catégorie
-                    };
-                    categSon.appendChild(assignCategoryButton);
-                    assignCategoryButton.addEventListener('click', () => {
-                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    });
-                    
-                    audioContainer.appendChild(categSon);
-                    audioListContainer.appendChild(audioContainer);
-                  });
-                }
-              })
-              .catch(error => console.error('Erreur lors de la récupération des fichiers audio:', error));
-          })
-          .catch(error => console.error('Erreur lors de la récupération des métadonnées audio:', error));
-      })
-      .catch(error => console.error('Erreur lors de la récupération des catégories:', error));
-  }
+                                    // Bouton Supprimer
+                                    const deleteButton = document.createElement('button');
+                                    deleteButton.textContent = 'Supprimer';
+                                    deleteButton.classList.add('btn', 'btn-danger');
+                                    deleteButton.onclick = () => deleteSong(file);
+                                    editSon.appendChild(deleteButton);
+                                    deleteButton.addEventListener('click', () => {
+                                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                    });
+
+                                    // Ajouter le bouton d'analyse des sons
+                                    const analyseButton = document.createElement('button');
+                                    analyseButton.textContent = 'Analyser';
+                                    analyseButton.classList.add('btn', 'btn-info');
+                                    analyseButton.addEventListener('click', async () => {
+                                        const canvas = audioContainer.querySelector('#sonogramCanvas') as HTMLCanvasElement;
+                                        let closeButton = audioContainer.querySelector('#closeButtonAnalyse');
+                                        if (!closeButton) {
+                                            closeButton = document.createElement('button');
+                                            closeButton.textContent = 'Fermer';
+                                            closeButton.classList.add('btn', 'btn-secondary');
+                                            closeButton.id = 'closeButtonAnalyse';
+                                            closeButton.addEventListener('click', () => {
+                                                closeCanvas(audioContainer);
+                                                if (closeButton)
+                                                    closeButton.remove();
+                                            });
+                                            editSon.appendChild(closeButton);
+                                        }
+
+                                        const audioUrl = `/uploads/${file}`; // URL du fichier audio
+                                        const response = await fetch(audioUrl);
+                                        const blob = await response.blob();
+                                        
+                                        // Cacher les boutons lorsque l'analyse commence
+                                        const buttons = audioContainer.querySelectorAll('button:not(#closeButtonAnalyse)');
+                                        buttons.forEach(button => button.classList.add('hidden'));
+
+                                        drawSonogram(blob, editSon, canvas);
+                                    });
+                                    analyseButton.addEventListener('click', () => {
+                                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                    });
+                                    editSon.appendChild(analyseButton);
+
+                                    // Ajouter le div "editSon" au conteneur principal
+                                    audioContainer.appendChild(editSon);
+
+                                    // Créer le div "categSon"
+                                    const categSon = document.createElement('div');
+                                    categSon.classList.add('categSon');
+
+                                    // Menu déroulant pour les catégories
+                                    const categorySelect = document.createElement('select');
+                                    categories.forEach((category: any) => {
+                                        const option = document.createElement('option');
+                                        option.value = category.name;
+                                        option.textContent = category.name;
+                                        categorySelect.appendChild(option);
+                                    });
+                                    categorySelect.value = fileCategory; // Sélectionner la catégorie actuelle
+                                    categSon.appendChild(categorySelect);
+                                    categorySelect.addEventListener('click', () => {
+                                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                    });
+
+                                    // Bouton pour assigner la catégorie
+                                    const assignCategoryButton = document.createElement('button');
+                                    assignCategoryButton.textContent = 'Assigner Catégorie';
+                                    assignCategoryButton.classList.add('btn', 'btn-secondary');
+                                    assignCategoryButton.onclick = () => {
+                                        assignCategoryToFile(file, categorySelect.value);
+                                        fileCategoryParagraph.textContent = `Catégorie: ${categorySelect.value}`; // Mise à jour immédiate de l'affichage de la catégorie
+                                    };
+                                    categSon.appendChild(assignCategoryButton);
+                                    assignCategoryButton.addEventListener('click', () => {
+                                        audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                    });
+
+                                    audioContainer.appendChild(categSon);
+                                    audioListContainer.appendChild(audioContainer);
+                                });
+                            }
+                        })
+                        .catch(error => console.error('Erreur lors de la récupération des fichiers audio:', error));
+                })
+                .catch(error => console.error('Erreur lors de la récupération des métadonnées audio:', error));
+        })
+        .catch(error => console.error('Erreur lors de la récupération des catégories:', error));
+}
+
+
+
+
   
 
 /**
@@ -241,9 +252,13 @@ function displayAudioList() {
 function closeCanvas(audioContainer: HTMLDivElement) {
     const canvas = audioContainer.querySelector('#sonogramCanvas') as HTMLCanvasElement;
     if (canvas) {
-        canvas.remove(); 
+        canvas.remove();
     }
+    const buttons = audioContainer.querySelectorAll('button');
+    buttons.forEach(button => button.classList.remove('hidden')); // Afficher les boutons
 }
+
+
 
 window.addEventListener('DOMContentLoaded', () => {
     const audioList = document.getElementById('audioList');
@@ -497,7 +512,31 @@ async function analyseAudio(audioFile: Blob, audioContainer: HTMLDivElement): Pr
  * @returns Une promesse qui se résout lorsque le sonogramme a commencé à être dessiné. La fonction continue de dessiner
  *          le sonogramme en temps réel jusqu'à ce que la source audio soit épuisée.
  */
-async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement, sonogramCanvas: HTMLCanvasElement): Promise<void> {
+/**
+ * Cache tous les boutons liés aux sons dans un conteneur donné.
+ *
+ * @param {HTMLDivElement} audioContainer - Le conteneur contenant les boutons à cacher.
+ */
+function hideButtons(audioContainer: HTMLDivElement): void {
+    const buttons = audioContainer.querySelectorAll('button:not(#closeButtonAnalyse)');
+    buttons.forEach((button) => {
+        (button as HTMLButtonElement).classList.add('hidden');
+    });
+}
+
+/**
+ * Affiche tous les boutons liés aux sons dans un conteneur donné.
+ *
+ * @param {HTMLDivElement} audioContainer - Le conteneur contenant les boutons à afficher.
+ */
+function showButtons(audioContainer: HTMLDivElement): void {
+    const buttons = audioContainer.querySelectorAll('button.hidden');
+    buttons.forEach((button) => {
+        (button as HTMLButtonElement).classList.remove('hidden');
+    });
+}
+
+async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement, sonogramCanvas: HTMLCanvasElement | null): Promise<void> {
     const audioContext = new AudioContext();
     const arrayBuffer = await audioFile.arrayBuffer();
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
@@ -506,11 +545,28 @@ async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement, son
     canvas.id = 'sonogramCanvas';
     canvas.width = 850; // Inclut l'espace pour les légendes
     canvas.height = 350; // Inclut l'espace pour les légendes
-    
+
     const animationHeight = 300; // Hauteur dédiée à l'animation
     const legendSpaceBottom = 50; // Espace réservé pour les légendes horizontales
     const legendSpaceSide = 150; // Espace réservé pour les légendes verticales
     audioContainer.appendChild(canvas);
+
+    hideButtons(audioContainer);
+
+    // Ajouter un bouton "Fermer" s'il n'existe pas déjà
+    let closeButton = audioContainer.querySelector('#closeButtonAnalyse') as HTMLButtonElement | null;
+    if (!closeButton) {
+        closeButton = document.createElement('button');
+        closeButton.textContent = 'Fermer';
+        closeButton.classList.add('btn', 'btn-secondary');
+        closeButton.id = 'closeButtonAnalyse';
+        closeButton.addEventListener('click', () => {
+            closeCanvas(audioContainer);
+            showButtons(audioContainer);
+            if (closeButton) closeButton.remove();
+        });
+        audioContainer.appendChild(closeButton);
+    }
 
     const canvasContext = canvas.getContext('2d');
     if (!canvasContext) {
@@ -528,8 +584,7 @@ async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement, son
     source.connect(analyser);
     analyser.connect(audioContext.destination);
     source.start(0);
-    
-    // Définition de la fonction drawLegends pour les fréquences
+
     function drawLegends(ctx: CanvasRenderingContext2D, width: number, sampleRate: number) {
         const specificFrequencies = [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000];
         const maxFreq = sampleRate / 2;
@@ -538,8 +593,7 @@ async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement, son
         ctx.font = '12px Arial';
         ctx.fillStyle = 'white';
 
-
-        const bottomOffset = 20; 
+        const bottomOffset = 20;
         specificFrequencies.forEach(freq => {
             const logFreq = Math.log10(freq);
             const x = ((logFreq - logMin) / (logMax - logMin)) * (width - legendSpaceSide);
@@ -548,25 +602,21 @@ async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement, son
     }
 
     function drawDbLegends(ctx: CanvasRenderingContext2D, width: number, height: number, legendSpaceBottom: number, legendSpaceSide: number) {
-        const dbValues = Array.from({ length: 13 }, (_, i) => i * 10); // Créer un tableau de valeurs de 0 à 120 par pas de 10
+        const dbValues = Array.from({ length: 13 }, (_, i) => i * 10);
         ctx.font = '12px Arial';
         ctx.fillStyle = 'white';
         ctx.textAlign = 'left';
-        const offsetX = 20; // Distance horizontale depuis le bord droit du graphique d'animation
-    
+        const offsetX = 20;
+
         const maxLegendWidth = legendSpaceSide - offsetX;
-    
-        const effectiveHeight = height - legendSpaceBottom; // Ajuster cette valeur pour augmenter la hauteur utilisée pour les dB
-    
+        const effectiveHeight = height - legendSpaceBottom;
+
         dbValues.forEach((db, index) => {
             const y = (1 - ((db - 0) / (120 - 0))) * effectiveHeight;
-            // Diminuer le second terme ici pour monter les légendes et réduire l'écart vertical
-            ctx.fillText(`${db} dB`, width - maxLegendWidth, y + (legendSpaceBottom / 4)); // Réduire ce terme pour rapprocher les légendes vers le bas
+            ctx.fillText(`${db} dB`, width - maxLegendWidth, y + (legendSpaceBottom / 4));
         });
     }
-    
-    
-    
+
     const draw = () => {
         requestAnimationFrame(draw);
 
@@ -579,21 +629,27 @@ async function drawSonogram(audioFile: Blob, audioContainer: HTMLDivElement, son
         let barHeight;
         let x = 0;
 
-        for(let i = 0; i < bufferLength; i++) {
+        for (let i = 0; i < bufferLength; i++) {
             barHeight = dataArray[i];
-             if (x < animationWidth) {
-            canvasContext.fillStyle = `rgb(${barHeight + 100},50,50)`;
-            canvasContext.fillRect(x, canvas.height - 50 - barHeight / 2, barWidth, barHeight / 2);
-        }
-        x += barWidth + 1;
+            if (x < animationWidth) {
+                canvasContext.fillStyle = `rgb(${barHeight + 100},50,50)`;
+                canvasContext.fillRect(x, canvas.height - 50 - barHeight / 2, barWidth, barHeight / 2);
+            }
+            x += barWidth + 1;
         }
 
-        drawLegends(canvasContext, canvas.width , audioBuffer.sampleRate);
+        drawLegends(canvasContext, canvas.width, audioBuffer.sampleRate);
         drawDbLegends(canvasContext, canvas.width, canvas.height, legendSpaceBottom, legendSpaceSide);
     };
 
     draw();
 }
+
+
+
+
+
+
 
 
 

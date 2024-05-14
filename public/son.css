@@ -64,6 +64,7 @@ div .col-3{
     margin-right: auto;
     text-align: center; /* Aligner le texte à gauche */
     cursor: pointer; /* Style pour montrer que l'élément est cliquable */
+    
 }
 
 .editSon button{
@@ -96,23 +97,11 @@ div .col-3{
     flex-direction: column;
 }
 
-#audioList .audio-container {
+#audioList {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 5px;
-    border: 1px solid #ccc;
-    margin-bottom: 5px;
-    cursor: pointer;
-}
-
-#audioList .audio-container.minimized {
-    height: 50px; /* Hauteur réduite pour le mode minimisé */
-    overflow: hidden; /* Masque les détails débordants */
-}
-
-#audioList .audio-container.expanded {
-    height: auto; /* Permet à la hauteur de s'ajuster au contenu */
+    flex-wrap: wrap;
+    justify-content: space-around; /* Espacement uniforme entre les conteneurs */
+    gap: 20px; /* Espacement entre les conteneurs */
 }
 
 .audio-details.hidden {
@@ -121,20 +110,23 @@ div .col-3{
 
 .audio-title {
     font-weight: bold;
-}
-
-.audio-title {
-    font-weight: bold;
-    color: #00FF00; /* Green color for titles */
-    font-size: 1.5rem;
+    color: #ffffff; /* Couleur bleue pour le titre */
+    font-size: 1.75rem; /* Taille de texte plus grande pour le titre */
+    margin-bottom: 0.5rem; /* Espacement en dessous du titre */
 }
 
 .category-label {
     font-style: italic;
-    color: #FFD700; /* Gold color for category */
-    font-size: 1.2rem;
+    color: #ffffff; /* Couleur grise pour la catégorie */
+    font-size: 1rem; /* Taille de texte plus petite pour la catégorie */
+    margin-bottom: 1rem; /* Espacement en dessous de la catégorie */
 }
 
-.hidden-button {
-    display: none; /* Hides buttons */
+audio {
+    width: 100%; /* Prendre toute la largeur du conteneur */
+    max-width: 300px; /* Limiter la largeur maximale */
+}
+
+.hidden {
+    display: none;
 }
