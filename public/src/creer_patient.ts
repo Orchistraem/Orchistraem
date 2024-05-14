@@ -88,6 +88,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
+
 // Sélectionnez le div parent de tous les boutons radio
 const chooseProfilPic = document.getElementById("chooseProfilPic");
 

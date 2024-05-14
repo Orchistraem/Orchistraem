@@ -22,5 +22,13 @@
   {
     "name": "mon_audio.mp3",
     "category": "Cuivre"
+  },
+  {
+    "name": "Bruit de pet.mp3",
+    "category": "Non catégorisé"
+  },
+  {
+    "name": "Bruit de pet - Copie.mp3",
+    "category": "Non catégorisé"
   }
 ]

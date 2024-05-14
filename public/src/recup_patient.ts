@@ -55,6 +55,7 @@ function toggleArchiveStatus(patientId : String) {
     })
     .then(response => {
         if (response.ok) {
+            window.location.href = '/creer_patient.html';
             return response.json();
         } else {
             throw new Error('Failed to toggle archive status');

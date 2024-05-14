@@ -313,6 +313,8 @@ app.get('/audio-metadata', (req, res) => {
 
 app.post('/upload-audio', upload.single('audioFile'), (req, res) => {
   const category = req.body.category || 'Non catégorisé'; // Fallback si aucune catégorie n'est fournie
+  const audioMetadataPath = './audioMetadata.json'; // Chemin vers le fichier de métadonnées
+
   if (!fs.existsSync(audioMetadataPath)) {
     fs.writeFileSync(audioMetadataPath, JSON.stringify([]), 'utf-8');
   }
@@ -328,6 +330,7 @@ app.post('/upload-audio', upload.single('audioFile'), (req, res) => {
     res.status(409).send("Le fichier existe déjà");
   }
 });
+
 
 // Route pour renommer un fichier audio
 app.post('/rename-audio', (req, res) => {
@@ -413,6 +416,7 @@ app.post('/patients', (req, res) => {
   }
 });
 
+
 app.post('/toggle-archive/:patientId', (req, res) => {
   const { patientId } = req.params;
   const dataPath = path.join(__dirname, 'data', 'patients', patientId,`info.json`);
@@ -435,6 +439,26 @@ app.post('/toggle-archive/:patientId', (req, res) => {
       });
   });
 });
+
+
+// Route pour supprimer un patient spécifique
+app.delete('/patients/:id', (req, res) => {
+  const { id } = req.params; // Extraction de l'ID du patient à partir de l'URL
+
+  try {
+      const patientDir = path.join(__dirname, 'data', 'patients', id);
+
+      // Fonction récursive pour supprimer le répertoire du patient
+      fs.rmdirSync(patientDir, { recursive: true });
+
+      res.status(200).json({ message: 'Patient supprimé avec succès' });
+  } catch (error) {
+      console.error('Erreur lors de la suppression du patient:', error);
+      res.status(500).json({ error: 'Erreur interne du serveur' });
+  }
+});
+
+
 
 // Fonction utilitaire pour générer un identifiant unique
 function generateUniqueId() {

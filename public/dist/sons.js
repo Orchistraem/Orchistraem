@@ -10,6 +10,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 let categories = []; // Initialisez les catégories, vous devrez les charger depuis le serveur.
 /**
+ * Affiche une notification à l'utilisateur.
+ *
+ * Cette fonction affiche un message temporaire à l'écran en utilisant un élément HTML spécifié par son ID.
+ * Le message disparaîtra automatiquement après un délai spécifié.
+ *
+ * @param message - Le message à afficher dans la notification.
+ * @param duration - La durée pendant laquelle la notification reste visible en millisecondes (1500 par défaut).
+ */
+function showNotification1(message, duration = 1500) {
+    const notification = document.getElementById('notification');
+    if (notification) {
+        notification.innerText = message; // Mettre à jour le texte
+        notification.style.display = 'block'; // Afficher la notification
+        // Masquer la notification après 'duration' millisecondes
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, duration);
+    }
+}
+/**
  * Configure le formulaire pour le téléchargement de fichiers audio.
  *
  * Cette fonction prépare le formulaire pour télécharger des fichiers audio.
@@ -36,10 +56,17 @@ function setupUploadAudioForm() {
                 })
                     .then(response => {
                     if (response.ok) {
+                        showNotification1('Fichier téléchargé avec succès');
                         console.log('Fichier téléchargé avec succès');
                         refreshAudioList(); // Rafraîchir la liste après le téléchargement réussi
                     }
+                    else if (response.status === 409) {
+                        console.error('Le fichier existe déjà');
+                        showNotification1('Le fichier existe déjà');
+                        refreshAudioList();
+                    }
                     else {
+                        showNotification1('Erreur lors du téléchargement du fichier');
                         throw new Error('Erreur lors du téléchargement du fichier');
                     }
                 })
@@ -75,6 +102,10 @@ function refreshAudioList() {
  * Affiche la liste des fichiers audio.
  * @returns aucune valeur n'est retourné
  */
+/**
+ * Affiche la liste des fichiers audio.
+ * @returns aucune valeur n'est retourné
+ */
 function displayAudioList() {
     // Récupérez les catégories disponibles depuis le serveur.
     fetch('/categories')
@@ -99,15 +130,17 @@ function displayAudioList() {
                         audioContainer.addEventListener('click', () => {
                             audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                         });
-                        // Affiche le nom du fichier audio sans l'extension .mp3 et remplace les caractères spéciaux par des espaces.
+                        // Ajouter une classe spécifique pour le titre
                         const fileNameParagraph = document.createElement('p');
+                        fileNameParagraph.classList.add('audio-title'); // Classe pour le titre
                         fileNameParagraph.textContent = file.replace(/\.mp3$/, '').replace(/[_-]/g, ' ');
                         audioContainer.appendChild(fileNameParagraph);
-                        // Récupère et affiche la catégorie du fichier à partir des métadonnées ou l'indique comme "Non catégorisé".
+                        // Ajouter une classe spécifique pour la catégorie
                         const fileMetadata = audioMetadata.find((meta) => meta.name === file);
                         const fileCategory = fileMetadata ? fileMetadata.category : 'Non catégorisé';
                         const fileCategoryParagraph = document.createElement('p');
-                        fileCategoryParagraph.textContent = `Catégorie: ${fileCategory}`;
+                        fileCategoryParagraph.classList.add('category-label'); // Classe pour la catégorie
+                        fileCategoryParagraph.textContent = ` ${fileCategory}`;
                         audioContainer.appendChild(fileCategoryParagraph);
                         // Crée et affiche un lecteur audio pour écouter le fichier.
                         const audioElement = document.createElement('audio');
@@ -142,7 +175,7 @@ function displayAudioList() {
                         const analyseButton = document.createElement('button');
                         analyseButton.textContent = 'Analyser';
                         analyseButton.classList.add('btn', 'btn-info');
-                        analyseButton.addEventListener('click', () => {
+                        analyseButton.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
                             const canvas = audioContainer.querySelector('#sonogramCanvas');
                             let closeButton = audioContainer.querySelector('#closeButtonAnalyse');
                             if (!closeButton) {
@@ -158,12 +191,13 @@ function displayAudioList() {
                                 editSon.appendChild(closeButton);
                             }
                             const audioUrl = `/uploads/${file}`; // URL du fichier audio
-                            fetch(audioUrl)
-                                .then(response => response.blob())
-                                .then(blob => {
-                                drawSonogram(blob, editSon, canvas);
-                            });
-                        });
+                            const response = yield fetch(audioUrl);
+                            const blob = yield response.blob();
+                            // Cacher les boutons lorsque l'analyse commence
+                            const buttons = audioContainer.querySelectorAll('button:not(#closeButtonAnalyse)');
+                            buttons.forEach(button => button.classList.add('hidden'));
+                            drawSonogram(blob, editSon, canvas);
+                        }));
                         analyseButton.addEventListener('click', () => {
                             audioContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                         });
@@ -224,7 +258,19 @@ function closeCanvas(audioContainer) {
     if (canvas) {
         canvas.remove();
     }
+    const buttons = audioContainer.querySelectorAll('button');
+    buttons.forEach(button => button.classList.remove('hidden')); // Afficher les boutons
 }
+window.addEventListener('DOMContentLoaded', () => {
+    const audioList = document.getElementById('audioList');
+    audioList === null || audioList === void 0 ? void 0 : audioList.addEventListener('click', function (event) {
+        const target = event.target; // Assurer que target est traité comme un HTMLElement
+        if (target && target.classList.contains('audio-container')) {
+            target.classList.toggle('minimized');
+            target.classList.toggle('expanded');
+        }
+    });
+});
 /**
  * Modifie le nom d'un fichier audio.
  * @param currentFileName Le nom actuel du fichier audio.
@@ -330,9 +376,11 @@ function deleteSong(fileName) {
                 if (response.ok) {
                     audioContainer.remove();
                     console.log(`Fichier ${fileName} supprimé`);
+                    showNotification1(`Fichier ${fileName} supprimé`);
                 }
                 else {
                     console.error('Erreur lors de la suppression du fichier');
+                    showNotification1('Erreur lors de la suppression du fichier');
                 }
             })
                 .catch(error => console.error('Erreur:', error));
@@ -443,6 +491,28 @@ function analyseAudio(audioFile, audioContainer) {
  * @returns Une promesse qui se résout lorsque le sonogramme a commencé à être dessiné. La fonction continue de dessiner
  *          le sonogramme en temps réel jusqu'à ce que la source audio soit épuisée.
  */
+/**
+ * Cache tous les boutons liés aux sons dans un conteneur donné.
+ *
+ * @param {HTMLDivElement} audioContainer - Le conteneur contenant les boutons à cacher.
+ */
+function hideButtons(audioContainer) {
+    const buttons = audioContainer.querySelectorAll('button:not(#closeButtonAnalyse)');
+    buttons.forEach((button) => {
+        button.classList.add('hidden');
+    });
+}
+/**
+ * Affiche tous les boutons liés aux sons dans un conteneur donné.
+ *
+ * @param {HTMLDivElement} audioContainer - Le conteneur contenant les boutons à afficher.
+ */
+function showButtons(audioContainer) {
+    const buttons = audioContainer.querySelectorAll('button.hidden');
+    buttons.forEach((button) => {
+        button.classList.remove('hidden');
+    });
+}
 function drawSonogram(audioFile, audioContainer, sonogramCanvas) {
     return __awaiter(this, void 0, void 0, function* () {
         const audioContext = new AudioContext();
@@ -456,6 +526,22 @@ function drawSonogram(audioFile, audioContainer, sonogramCanvas) {
         const legendSpaceBottom = 50; // Espace réservé pour les légendes horizontales
         const legendSpaceSide = 150; // Espace réservé pour les légendes verticales
         audioContainer.appendChild(canvas);
+        hideButtons(audioContainer);
+        // Ajouter un bouton "Fermer" s'il n'existe pas déjà
+        let closeButton = audioContainer.querySelector('#closeButtonAnalyse');
+        if (!closeButton) {
+            closeButton = document.createElement('button');
+            closeButton.textContent = 'Fermer';
+            closeButton.classList.add('btn', 'btn-secondary');
+            closeButton.id = 'closeButtonAnalyse';
+            closeButton.addEventListener('click', () => {
+                closeCanvas(audioContainer);
+                showButtons(audioContainer);
+                if (closeButton)
+                    closeButton.remove();
+            });
+            audioContainer.appendChild(closeButton);
+        }
         const canvasContext = canvas.getContext('2d');
         if (!canvasContext) {
             console.error('Impossible de récupérer le contexte du canvas');
@@ -470,7 +556,6 @@ function drawSonogram(audioFile, audioContainer, sonogramCanvas) {
         source.connect(analyser);
         analyser.connect(audioContext.destination);
         source.start(0);
-        // Définition de la fonction drawLegends pour les fréquences
         function drawLegends(ctx, width, sampleRate) {
             const specificFrequencies = [125, 250, 500, 1000, 1500, 2000, 3000, 4000, 8000];
             const maxFreq = sampleRate / 2;
@@ -486,17 +571,16 @@ function drawSonogram(audioFile, audioContainer, sonogramCanvas) {
             });
         }
         function drawDbLegends(ctx, width, height, legendSpaceBottom, legendSpaceSide) {
-            const dbValues = Array.from({ length: 13 }, (_, i) => i * 10); // Créer un tableau de valeurs de 0 à 120 par pas de 10
+            const dbValues = Array.from({ length: 13 }, (_, i) => i * 10);
             ctx.font = '12px Arial';
             ctx.fillStyle = 'white';
             ctx.textAlign = 'left';
-            const offsetX = 20; // Distance horizontale depuis le bord droit du graphique d'animation
+            const offsetX = 20;
             const maxLegendWidth = legendSpaceSide - offsetX;
-            const effectiveHeight = height - legendSpaceBottom; // Ajuster cette valeur pour augmenter la hauteur utilisée pour les dB
+            const effectiveHeight = height - legendSpaceBottom;
             dbValues.forEach((db, index) => {
                 const y = (1 - ((db - 0) / (120 - 0))) * effectiveHeight;
-                // Diminuer le second terme ici pour monter les légendes et réduire l'écart vertical
-                ctx.fillText(`${db} dB`, width - maxLegendWidth, y + (legendSpaceBottom / 4)); // Réduire ce terme pour rapprocher les légendes vers le bas
+                ctx.fillText(`${db} dB`, width - maxLegendWidth, y + (legendSpaceBottom / 4));
             });
         }
         const draw = () => {
