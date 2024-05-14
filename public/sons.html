@@ -3,57 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <title>Sons</title>
-    <link rel="stylesheet" href="base.css" />
-    <link rel="stylesheet" href="header.css" />
-    <link rel="stylesheet" href="layout.css" />
-    <link rel="stylesheet" href="son.css" />
+    <link rel="stylesheet" href="base.css">
+    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="layout.css">
+    <link rel="stylesheet" href="son.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="icon" href="src/Images/logo.png" type="image/png">
     <script src="dist/sons.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
 </head>
 <body>
 
   <div class="header">
     <div class="tab1">
       <a href="creer_patient.html">
-        <img src="src/Images/Patients.png">
+        <img src="src/Images/Patients.png" alt="Patients">
       </a>
     </div>
     <div class="tab2">
       <a href="sons.html">
-          <img src="src/Images/Sons.png" alt="Sons">
+        <img src="src/Images/Sons.png" alt="Sons">
       </a>
-    </div>      
+    </div>
     <div class="header-title">
       <a href="index.html">Orchistraem</a>
     </div>
   </div>
-  <div id="ajout">
-    <form id="uploadAudioForm" enctype="multipart/form-data" class="my-3">
-      <h2>Ajouter un audio</h2>
-      <div class="input-group mb-3">
-        <div class="col-3">
-          <input type="file" class="form-control" id="audioFile" name="audioFile" accept="audio/*">
-        </div>
+
+  <div
+  id="notification"
+  style="
+    display: none;
+    position: fixed;
+    top: 7%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #caf0f8;
+    color: #0077b6;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+  "
+>
+  Message de notification
+</div>
+
+  <div class="main-container">
+    <div id="audio-section">
+      <h1 id="title-list">Pistes Audio Enregistrées</h1>
+      <div id="audioList">
+        <!-- La liste des audios sera chargée ici -->
       </div>
-      <button type="submit" class="btn btn-primary">Télécharger l'audio</button>
-    </form>
-    <div id="categoriesManagement">
-      <h2>Gestion des Catégories</h2>
-      <input type="text" id="newCategoryName" placeholder="Nom de la nouvelle catégorie" />
-      <button id="addCategoryBtn" class="btn btn-primary">Ajouter Catégorie</button>
-      <div id="categoriesList"></div>
+    </div>
+
+    <div id="management-section">
+      <div id="ajout">
+        <form id="uploadAudioForm" enctype="multipart/form-data" class="my-3">
+          <h2>Ajouter un audio</h2>
+          <div class="input-group mb-3">
+            <div class="col-3">
+              <input type="file" class="form-control" id="audioFile" name="audioFile" accept="audio/*">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Télécharger l'audio</button>
+        </form>
+      </div>
+      <div id="categoriesManagement">
+        <h2>Gestion des Catégories</h2>
+        <input type="text" id="newCategoryName" placeholder="Nom de la nouvelle catégorie">
+        <button id="addCategoryBtn" class="btn btn-primary">Ajouter Catégorie</button>
+        <div id="categoriesList"></div>
+      </div>
     </div>
   </div>
-  <h1 id="title-list">Pistes Audio Enregistrées</h1>
 
-  <div id="audioList">
-        
-  </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

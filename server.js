@@ -313,6 +313,8 @@ app.get('/audio-metadata', (req, res) => {
 
 app.post('/upload-audio', upload.single('audioFile'), (req, res) => {
   const category = req.body.category || 'Non catégorisé'; // Fallback si aucune catégorie n'est fournie
+  const audioMetadataPath = './audioMetadata.json'; // Chemin vers le fichier de métadonnées
+
   if (!fs.existsSync(audioMetadataPath)) {
     fs.writeFileSync(audioMetadataPath, JSON.stringify([]), 'utf-8');
   }
@@ -328,6 +330,7 @@ app.post('/upload-audio', upload.single('audioFile'), (req, res) => {
     res.status(409).send("Le fichier existe déjà");
   }
 });
+
 
 // Route pour renommer un fichier audio
 app.post('/rename-audio', (req, res) => {
