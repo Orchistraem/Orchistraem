@@ -58,6 +58,7 @@ function toggleArchiveStatus(patientId) {
     })
         .then(response => {
         if (response.ok) {
+            window.location.href = '/creer_patient.html';
             return response.json();
         }
         else {
