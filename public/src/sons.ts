@@ -6,7 +6,28 @@ interface Category {
 
 let categories: Category[] = []; // Initialisez les catégories, vous devrez les charger depuis le serveur.
 
-
+/**
+ * Affiche une notification à l'utilisateur.
+ *
+ * Cette fonction affiche un message temporaire à l'écran en utilisant un élément HTML spécifié par son ID.
+ * Le message disparaîtra automatiquement après un délai spécifié.
+ *
+ * @param message - Le message à afficher dans la notification.
+ * @param duration - La durée pendant laquelle la notification reste visible en millisecondes (1500 par défaut).
+ */
+function showNotification1(message: string, duration: number = 1500) {
+    const notification = document.getElementById('notification');
+    if (notification) {
+      notification.innerText = message; // Mettre à jour le texte
+      notification.style.display = 'block'; // Afficher la notification
+  
+      // Masquer la notification après 'duration' millisecondes
+      setTimeout(() => {
+        notification.style.display = 'none';
+      }, duration);
+    }
+  }
+  
 
 /**
  * Configure le formulaire pour le téléchargement de fichiers audio.
@@ -37,9 +58,15 @@ function setupUploadAudioForm(): void {
                 })
                 .then(response => {
                     if (response.ok) {
+                        showNotification1('Fichier téléchargé avec succès');
                         console.log('Fichier téléchargé avec succès');
                         refreshAudioList(); // Rafraîchir la liste après le téléchargement réussi
+                    } else if (response.status === 409) {
+                        console.error('Le fichier existe déjà');
+                        showNotification1('Le fichier existe déjà');
+                        refreshAudioList();
                     } else {
+                        showNotification1('Erreur lors du téléchargement du fichier');
                         throw new Error('Erreur lors du téléchargement du fichier');
                     }
                 })
@@ -52,6 +79,7 @@ function setupUploadAudioForm(): void {
         console.error('Élément(s) de formulaire introuvable(s).');
     }
 }
+
 
 
 /**
@@ -393,8 +421,12 @@ function deleteSong(fileName: string): void {
                 if (response.ok) {
                     audioContainer.remove();
                     console.log(`Fichier ${fileName} supprimé`);
+                    showNotification1(`Fichier ${fileName} supprimé`);
+
                 } else {
                     console.error('Erreur lors de la suppression du fichier');
+                    showNotification1('Erreur lors de la suppression du fichier');
+
                 }
             })
             .catch(error => console.error('Erreur:', error));
