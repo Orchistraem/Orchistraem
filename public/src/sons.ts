@@ -243,7 +243,7 @@ function displayAudioList() {
                                     assignCategoryButton.classList.add('btn', 'btn-secondary');
                                     assignCategoryButton.onclick = () => {
                                         assignCategoryToFile(file, categorySelect.value);
-                                        fileCategoryParagraph.textContent = `Catégorie: ${categorySelect.value}`; // Mise à jour immédiate de l'affichage de la catégorie
+                                        fileCategoryParagraph.textContent = `${categorySelect.value}`; // Mise à jour immédiate de l'affichage de la catégorie
                                     };
                                     categSon.appendChild(assignCategoryButton);
                                     assignCategoryButton.addEventListener('click', () => {
