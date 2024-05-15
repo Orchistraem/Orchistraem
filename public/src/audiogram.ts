@@ -1559,49 +1559,53 @@ function toggleAnnotation(chart: any, annotationId: string) {
  * les interactions avec le sélecteur de sons.
  */
 function fillSoundSelector(): void {
-  fetch('/list-audios') 
-      .then(response => response.json())
-      .then((sounds: string[]) => {
-          const soundSelector = document.getElementById('soundSelectorChampLibre') as HTMLSelectElement;;
+  fetch('/list-audios')
+    .then(response => response.json())
+    .then((sounds: string[]) => {
+      const soundSelector = document.getElementById('soundSelectorChampLibre') as HTMLSelectElement;
 
-          // Vérification pour s'assurer que soundSelector n'est pas null
-          if (soundSelector) {
-              // Ajouter une option par défaut qui n'est pas sélectionnable
-              const defaultOption = document.createElement('option');
-              defaultOption.textContent = 'Sélectionner un son'; // Texte d'incitation à choisir
-              defaultOption.value = ''; // Valeur vide pour indiquer qu'aucune sélection n'a été faite
-              defaultOption.selected = true; // Faire de cette option la sélection par défaut
+      // Vérification pour s'assurer que soundSelector n'est pas null
+      if (soundSelector) {
+        // Ajouter une option par défaut qui n'est pas sélectionnable
+        const defaultOption = document.createElement('option');
+        defaultOption.textContent = 'Sélectionner un son'; // Texte d'incitation à choisir
+        defaultOption.value = ''; // Valeur vide pour indiquer qu'aucune sélection n'a été faite
+        defaultOption.selected = true; // Faire de cette option la sélection par défaut
 
-              soundSelector.appendChild(defaultOption);
+        soundSelector.appendChild(defaultOption);
 
-              // Ajouter les sons disponibles comme options
-              sounds.forEach(sound => {
-                  const option = document.createElement('option');
-                  option.value = sound;
-                  option.textContent = sound; // Affiche le nom du fichier comme texte de l'option
-                  soundSelector.appendChild(option);
-              });
-
-          // Ajouter un écouteur d'événements pour gérer les changements
-          soundSelector.addEventListener('change', () => {
-            if (soundSelector.value === '') {
-                // Si l'option par défaut est sélectionnée, supprimer l'annotation
-                toggleAnnotation(audiogramChartLeft, 'box1');
-                toggleAnnotation(audiogramChartRight, 'box1');
-                toggleAnnotation(audiogramChampLibre, 'box1');
-            } else {
-                // Sinon, afficher ou ajuster l'annotation selon le son sélectionné
-                updateAnnotation(audiogramChartLeft, 'box1', soundSelector.value);
-                updateAnnotation(audiogramChartRight, 'box1', soundSelector.value);
-                updateAnnotation(audiogramChampLibre, 'box1', soundSelector.value);
-            }
+        // Ajouter les sons disponibles comme options
+        sounds.forEach(sound => {
+          const option = document.createElement('option');
+          option.value = sound;
+          option.textContent = sound; // Affiche le nom du fichier comme texte de l'option
+          soundSelector.appendChild(option);
         });
-    } else {
+
+        // Ajouter un écouteur d'événements pour gérer les changements
+        soundSelector.addEventListener('change', () => {
+          if (soundSelector.value === '') {
+            // Si l'option par défaut est sélectionnée, supprimer l'annotation
+            toggleAnnotation(audiogramChartLeft, 'box1');
+            toggleAnnotation(audiogramChartRight, 'box1');
+            toggleAnnotation(audiogramChampLibre, 'box1');
+          } else {
+            // Sinon, afficher ou ajuster l'annotation selon le son sélectionné
+            updateAnnotation(audiogramChartLeft, 'box1', soundSelector.value);
+            updateAnnotation(audiogramChartRight, 'box1', soundSelector.value);
+            updateAnnotation(audiogramChampLibre, 'box1', soundSelector.value);
+          }
+        });
+      } else {
         console.error('Le sélecteur de sons est introuvable.');
-    }
-})
-.catch(error => console.error('Erreur lors de la récupération des sons:', error));
+      }
+    })
+    .catch(error => console.error('Erreur lors de la récupération des sons:', error));
 }
+
+// Assurez-vous d'appeler fillSoundSelector lorsque la page est chargée
+document.addEventListener('DOMContentLoaded', fillSoundSelector);
+
 
 /**
  * Met à jour une annotation spécifique sur un graphique d'audiogramme en fonction d'un son sélectionné.
@@ -1631,32 +1635,7 @@ function updateAnnotation(chart: any, annotationId: string, sound: string) {
   }
   chart.update();
 }
-// Assurez-vous d'appeler fillSoundSelector lorsque la page est chargée
-document.addEventListener('DOMContentLoaded', fillSoundSelector);
 
-// Assurez-vous que ce script s'exécute après que le DOM est entièrement chargé
-document.addEventListener('DOMContentLoaded', () => {
-  const select = document.getElementById('soundSelectorChampLibre');
-
-  if (select instanceof HTMLSelectElement) { // Vérifie si 'select' est bien un élément HTMLSelectElement
-      fetch('/list-audios')
-          .then(response => {
-              if (!response.ok) {
-                  throw new Error('Réponse réseau non OK');
-              }
-              return response.json();
-          })
-          .then((audios: string[]) => {
-              audios.forEach((audio) => {
-                  const option = new Option(audio, audio); // Utilise le nom du fichier comme valeur et texte
-                  select.add(option);
-              });
-          })
-          .catch(error => console.error('Erreur lors de la récupération des audios:', error));
-  } else {
-      console.error('Élément select non trouvé ou n\'est pas un élément select');
-  }
-});
 
 /**
  * Récupère les informations d'un patient à partir d'un serveur et les affiche.

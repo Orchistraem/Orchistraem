@@ -1405,7 +1405,6 @@ function fillSoundSelector() {
         .then(response => response.json())
         .then((sounds) => {
         const soundSelector = document.getElementById('soundSelectorChampLibre');
-        ;
         // Vérification pour s'assurer que soundSelector n'est pas null
         if (soundSelector) {
             // Ajouter une option par défaut qui n'est pas sélectionnable
@@ -1443,6 +1442,8 @@ function fillSoundSelector() {
     })
         .catch(error => console.error('Erreur lors de la récupération des sons:', error));
 }
+// Assurez-vous d'appeler fillSoundSelector lorsque la page est chargée
+document.addEventListener('DOMContentLoaded', fillSoundSelector);
 /**
  * Met à jour une annotation spécifique sur un graphique d'audiogramme en fonction d'un son sélectionné.
  *
@@ -1472,31 +1473,6 @@ function updateAnnotation(chart, annotationId, sound) {
     }
     chart.update();
 }
-// Assurez-vous d'appeler fillSoundSelector lorsque la page est chargée
-document.addEventListener('DOMContentLoaded', fillSoundSelector);
-// Assurez-vous que ce script s'exécute après que le DOM est entièrement chargé
-document.addEventListener('DOMContentLoaded', () => {
-    const select = document.getElementById('soundSelectorChampLibre');
-    if (select instanceof HTMLSelectElement) { // Vérifie si 'select' est bien un élément HTMLSelectElement
-        fetch('/list-audios')
-            .then(response => {
-            if (!response.ok) {
-                throw new Error('Réponse réseau non OK');
-            }
-            return response.json();
-        })
-            .then((audios) => {
-            audios.forEach((audio) => {
-                const option = new Option(audio, audio); // Utilise le nom du fichier comme valeur et texte
-                select.add(option);
-            });
-        })
-            .catch(error => console.error('Erreur lors de la récupération des audios:', error));
-    }
-    else {
-        console.error('Élément select non trouvé ou n\'est pas un élément select');
-    }
-});
 /**
  * Récupère les informations d'un patient à partir d'un serveur et les affiche.
  *
