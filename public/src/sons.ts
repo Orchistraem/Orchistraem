@@ -769,11 +769,13 @@ async function addCategory(): Promise<void> {
 
         // Recharge la liste des catégories pour afficher la nouvelle catégorie
         await loadAndDisplayCategories();
+
+        // Actualise la liste des fichiers audio pour inclure les nouvelles catégories
+        await refreshAudioList();
     } else {
         alert("Erreur lors de l'ajout de la catégorie");
     }
 }
-
 /**
  * Supprime une catégorie existante à la fois côté client et sur le serveur.
  *

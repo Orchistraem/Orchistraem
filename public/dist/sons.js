@@ -680,6 +680,8 @@ function addCategory() {
             newCategoryNameInput.value = ''; // Effacer le champ après l'ajout
             // Recharge la liste des catégories pour afficher la nouvelle catégorie
             yield loadAndDisplayCategories();
+            // Actualise la liste des fichiers audio pour inclure les nouvelles catégories
+            yield refreshAudioList();
         }
         else {
             alert("Erreur lors de l'ajout de la catégorie");
