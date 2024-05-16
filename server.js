@@ -1,4 +1,6 @@
 const express = require('express');
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 const multer = require('multer');
 const bodyParser = require('body-parser');
 const fs = require('fs');
@@ -7,6 +9,27 @@ const port = 3000;
 const path = require('path');
 
 
+// Configuration de Swagger
+const swaggerOptions = {
+  swaggerDefinition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'API Express',
+      version: '1.0.0',
+      description: 'Documentation de l\'API Express',
+    },
+    servers: [
+      {
+        url: 'http://localhost:3000',
+      },
+    ],
+  },
+  apis: ['./server.js'], // Fichiers à documenter
+};
+
+const swaggerDocs = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
 // Pour lire le corps des requêtes POST en JSON
 app.use(bodyParser.json());
 
@@ -14,6 +37,28 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const audioMetadataPath = path.join(__dirname, 'data', 'audioMetadata.json');
 
+/**
+ * @swagger
+ * /assign-category:
+ *   post:
+ *     summary: Assigner une catégorie à un fichier audio
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fileName:
+ *                 type: string
+ *               categoryName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Catégorie mise à jour avec succès
+ *       404:
+ *         description: Fichier non trouvé dans les uploads
+ */
 app.post('/assign-category', (req, res) => {
   const { fileName, categoryName } = req.body;
 
@@ -53,7 +98,26 @@ if (!fs.existsSync(categoriesFilePath)) {
     fs.writeFileSync(categoriesFilePath, JSON.stringify([]), 'utf-8');
 }
 
-
+/**
+ * @swagger
+ * /categories:
+ *   post:
+ *     summary: Ajouter une nouvelle catégorie
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Catégorie ajoutée avec succès
+ *       409:
+ *         description: Catégorie déjà existante
+ */
 app.post('/categories', (req, res) => {
   const { name } = req.body;
   const categories = JSON.parse(fs.readFileSync(categoriesFilePath, 'utf-8'));
@@ -67,13 +131,47 @@ app.post('/categories', (req, res) => {
 });
 
 
-// Route pour lister toutes les catégories
+/**
+ * @swagger
+ * /categories:
+ *   get:
+ *     summary: Lister toutes les catégories
+ *     responses:
+ *       200:
+ *         description: Liste de toutes les catégories
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   name:
+ *                     type: string
+ */
 app.get('/categories', (req, res) => {
     const categories = JSON.parse(fs.readFileSync(categoriesFilePath, 'utf-8'));
     res.json(categories);
 });
 
-// Route pour supprimer une catégorie
+/**
+ * @swagger
+ * /categories/{name}:
+ *   delete:
+ *     summary: Supprimer une catégorie
+ *     parameters:
+ *       - in: path
+ *         name: name
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Nom de la catégorie à supprimer
+ *     responses:
+ *       200:
+ *         description: Catégorie supprimée et fichiers audio mis à jour
+ *       500:
+ *         description: Erreur interne du serveur
+ */
 app.delete('/categories/:name', async (req, res) => {
   const { name } = req.params;
   let categories = JSON.parse(fs.readFileSync(categoriesFilePath, 'utf-8'));
@@ -92,29 +190,112 @@ app.delete('/categories/:name', async (req, res) => {
   res.send('Catégorie supprimée et fichiers audio mis à jour');
 });
 
-// Route pour la racine qui répond aux requêtes GET
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     summary: Route principale qui retourne la page d'accueil
+ *     responses:
+ *       200:
+ *         description: Page d'accueil
+ */
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html')); // Assurez-vous que le chemin est correct
 });
 
-
-// Répertoires pour stocker les données
-const LEFT_DATA_DIR = './data/left';
-const RIGHT_DATA_DIR = './data/right';
-const CHAMPLIBRE_DATA_DIR = './data/champLibre';
-
+/**
+ * @swagger
+ * /patients/{id}/audiogram/left:
+ *   post:
+ *     summary: Enregistrer les données d'audiogramme pour l'oreille gauche d'un patient
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID du patient
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               data:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Données enregistrées avec succès
+ *       500:
+ *         description: Erreur interne du serveur
+ */
 app.post('/patients/:id/audiogram/left', (req, res) => {
   const patientId = req.params.id;
   const patientDir = path.join(PATIENTS_DIR, patientId, 'left');
   saveAudiogramData(req.body, patientDir, res);
 });
 
+/**
+ * @swagger
+ * /patients/{id}/audiogram/right:
+ *   post:
+ *     summary: Enregistrer les données d'audiogramme pour l'oreille droite d'un patient
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID du patient
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               data:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Données enregistrées avec succès
+ *       500:
+ *         description: Erreur interne du serveur
+ */
 app.post('/patients/:id/audiogram/right', (req, res) => {
   const patientId = req.params.id;
   const patientDir = path.join(PATIENTS_DIR, patientId, 'right');
   saveAudiogramData(req.body, patientDir, res);
 });
 
+/**
+ * @swagger
+ * /patients/{id}/audiogram/champLibre:
+ *   post:
+ *     summary: Enregistrer les données d'audiogramme pour le champ libre d'un patient
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID du patient
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               data:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Données enregistrées avec succès
+ *       500:
+ *         description: Erreur interne du serveur
+ */
 app.post('/patients/:id/audiogram/champLibre', (req, res) => {
   const patientId = req.params.id;
   const patientDir = path.join(PATIENTS_DIR, patientId, 'champLibre');
@@ -144,41 +325,36 @@ function saveAudiogramData(data, directory, res) {
 }
 
 
-/* // Point de terminaison pour stocker les données des audiogrammes
-app.post('/audiogram', (req, res) => {
-  console.log("Requête reçue:", req.body); // Afficher les données reçues
-
-  // Essayez de stocker les données et capturez les erreurs
-  try {
-    const data = req.body;
-    const filePath = `${DATA_DIR}/audiogram_${Date.now()}.json`;
-    fs.writeFileSync(filePath, JSON.stringify(data));
-    console.log('Données enregistrées:', data);
-    res.status(200).send('Données enregistrées');
-  } catch (error) {
-    console.error('Erreur lors de l\'enregistrement des données:', error);
-    res.status(500).send('Erreur interne du serveur');
-  }
-}); */
-
-
-app.get('/list-audios', (req, res) => {
-  const UPLOADS_DIR = './uploads';
-
-  fs.readdir(UPLOADS_DIR, (err, files) => {
-      if (err) {
-          console.error('Erreur lors de la lecture du dossier:', err);
-          return res.status(500).send('Erreur interne du serveur');
-      }
-
-      // Filtrer pour ne garder que les fichiers audio
-      let audioFiles = files.filter(file => file.endsWith('.mp3'));
-
-      // Envoyer la liste des fichiers audio
-      res.json(audioFiles);
-  });
-});
-
+/**
+ * @swagger
+ * /patients/{id}/audiogram/{ear}:
+ *   get:
+ *     summary: Obtenir les données d'audiogramme pour une oreille spécifique d'un patient
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID du patient
+ *       - in: path
+ *         name: ear
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Oreille ('left', 'right', 'champLibre')
+ *     responses:
+ *       200:
+ *         description: Données de l'oreille spécifiée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       500:
+ *         description: Erreur interne du serveur
+ */
 app.get('/patients/:id/audiogram/:ear', (req, res) => {
   const patientId = req.params.id;
   const ear = req.params.ear; // Capture l'oreille depuis l'URL
@@ -224,7 +400,40 @@ app.get('/patients/:id/audiogram/:ear', (req, res) => {
 
 
 
-// Route pour supprimer un point spécifique pour un patient
+/**
+ * @swagger
+ * /patients/{patientId}/audiogram/{ear}/{pointId}:
+ *   delete:
+ *     summary: Supprimer un point spécifique pour un patient
+ *     parameters:
+ *       - in: path
+ *         name: patientId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID du patient
+ *       - in: path
+ *         name: ear
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Oreille ('left', 'right', 'champLibre')
+ *       - in: path
+ *         name: pointId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID du point à supprimer
+ *     responses:
+ *       200:
+ *         description: Point supprimé
+ *       400:
+ *         description: Côté de l'oreille non valide
+ *       404:
+ *         description: Point non trouvé
+ *       500:
+ *         description: Erreur interne du serveur
+ */
 app.delete('/patients/:patientId/audiogram/:ear/:pointId', (req, res) => {
   const { patientId, ear, pointId } = req.params;
   const PATIENTS_DIR = `./data/patients/${patientId}`;
@@ -259,7 +468,32 @@ app.delete('/patients/:patientId/audiogram/:ear/:pointId', (req, res) => {
   }
 });
 
-// Route pour supprimer tous les points d'une oreille spécifique ou du champ libre pour un patient
+/**
+ * @swagger
+ * /patients/{patientId}/delete-all-points/{ear}:
+ *   delete:
+ *     summary: Supprimer tous les points d'une oreille spécifique ou du champ libre pour un patient
+ *     parameters:
+ *       - in: path
+ *         name: patientId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID du patient
+ *       - in: path
+ *         name: ear
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Oreille ('left', 'right', 'champLibre')
+ *     responses:
+ *       200:
+ *         description: Tous les points ont été supprimés
+ *       400:
+ *         description: Côté de l'oreille non valide
+ *       500:
+ *         description: Erreur interne du serveur
+ */
 app.delete('/patients/:patientId/delete-all-points/:ear', (req, res) => {
   const { patientId, ear } = req.params;
   const PATIENTS_DIR = `./data/patients/${patientId}`;
@@ -301,7 +535,23 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-
+/**
+ * @swagger
+ * /audio-metadata:
+ *   get:
+ *     summary: Obtenir les métadonnées audio
+ *     responses:
+ *       200:
+ *         description: Métadonnées audio
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       404:
+ *         description: Métadonnées audio non trouvées
+ */
 app.get('/audio-metadata', (req, res) => {
   if (fs.existsSync(audioMetadataPath)) {
       const metadata = fs.readFileSync(audioMetadataPath, 'utf-8');
@@ -311,6 +561,29 @@ app.get('/audio-metadata', (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /upload-audio:
+ *   post:
+ *     summary: Télécharger un fichier audio
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               audioFile:
+ *                 type: string
+ *                 format: binary
+ *               category:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Fichier audio téléchargé et métadonnées enregistrées avec succès
+ *       409:
+ *         description: Le fichier existe déjà
+ */
 app.post('/upload-audio', upload.single('audioFile'), (req, res) => {
   const category = req.body.category || 'Non catégorisé'; // Fallback si aucune catégorie n'est fournie
   const audioMetadataPath = './audioMetadata.json'; // Chemin vers le fichier de métadonnées
@@ -332,7 +605,28 @@ app.post('/upload-audio', upload.single('audioFile'), (req, res) => {
 });
 
 
-// Route pour renommer un fichier audio
+/**
+ * @swagger
+ * /rename-audio:
+ *   post:
+ *     summary: Renommer un fichier audio
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               oldName:
+ *                 type: string
+ *               newName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Fichier renommé avec succès
+ *       500:
+ *         description: Erreur lors du renommage du fichier
+ */
 app.post('/rename-audio', (req, res) => {
   const { oldName, newName } = req.body;
   const oldPath = `uploads/${oldName}`;
@@ -347,7 +641,26 @@ app.post('/rename-audio', (req, res) => {
   });
 });
 
-//Route pour supprimer un fichier audio
+/**
+ * @swagger
+ * /delete-audio:
+ *   post:
+ *     summary: Supprimer un fichier audio
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fileName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Fichier supprimé avec succès
+ *       500:
+ *         description: Erreur lors de la suppression du fichier
+ */
 app.post('/delete-audio', (req, res) => {
   const { fileName } = req.body;
   const filePath = `uploads/${fileName}`;
@@ -361,6 +674,21 @@ app.post('/delete-audio', (req, res) => {
   });
 });
 
+/**
+ * @swagger
+ * /list-audios:
+ *   get:
+ *     summary: Lister tous les fichiers audio
+ *     responses:
+ *       200:
+ *         description: Liste des fichiers audio
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: string
+ */
 app.get('/list-audios', (req, res) => {
   const directoryPath = path.join(__dirname, 'uploads'); // Assurez-vous que le chemin est correct
 
@@ -379,7 +707,30 @@ app.get('/list-audios', (req, res) => {
 
 const PATIENTS_DIR = './data/patients';
 
-// Route pour ajouter un nouveau patient
+/**
+ * @swagger
+ * /patients:
+ *   post:
+ *     summary: Ajouter un nouveau patient
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               age:
+ *                 type: number
+ *               pic:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Patient ajouté avec succès
+ *       500:
+ *         description: Erreur interne du serveur
+ */
 app.post('/patients', (req, res) => {
   const { name, age, pic } = req.body;
 
@@ -416,7 +767,24 @@ app.post('/patients', (req, res) => {
   }
 });
 
-
+/**
+ * @swagger
+ * /toggle-archive/{patientId}:
+ *   post:
+ *     summary: Basculer l'état d'archivage d'un patient
+ *     parameters:
+ *       - in: path
+ *         name: patientId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID du patient
+ *     responses:
+ *       200:
+ *         description: État d'archivage basculé avec succès
+ *       500:
+ *         description: Erreur lors de la mise à jour de l'état d'archivage
+ */
 app.post('/toggle-archive/:patientId', (req, res) => {
   const { patientId } = req.params;
   const dataPath = path.join(__dirname, 'data', 'patients', patientId,`info.json`);
@@ -441,7 +809,24 @@ app.post('/toggle-archive/:patientId', (req, res) => {
 });
 
 
-// Route pour supprimer un patient spécifique
+/**
+ * @swagger
+ * /patients/{id}:
+ *   delete:
+ *     summary: Supprimer un patient spécifique
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID du patient
+ *     responses:
+ *       200:
+ *         description: Patient supprimé avec succès
+ *       500:
+ *         description: Erreur interne du serveur
+ */
 app.delete('/patients/:id', (req, res) => {
   const { id } = req.params; // Extraction de l'ID du patient à partir de l'URL
 
@@ -465,6 +850,21 @@ function generateUniqueId() {
   return Math.random().toString(36).substr(2, 9); // Exemple simple d'identifiant aléatoire
 }
 
+/**
+ * @swagger
+ * /all-patient-info:
+ *   get:
+ *     summary: Obtenir les informations de tous les patients
+ *     responses:
+ *       200:
+ *         description: Liste des informations de tous les patients
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ */
 app.get('/all-patient-info', (req, res) => {
   try {
     const patientsDir = './data/patients';
@@ -485,6 +885,28 @@ app.get('/all-patient-info', (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /patients/{id}/info.json:
+ *   get:
+ *     summary: Obtenir les informations d'un patient spécifique
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID du patient
+ *     responses:
+ *       200:
+ *         description: Informations du patient
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       404:
+ *         description: Patient non trouvé
+ */
 app.get('/patients/:id/info.json', (req, res) => {
   const { id } = req.params; // Extraction de l'ID du patient à partir de l'URL
   const infoPath = path.join(__dirname, 'data', 'patients', id, 'info.json'); // Chemin vers le fichier info.json du patient
