@@ -6,6 +6,24 @@ let audiogramChartLeft: any = null;
 let audiogramChartRight: any = null;
 let audiogramChampLibre: any = null;
 
+/**
+ * Représente les données d'un audiogramme pour une oreille spécifique.
+ * 
+ * Cette interface est utilisée pour typer les données envoyées au serveur et celles récupérées.
+ */
+interface AudiogramData {
+  id: string;
+  ear: string;
+  frequency: number;
+  decibels: number;
+  style: string;
+}
+
+// Define un type pour les points sur l'audiogramme
+type DataPoint = {
+  x: number; // Frequency
+  y: number; // Decibels
+};
 
 // Mode de suppression désactivé par défaut
 let isDeletionModeActive = false;
@@ -171,24 +189,7 @@ function deleteAllPointsFromServer() {
 }
 
 
-/**
- * Représente les données d'un audiogramme pour une oreille spécifique.
- * 
- * Cette interface est utilisée pour typer les données envoyées au serveur et celles récupérées.
- */
-interface AudiogramData {
-  id: string;
-  ear: string;
-  frequency: number;
-  decibels: number;
-  style: string;
-}
 
-// Define un type pour les points sur l'audiogramme
-type DataPoint = {
-  x: number; // Frequency
-  y: number; // Decibels
-};
 
 /**
  * Calcule l'écart de décibels pour chaque point et, optionnellement, l'affiche en console.
@@ -1364,6 +1365,20 @@ function setupClickListeners(chart: any, ear: string, legendSelector: HTMLSelect
 }
 
 
+/**
+ * Appelle une recommandation en fonction des points de fréquence et de décibels.
+ * 
+ * Cette fonction interagit avec l'interface utilisateur pour afficher un modal avec les résultats de la recherche de fichiers audio
+ * correspondant aux critères de fréquence et de décibels fournis. Elle récupère d'abord les fichiers audio disponibles,
+ * puis utilise ces données pour trouver les fichiers correspondants aux critères donnés. Les résultats sont affichés dans
+ * un modal. Si une erreur survient pendant la récupération ou la recherche des fichiers, un message d'erreur est affiché.
+ * 
+ * @param freqPoint - La fréquence du point pour lequel une recommandation est recherchée.
+ * @param dbPoint - Le niveau de décibels du point pour lequel une recommandation est recherchée.
+ * 
+ * @example
+ * callRecommendation(1000, 50); // Cherche des fichiers audio correspondant à 1000 Hz et 50 dB et affiche les résultats dans un modal.
+ */
 async function callRecommendation(freqPoint : number, dbPoint:number) {
   const modal = document.getElementById("resultModal") as HTMLDivElement | null;
   const modalText = document.getElementById("modalText") as HTMLParagraphElement | null;
@@ -1394,12 +1409,10 @@ async function callRecommendation(freqPoint : number, dbPoint:number) {
     modalText.textContent = "Erreur lors de la recherche des fichiers.";
   }
 
-  // When the user clicks on <span> (x), close the modal
   closeSpan.onclick = function() {
     modal.style.display = "none";
   }
 
-  // When the user clicks anywhere outside of the modal, close it
   window.onclick = function(event) {
     if (event.target == modal) {
       modal.style.display = "none";
@@ -1637,56 +1650,7 @@ function updateAnnotation(chart: any, annotationId: string, sound: string) {
 }
 
 
-/**
- * Récupère les informations d'un patient à partir d'un serveur et les affiche.
- *
- * Cette fonction extrait l'ID du patient de l'URL de la page actuelle, construit une URL pour accéder aux informations
- * du patient, et envoie une requête pour récupérer ces données. Si les informations sont récupérées avec succès,
- * elles sont passées à une fonction d'affichage. En cas d'échec de la requête, une erreur est enregistrée dans la console.
- */
-function fetchPatientInfo() {
-  let patientId = getPatientIdFromUrl()
-  const url = `/patients/${patientId}/info.json`;
 
-  fetch(url)
-      .then(response => {
-          if (!response.ok) {
-              throw new Error('Erreur lors de la récupération des informations du patient');
-          }
-          return response.json();
-      })
-      .then(patientInfo => {
-          displayPatientInfo(patientInfo);
-      })
-      .catch(error => {
-          console.error('Erreur:', error);
-      });
-}
-
-
-/**
- * Affiche les informations d'un patient sur l'interface utilisateur.
- *
- * Cette fonction met à jour les éléments HTML avec les informations du patient, telles que son nom et sa photo de profil.
- * Elle requiert que les éléments HTML pour afficher le nom et la photo du patient soient présents dans le DOM. Si les
- * informations ou les éléments HTML nécessaires sont manquants, une erreur est enregistrée dans la console.
- *
- * @param patientInfo - Un objet contenant les informations du patient, notamment son nom (`name`) et l'URL de sa photo de profil (`pic`).
- */
-function displayPatientInfo(patientInfo: any) {
-  const patientNameElement = document.getElementById('patientName');
-  const patientImageElement = document.getElementById('patientImage') as HTMLImageElement | null;
-
-  if (patientNameElement && patientImageElement) { // Vérification que les éléments ne sont pas null
-    patientNameElement.textContent = patientInfo.name;
-    if (patientInfo.pic) {
-        patientImageElement.src = "src/Images/profile_pics/"+patientInfo.pic;
-        patientImageElement.alt = `Photo de profil de ${patientInfo.name}`;
-    }
-  } else {
-    console.error("Un des éléments HTML est manquant");
-  }
-}
 
 
 /**

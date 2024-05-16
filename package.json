@@ -11,7 +11,12 @@
     "@types/chart.js": "^2.9.41",
     "@types/semver": "^7.5.8",
     "ts-loader": "^9.5.1",
+    "typedoc": "^0.25.13",
+    "typedoc-plugin-markdown": "^4.0.2",
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"
+  },
+  "scripts": {
+    "docs": "typedoc"
   }
 }
