@@ -8,6 +8,53 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+/**
+ * Récupère les informations d'un patient à partir d'un serveur et les affiche.
+ *
+ * Cette fonction extrait l'ID du patient de l'URL de la page actuelle, construit une URL pour accéder aux informations
+ * du patient, et envoie une requête pour récupérer ces données. Si les informations sont récupérées avec succès,
+ * elles sont passées à une fonction d'affichage. En cas d'échec de la requête, une erreur est enregistrée dans la console.
+ */
+function fetchPatientInfo() {
+    let patientId = getPatientIdFromUrl();
+    const url = `/patients/${patientId}/info.json`;
+    fetch(url)
+        .then(response => {
+        if (!response.ok) {
+            throw new Error('Erreur lors de la récupération des informations du patient');
+        }
+        return response.json();
+    })
+        .then(patientInfo => {
+        displayPatientInfo(patientInfo);
+    })
+        .catch(error => {
+        console.error('Erreur:', error);
+    });
+}
+/**
+ * Affiche les informations d'un patient sur l'interface utilisateur.
+ *
+ * Cette fonction met à jour les éléments HTML avec les informations du patient, telles que son nom et sa photo de profil.
+ * Elle requiert que les éléments HTML pour afficher le nom et la photo du patient soient présents dans le DOM. Si les
+ * informations ou les éléments HTML nécessaires sont manquants, une erreur est enregistrée dans la console.
+ *
+ * @param patientInfo - Un objet contenant les informations du patient, notamment son nom (`name`) et l'URL de sa photo de profil (`pic`).
+ */
+function displayPatientInfo(patientInfo) {
+    const patientNameElement = document.getElementById('patientName');
+    const patientImageElement = document.getElementById('patientImage');
+    if (patientNameElement && patientImageElement) { // Vérification que les éléments ne sont pas null
+        patientNameElement.textContent = patientInfo.name;
+        if (patientInfo.pic) {
+            patientImageElement.src = "src/Images/profile_pics/" + patientInfo.pic;
+            patientImageElement.alt = `Photo de profil de ${patientInfo.name}`;
+        }
+    }
+    else {
+        console.error("Un des éléments HTML est manquant");
+    }
+}
 function fetchAllPatientInfo() {
     return __awaiter(this, void 0, void 0, function* () {
         try {

@@ -5,13 +5,20 @@
     "express": "^4.18.2",
     "multer": "^1.4.5-lts.1",
     "open": "^10.0.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
     "sweetalert2": "^11.6.13"
   },
   "devDependencies": {
     "@types/chart.js": "^2.9.41",
     "@types/semver": "^7.5.8",
     "ts-loader": "^9.5.1",
+    "typedoc": "^0.25.13",
+    "typedoc-plugin-markdown": "^4.0.2",
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"
+  },
+  "scripts": {
+    "docs": "typedoc"
   }
 }

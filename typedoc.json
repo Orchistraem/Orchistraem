@@ -1,0 +1,9 @@
+{
+    "entryPoints": ["public/src/audiogram.ts", "public/src/categorie.ts","public/src/creer_patient.ts","public/src/recup_patient.ts","public/src/sonogram.ts","public/src/sons.ts"],
+    "out": "docs",
+    "exclude": ["**/__tests__/**", "**/*.test.ts"],
+    "includeVersion": true,
+    "tsconfig": "tsconfig.json",
+    "theme": "default"
+  }
+  
