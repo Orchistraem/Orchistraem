@@ -454,62 +454,66 @@ async function analyseAudioExtremesConsole(audioFile: Blob): Promise<{xMin: numb
   const dataArrayFrequency = new Uint8Array(bufferLength);
 
   source.connect(audioContext.destination);
-  source.start(0);
 
-  const graphMinFrequency = 125;
-  const graphMaxFrequency = 8000;
-  const graphMinIntensity = 0;
-  const graphMaxIntensity = 120;
+  const sampleRate = audioContext.sampleRate;
+  const duration = audioBuffer.duration;
+  const segmentDuration = 0.5; // Segment de 0,5 seconde pour une meilleure précision
 
-  return new Promise((resolve, reject) => {
+  let minFreqIndex = bufferLength;
+  let maxFreqIndex = 0;
+  let minIntensityDb = Infinity;
+  let maxIntensityDb = -Infinity;
+
+  const analyseSegment = (startTime: number): Promise<void> => {
+    return new Promise((resolve) => {
       const checkAudioProcessing = () => {
-          analyser.getByteFrequencyData(dataArrayFrequency);
+        analyser.getByteFrequencyData(dataArrayFrequency);
 
-          let minFreqIndex = bufferLength;
-          let maxFreqIndex = 0;
-          let minIntensityDb = Infinity;
-          let maxIntensityDb = -Infinity;
+        for (let i = 0; i < bufferLength; i++) {
+          if (dataArrayFrequency[i] > 0) {
+            minFreqIndex = Math.min(minFreqIndex, i);
+            maxFreqIndex = Math.max(maxFreqIndex, i);
 
-          for (let i = 0; i < bufferLength; i++) {
-              if (dataArrayFrequency[i] > 0) {
-                  minFreqIndex = Math.min(minFreqIndex, i);
-                  maxFreqIndex = Math.max(maxFreqIndex, i);
-
-                  let intensityDb = 20 * Math.log10(dataArrayFrequency[i] / 255);
-                  intensityDb = Math.abs(intensityDb); // Convert to absolute value
-                  minIntensityDb = Math.min(minIntensityDb, intensityDb);
-                  maxIntensityDb = Math.max(maxIntensityDb, intensityDb);
-              }
+            let intensityDb = 20 * Math.log10(dataArrayFrequency[i] / 255);
+            minIntensityDb = Math.min(minIntensityDb, intensityDb);
+            maxIntensityDb = Math.max(maxIntensityDb, intensityDb);
           }
+        }
 
-          if (minFreqIndex < bufferLength) {
-              let minFrequency = minFreqIndex * audioContext.sampleRate / analyser.fftSize;
-              let maxFrequency = maxFreqIndex * audioContext.sampleRate / analyser.fftSize;
-
-              minFrequency = Math.max(minFrequency, graphMinFrequency);
-              maxFrequency = Math.min(maxFrequency, graphMaxFrequency);
-
-              if (minFrequency > maxFrequency) {
-                  maxFrequency = minFrequency;
-              }
-
-              resolve({
-                  xMin: minFrequency,
-                  xMax: maxFrequency,
-                  yMin: Math.max(minIntensityDb, graphMinIntensity),
-                  yMax: Math.min(maxIntensityDb, graphMaxIntensity)
-              });
-
-              source.stop();
-              audioContext.close();
-          } else {
-              requestAnimationFrame(checkAudioProcessing);
-          }
+        resolve();
       };
 
-      requestAnimationFrame(checkAudioProcessing);
-  });
+      source.start(startTime);
+      setTimeout(checkAudioProcessing, segmentDuration * 1000);
+    });
+  };
+
+  const segmentPromises = [];
+  for (let currentTime = 0; currentTime < duration; currentTime += segmentDuration) {
+    segmentPromises.push(analyseSegment(currentTime));
+  }
+
+  await Promise.all(segmentPromises);
+
+  let minFrequency = minFreqIndex * sampleRate / analyser.fftSize;
+  let maxFrequency = maxFreqIndex * sampleRate / analyser.fftSize;
+
+  minFrequency = Math.max(minFrequency, 125);
+  maxFrequency = Math.min(maxFrequency, 8000);
+
+  source.stop();
+  audioContext.close();
+
+  return {
+    xMin: minFrequency,
+    xMax: maxFrequency,
+    yMin: Math.max(minIntensityDb, 0),
+    yMax: Math.min(maxIntensityDb, 120)
+  };
 }
+
+
+
 
 let buttonDeletionToggle = document.getElementById("toggleDeletionMode") as HTMLButtonElement;
 

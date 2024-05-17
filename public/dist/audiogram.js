@@ -409,50 +409,53 @@ function analyseAudioExtremesConsole(audioFile) {
         const bufferLength = analyser.frequencyBinCount;
         const dataArrayFrequency = new Uint8Array(bufferLength);
         source.connect(audioContext.destination);
-        source.start(0);
-        const graphMinFrequency = 125;
-        const graphMaxFrequency = 8000;
-        const graphMinIntensity = 0;
-        const graphMaxIntensity = 120;
+        const sampleRate = audioContext.sampleRate;
+        const duration = audioBuffer.duration;
+        const sampleInterval = 0.1; // Échantillonner toutes les 0,1 seconde
+        let minFreqIndex = bufferLength;
+        let maxFreqIndex = 0;
+        let minIntensityDb = Infinity;
+        let maxIntensityDb = -Infinity;
         return new Promise((resolve, reject) => {
-            const checkAudioProcessing = () => {
-                analyser.getByteFrequencyData(dataArrayFrequency);
-                let minFreqIndex = bufferLength;
-                let maxFreqIndex = 0;
-                let minIntensityDb = Infinity;
-                let maxIntensityDb = -Infinity;
-                for (let i = 0; i < bufferLength; i++) {
-                    if (dataArrayFrequency[i] > 0) {
-                        minFreqIndex = Math.min(minFreqIndex, i);
-                        maxFreqIndex = Math.max(maxFreqIndex, i);
-                        let intensityDb = 20 * Math.log10(dataArrayFrequency[i] / 255);
-                        intensityDb = Math.abs(intensityDb); // Convert to absolute value
-                        minIntensityDb = Math.min(minIntensityDb, intensityDb);
-                        maxIntensityDb = Math.max(maxIntensityDb, intensityDb);
+            const checkAudioProcessing = (currentTime) => {
+                if (currentTime >= duration) {
+                    if (minFreqIndex < bufferLength) {
+                        let minFrequency = minFreqIndex * sampleRate / analyser.fftSize;
+                        let maxFrequency = maxFreqIndex * sampleRate / analyser.fftSize;
+                        minFrequency = Math.max(minFrequency, 125);
+                        maxFrequency = Math.min(maxFrequency, 8000);
+                        console.log("Analyse complète:");
+                        console.log(`minFrequency: ${minFrequency}, maxFrequency: ${maxFrequency}`);
+                        console.log(`minIntensityDb: ${minIntensityDb}, maxIntensityDb: ${maxIntensityDb}`);
+                        resolve({
+                            xMin: minFrequency,
+                            xMax: maxFrequency,
+                            yMin: Math.max(minIntensityDb, 0),
+                            yMax: Math.min(maxIntensityDb, 120)
+                        });
                     }
-                }
-                if (minFreqIndex < bufferLength) {
-                    let minFrequency = minFreqIndex * audioContext.sampleRate / analyser.fftSize;
-                    let maxFrequency = maxFreqIndex * audioContext.sampleRate / analyser.fftSize;
-                    minFrequency = Math.max(minFrequency, graphMinFrequency);
-                    maxFrequency = Math.min(maxFrequency, graphMaxFrequency);
-                    if (minFrequency > maxFrequency) {
-                        maxFrequency = minFrequency;
+                    else {
+                        reject(new Error("No significant frequencies found"));
                     }
-                    resolve({
-                        xMin: minFrequency,
-                        xMax: maxFrequency,
-                        yMin: Math.max(minIntensityDb, graphMinIntensity),
-                        yMax: Math.min(maxIntensityDb, graphMaxIntensity)
-                    });
                     source.stop();
                     audioContext.close();
                 }
                 else {
-                    requestAnimationFrame(checkAudioProcessing);
+                    analyser.getByteFrequencyData(dataArrayFrequency);
+                    for (let i = 0; i < bufferLength; i++) {
+                        if (dataArrayFrequency[i] > 0) {
+                            minFreqIndex = Math.min(minFreqIndex, i);
+                            maxFreqIndex = Math.max(maxFreqIndex, i);
+                            let intensityDb = 20 * Math.log10(dataArrayFrequency[i] / 255);
+                            minIntensityDb = Math.min(minIntensityDb, intensityDb);
+                            maxIntensityDb = Math.max(maxIntensityDb, intensityDb);
+                        }
+                    }
+                    requestAnimationFrame(() => checkAudioProcessing(currentTime + sampleInterval));
                 }
             };
-            requestAnimationFrame(checkAudioProcessing);
+            source.start(0);
+            checkAudioProcessing(0);
         });
     });
 }
