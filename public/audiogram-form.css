@@ -27,20 +27,12 @@
     padding: 0; /* Supprimer le padding */
 }
 
-.chartBox {
-    flex-grow: 1; /* Permettre aux chartBox de grandir pour utiliser tout l'espace disponible */
-    max-width: 50%; /* Assurer que chaque audiogramme ne dépasse pas 50% de la largeur */
-    display: flex;
-    justify-content: center; /* Centrer le contenu des chartBox */
-}
-
 .audiogram-container > div {
     margin: 0; /* Réduire la marge à 0.5% */
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: -1em;
-    gap: 0.5em;
 }
 
 
