@@ -1,10 +1,16 @@
 /* Style des conteneurs de formulaires */
 .form-container {
+    display: flex;
     position: relative;
     margin-right: 50%;
     margin-left: 20%;
     text-align: center;
     margin-bottom: 2vw;
+}
+
+.form-container input, .form-container button{
+    margin: 1%;
+    width:auto;
 }
 
 /* Style des graphiques (ne pas toucher le quadrillage) */
@@ -78,6 +84,11 @@
     position: relative;
     border: solid 3px rgba(54, 162, 235, 1);
     background: white;
+}
+
+#addPointFormLeft, #addPointFormRight, #addPointFormThird{
+    display: flex;
+    flex-direction: row;
 }
 
 #addPointFormLeft {
