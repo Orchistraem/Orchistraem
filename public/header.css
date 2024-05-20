@@ -15,7 +15,7 @@
     height: 9%; /* Hauteur fixe pour le header */
 }
 
-.header .tab1, .header .tab2, .header a {
+.header .tab1, .header .tab2,.header .tab3, .header a {
     display: contents;
 }
 
@@ -34,7 +34,7 @@
     font-size: 250%;
 }
 
-.header .tab2 img, .header .tab1 img {
+.header .tab1 img, .header .tab2 img, .header .tab3 img {
     margin-right: 2%;
     width: 4%;
 }
