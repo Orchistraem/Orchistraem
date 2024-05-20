@@ -37,6 +37,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         text: `Patient ajouté avec succès.`,
                         icon: 'success',
                         confirmButtonText: 'Fermer'
+                    }).then(() => {
+                        window.location.href = `patient.html?id=${result.patientId}`;
                     });
                 }
                 else {
@@ -53,7 +55,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     confirmButtonText: 'Fermer'
                 });
             }
-            window.location.reload();
         });
     });
 });

@@ -1,31 +1,57 @@
 /* Style des conteneurs de formulaires */
 .form-container {
-    margin: 20px;
+    display: flex;
+    position: relative;
+    margin-right: 50%;
+    margin-left: 20%;
     text-align: center;
+    margin-bottom: 2vw;
+}
+
+.form-container input, .form-container button{
+    margin: 1%;
+    width:auto;
 }
 
 /* Style des graphiques (ne pas toucher le quadrillage) */
 .audiogram {
     width: 100%;
-    max-width: 720px;
-    height: 50vh; /* Utilise 50% de la hauteur de l'écran */
+    max-width: 620px;
+    height: 70vh; /* Utilise 50% de la hauteur de l'écran */
     background-color: white;
     border-radius: 1%;
 }
 
+/* Ajuster la taille du conteneur du graphique */
+.chart-container {
+    position: relative;
+    height: 50vh; /* Augmenté de 40vh à 60vh */
+    width: 45vw; /* Augmenté de 40vw à 60vw */
+    margin: 0;
+    padding: 0;
+}
+
+.chartBox {
+    margin: 0; /* Supprimer les marges */
+    padding: 0; /* Supprimer le padding */
+}
+
 .audiogram-container > div {
-    margin : 1%;
+    margin: 0; /* Réduire la marge à 0.5% */
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: -1em;
 }
 
+
 .audiogram-container {
     display: flex;
     justify-content:center;
     align-items: center;
+    gap: 0;
 }
+
 
 .dropdown-menu {
     display: none;
@@ -58,6 +84,11 @@
     position: relative;
     border: solid 3px rgba(54, 162, 235, 1);
     background: white;
+}
+
+#addPointFormLeft, #addPointFormRight, #addPointFormThird{
+    display: flex;
+    flex-direction: row;
 }
 
 #addPointFormLeft {
@@ -152,6 +183,6 @@
 }
 
 #decibelsThird {
-    margin-right: 0.2em;
+    margin-right: 0.2em;    
 }
 

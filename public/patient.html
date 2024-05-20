@@ -27,17 +27,23 @@
     <div class="header">
       <div class="tab1">
         <a href="creer_patient.html">
-          <img src="src/Images/Patients.png" />
+          <img src="src/Images/Patients.png" alt="Patients">
         </a>
       </div>
       <div class="tab2">
         <a href="sons.html">
-          <img src="src/Images/Sons.png" alt="Sons" />
+          <img src="src/Images/Sons.png" alt="Sons">
+        </a>
+      </div>
+      <div class="tab3">
+        <a href="a_propos.html">
+          <img src="src/Images/logo.png" alt="Sons">
         </a>
       </div>
       <div class="header-title">
         <a href="index.html">Orchistraem</a>
       </div>
+      
     </div>
 
     <div
@@ -179,7 +185,7 @@
     <div id="LRAudiogram" class="audiogram-container">
       <!-- Left Audiogram -->
       <div class="chartBox">
-        <div class="chart-container" style="position: relative; height:40vh; width:40vw">
+        <div class="chart-container">
         <canvas id="audiogramLeft" class="audiogram"></canvas>
       </div>
               <!-- Left form Audiogram -->
@@ -191,14 +197,14 @@
                     class="form-control"
                     placeholder="Fréquence"
                     name="frequency"
-                  /><br />
+                  />
                   <input
                     type="text"
                     id="decibelsLeft"
                     class="form-control"
                     placeholder="dB"
                     name="decibels"
-                  /><br />
+                  />
                   <button type="submit" class="btn btn-outline-primary">
                     Ajouter
                   </button>
@@ -208,7 +214,7 @@
 
       <!-- Right Audiogram -->
       <div class="chartBox">
-        <div class="chart-container" style="position: relative; height:40vh; width:40vw">
+        <div class="chart-container">
         <canvas id="audiogramRight" class="audiogram"></canvas>
         </div>
         <!-- Form for Right Audiogram -->
@@ -239,7 +245,7 @@
     <!-- Third Audiogram on a new line -->
     <div id ="CLAudiogram" class="audiogram-container" style="display: none">
       <div class="chartBox">
-        <div class="chart-container" style="position: relative; height:40vh; width:40vw">
+        <div class="chart-container">
         <canvas id="audiogramChampLibre" class="audiogram" ></canvas></div>
         <div class="form-container" id="test">
           <form id="addPointFormThird">

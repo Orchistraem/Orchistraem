@@ -1,0 +1,36 @@
+
+
+.container {
+    margin: 5%;
+    color: #FFF; /* Texte blanc pour le contraste */
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 3px 10px 0 rgba(0, 0, 0, 0.09); /* Ombre plus légère */
+    border-radius: 25px; /* Coins arrondis pour l'effet bulle */
+    padding: 10px; /* Espace intérieur */
+    margin-bottom: 10px; /* Espace entre les bulles */
+    background-color: rgb(45, 142, 207); /* Couleur de fond */
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2); /* Ombre pour un effet 3D */
+    max-width: 1050px; /* Largeur maximale */
+    max-height: 800px;
+    margin-left: auto; /* Centrer la bulle */
+    margin-right: auto;
+    text-align: center; /* Aligner le texte à gauche */
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+.highlight {
+    font-weight: bold;
+    color: rgb(187, 45, 59);
+}
+
+.student-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.student-list li {
+    padding: 5px 0;
+}
