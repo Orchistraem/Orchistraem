@@ -3,6 +3,7 @@ html, body {
     margin: 0; /* Supprime les marges par défaut */
     min-height: 100%;
     height: auto;
+    overflow-x: hidden;    
 }
 
 body {
