@@ -1,5 +1,6 @@
 /* Style des conteneurs de formulaires */
 .form-container {
+    position: relative;
     margin-right: 50%;
     margin-left: 20%;
     text-align: center;
@@ -18,8 +19,8 @@
 /* Ajuster la taille du conteneur du graphique */
 .chart-container {
     position: relative;
-    height: 55vh; /* Augmenté de 40vh à 60vh */
-    width: 50vw; /* Augmenté de 40vw à 60vw */
+    height: 50vh; /* Augmenté de 40vh à 60vh */
+    width: 45vw; /* Augmenté de 40vw à 60vw */
     margin: 0;
     padding: 0;
 }
