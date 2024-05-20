@@ -1262,6 +1262,7 @@ function callRecommendation(freqPoint, dbPoint) {
             else {
                 modalText.textContent = "Fichiers correspondants: " + result.join(", ");
                 modal.style.display = "block"; // Show the modal
+                updateSoundSelector(result);
             }
         }
         catch (error) {
@@ -1277,6 +1278,35 @@ function callRecommendation(freqPoint, dbPoint) {
             }
         };
     });
+}
+/**
+ * Met à jour le sélecteur de sons avec les options fournies.
+ *
+ * @param sounds - Liste des noms de fichiers audio à ajouter dans le sélecteur.
+ */
+function updateSoundSelector(sounds) {
+    const soundSelector = document.getElementById('soundSelectorChampLibre');
+    // Vérification pour s'assurer que soundSelector n'est pas null
+    if (soundSelector) {
+        // Vider les options actuelles du sélecteur
+        soundSelector.innerHTML = '';
+        // Ajouter une option par défaut qui n'est pas sélectionnable
+        const defaultOption = document.createElement('option');
+        defaultOption.textContent = 'Sélectionner un son'; // Texte d'incitation à choisir
+        defaultOption.value = ''; // Valeur vide pour indiquer qu'aucune sélection n'a été faite
+        defaultOption.selected = true; // Faire de cette option la sélection par défaut
+        soundSelector.appendChild(defaultOption);
+        // Ajouter les sons disponibles comme options
+        sounds.forEach(sound => {
+            const option = document.createElement('option');
+            option.value = sound;
+            option.textContent = sound; // Affiche le nom du fichier comme texte de l'option
+            soundSelector.appendChild(option);
+        });
+    }
+    else {
+        console.error('Le sélecteur de sons est introuvable.');
+    }
 }
 /**
  * Supprime un point de l'audiogramme et met à jour le graphique.
