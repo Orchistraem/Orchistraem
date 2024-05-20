@@ -32,11 +32,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 if (response.ok) {
                     const result = yield response.json();
+                    console.log(result);
                     Swal.fire({
                         title: 'Succès !',
                         text: `Patient ajouté avec succès.`,
                         icon: 'success',
                         confirmButtonText: 'Fermer'
+                    }).then(() => {
+                        window.location.href = `patient.html?id=${result.patientId}`;
                     });
                 }
                 else {
@@ -53,7 +56,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     confirmButtonText: 'Fermer'
                 });
             }
-            window.location.reload();
         });
     });
 });

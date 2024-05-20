@@ -24,14 +24,18 @@ declare var Swal: any;
                 body: JSON.stringify(formData)
             });
 
-            if (response.ok) {
+            if (response.ok) {   
                 const result = await response.json();
                 Swal.fire({
                     title: 'Succès !',
                     text: `Patient ajouté avec succès.`,
                     icon: 'success',
                     confirmButtonText: 'Fermer'
-                  });
+                  }).then(() => {
+                    window.location.href = `patient.html?id=${result.patientId}`;
+                });
+
+
                 } else {
                   throw new Error('Erreur lors de la création du patient');
                 }
@@ -45,7 +49,6 @@ declare var Swal: any;
               confirmButtonText: 'Fermer'
             });
         }
-        window.location.reload();
     });
 });
 
