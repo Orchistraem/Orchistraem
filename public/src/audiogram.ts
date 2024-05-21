@@ -444,6 +444,8 @@ function areResultsSatisfactory(freqMin: number, freqMax: number): boolean {
 }
 
 
+let isAnalysisInProgress = false;
+
 /**
  * Analyse les valeurs extrêmes de fréquence et d'intensité dans un fichier audio.
  *
@@ -456,6 +458,13 @@ function areResultsSatisfactory(freqMin: number, freqMax: number): boolean {
  * @returns Une promesse qui résout en un objet contenant les valeurs extrêmes de fréquence et d'intensité (xMin, xMax, yMin, yMax).
  */
 async function analyseAudioExtremesConsole(audioFile: Blob): Promise<{xMin: number, xMax: number, yMin: number, yMax: number}> {
+  if (isAnalysisInProgress) {
+    console.warn('Analyse déjà en cours.');
+    return Promise.reject(new Error('Analyse déjà en cours.'));
+  }
+
+  isAnalysisInProgress = true;
+
   const audioContext = new AudioContext();
   const arrayBuffer = await audioFile.arrayBuffer();
   const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
@@ -479,6 +488,9 @@ async function analyseAudioExtremesConsole(audioFile: Blob): Promise<{xMin: numb
 
   let attempts = 0;
   const maxAttempts = 50; // Nombre maximum de tentatives pour obtenir des résultats satisfaisants
+
+  // Changer le curseur en 'wait' lorsque l'analyse commence
+  document.body.style.cursor = 'wait';
 
   return new Promise((resolve, reject) => {
       const checkAudioProcessing = () => {
@@ -513,6 +525,11 @@ async function analyseAudioExtremesConsole(audioFile: Blob): Promise<{xMin: numb
               }
 
               if (areResultsSatisfactory(minFrequency, maxFrequency)) {
+                  // Rétablir le curseur à son état par défaut lorsque l'analyse est terminée
+                  document.body.style.cursor = 'url("./src/Images/cursor.cur"), auto';
+
+                  isAnalysisInProgress = false;
+
                   resolve({
                       xMin: minFrequency,
                       xMax: maxFrequency,
@@ -529,6 +546,12 @@ async function analyseAudioExtremesConsole(audioFile: Blob): Promise<{xMin: numb
                   } else {
                       // Si après maxAttempts, nous n'avons pas de résultats satisfaisants, rejeter la promesse.
                       console.log("max attempts reached");
+
+                      // Rétablir le curseur à son état par défaut lorsque l'analyse est terminée
+                      document.body.style.cursor = 'url("./src/Images/cursor.cur"), auto';
+
+                      isAnalysisInProgress = false;
+
                       reject(new Error('Impossible d\'obtenir des résultats satisfaisants après plusieurs tentatives.'));
                       source.stop();
                       audioContext.close();
@@ -541,6 +564,12 @@ async function analyseAudioExtremesConsole(audioFile: Blob): Promise<{xMin: numb
               } else {
                   // Si après maxAttempts, nous n'avons pas de résultats satisfaisants, rejeter la promesse.
                   console.log("max attempts reached");
+
+                  // Rétablir le curseur à son état par défaut lorsque l'analyse est terminée
+                  document.body.style.cursor = 'default';
+
+                  isAnalysisInProgress = false;
+
                   reject(new Error('Impossible d\'obtenir des résultats satisfaisants après plusieurs tentatives.'));
                   source.stop();
                   audioContext.close();
@@ -551,6 +580,8 @@ async function analyseAudioExtremesConsole(audioFile: Blob): Promise<{xMin: numb
       requestAnimationFrame(checkAudioProcessing);
   });
 }
+
+
 
 let buttonDeletionToggle = document.getElementById("toggleDeletionMode") as HTMLButtonElement;
 

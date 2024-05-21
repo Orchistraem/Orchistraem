@@ -398,6 +398,7 @@ function areResultsSatisfactory(freqMin, freqMax) {
     const difference = freqMax - freqMin;
     return difference >= minDifference && difference <= maxDifference;
 }
+let isAnalysisInProgress = false;
 /**
  * Analyse les valeurs extrêmes de fréquence et d'intensité dans un fichier audio.
  *
@@ -411,6 +412,11 @@ function areResultsSatisfactory(freqMin, freqMax) {
  */
 function analyseAudioExtremesConsole(audioFile) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (isAnalysisInProgress) {
+            console.warn('Analyse déjà en cours.');
+            return Promise.reject(new Error('Analyse déjà en cours.'));
+        }
+        isAnalysisInProgress = true;
         const audioContext = new AudioContext();
         const arrayBuffer = yield audioFile.arrayBuffer();
         const audioBuffer = yield audioContext.decodeAudioData(arrayBuffer);
@@ -430,6 +436,8 @@ function analyseAudioExtremesConsole(audioFile) {
         const graphMaxIntensity = 120;
         let attempts = 0;
         const maxAttempts = 50; // Nombre maximum de tentatives pour obtenir des résultats satisfaisants
+        // Changer le curseur en 'wait' lorsque l'analyse commence
+        document.body.style.cursor = 'wait';
         return new Promise((resolve, reject) => {
             const checkAudioProcessing = () => {
                 analyser.getByteFrequencyData(dataArrayFrequency);
@@ -456,6 +464,9 @@ function analyseAudioExtremesConsole(audioFile) {
                         maxFrequency = minFrequency;
                     }
                     if (areResultsSatisfactory(minFrequency, maxFrequency)) {
+                        // Rétablir le curseur à son état par défaut lorsque l'analyse est terminée
+                        document.body.style.cursor = 'url("./src/Images/cursor.cur"), auto';
+                        isAnalysisInProgress = false;
                         resolve({
                             xMin: minFrequency,
                             xMax: maxFrequency,
@@ -474,6 +485,9 @@ function analyseAudioExtremesConsole(audioFile) {
                         else {
                             // Si après maxAttempts, nous n'avons pas de résultats satisfaisants, rejeter la promesse.
                             console.log("max attempts reached");
+                            // Rétablir le curseur à son état par défaut lorsque l'analyse est terminée
+                            document.body.style.cursor = 'url("./src/Images/cursor.cur"), auto';
+                            isAnalysisInProgress = false;
                             reject(new Error('Impossible d\'obtenir des résultats satisfaisants après plusieurs tentatives.'));
                             source.stop();
                             audioContext.close();
@@ -488,6 +502,9 @@ function analyseAudioExtremesConsole(audioFile) {
                     else {
                         // Si après maxAttempts, nous n'avons pas de résultats satisfaisants, rejeter la promesse.
                         console.log("max attempts reached");
+                        // Rétablir le curseur à son état par défaut lorsque l'analyse est terminée
+                        document.body.style.cursor = 'default';
+                        isAnalysisInProgress = false;
                         reject(new Error('Impossible d\'obtenir des résultats satisfaisants après plusieurs tentatives.'));
                         source.stop();
                         audioContext.close();
