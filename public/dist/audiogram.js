@@ -386,6 +386,19 @@ if (select) {
     });
 }
 /**
+ * Vérifie si les résultats de l'analyse sont satisfaisants.
+ *
+ * @param freqMin - La fréquence minimale.
+ * @param freqMax - La fréquence maximale.
+ * @returns true si les résultats sont satisfaisants, false sinon.
+ */
+function areResultsSatisfactory(freqMin, freqMax) {
+    const minDifference = 20; // Différence minimale acceptable entre les fréquences min et max
+    const maxDifference = 1000; // Différence maximale acceptable entre les fréquences min et max
+    const difference = freqMax - freqMin;
+    return difference >= minDifference && difference <= maxDifference;
+}
+/**
  * Analyse les valeurs extrêmes de fréquence et d'intensité dans un fichier audio.
  *
  * Cette fonction utilise l'API Web Audio pour créer un contexte audio et analyser les données de fréquence
@@ -414,6 +427,8 @@ function analyseAudioExtremesConsole(audioFile) {
         const graphMaxFrequency = 8000;
         const graphMinIntensity = 0;
         const graphMaxIntensity = 120;
+        let attempts = 0;
+        const maxAttempts = 50; // Nombre maximum de tentatives pour obtenir des résultats satisfaisants
         return new Promise((resolve, reject) => {
             const checkAudioProcessing = () => {
                 analyser.getByteFrequencyData(dataArrayFrequency);
@@ -439,17 +454,37 @@ function analyseAudioExtremesConsole(audioFile) {
                     if (minFrequency > maxFrequency) {
                         maxFrequency = minFrequency;
                     }
-                    resolve({
-                        xMin: minFrequency,
-                        xMax: maxFrequency,
-                        yMin: Math.max(minIntensityDb, graphMinIntensity),
-                        yMax: Math.min(maxIntensityDb, graphMaxIntensity)
-                    });
-                    source.stop();
-                    audioContext.close();
+                    if (areResultsSatisfactory(minFrequency, maxFrequency) || attempts >= maxAttempts) {
+                        resolve({
+                            xMin: minFrequency,
+                            xMax: maxFrequency,
+                            yMin: Math.max(minIntensityDb, graphMinIntensity),
+                            yMax: Math.min(maxIntensityDb, graphMaxIntensity)
+                        });
+                        source.stop();
+                        audioContext.close();
+                    }
+                    else {
+                        attempts++;
+                        requestAnimationFrame(checkAudioProcessing);
+                    }
                 }
                 else {
-                    requestAnimationFrame(checkAudioProcessing);
+                    attempts++;
+                    if (attempts < maxAttempts) {
+                        requestAnimationFrame(checkAudioProcessing);
+                    }
+                    else {
+                        // Si après maxAttempts, nous n'avons pas de résultats satisfaisants, on renvoie les résultats obtenus.
+                        resolve({
+                            xMin: minFreqIndex * audioContext.sampleRate / analyser.fftSize,
+                            xMax: maxFreqIndex * audioContext.sampleRate / analyser.fftSize,
+                            yMin: Math.max(minIntensityDb, graphMinIntensity),
+                            yMax: Math.min(maxIntensityDb, graphMaxIntensity)
+                        });
+                        source.stop();
+                        audioContext.close();
+                    }
                 }
             };
             requestAnimationFrame(checkAudioProcessing);
