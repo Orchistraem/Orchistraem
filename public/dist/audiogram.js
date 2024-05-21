@@ -418,10 +418,11 @@ function analyseAudioExtremesConsole(audioFile) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(analyser);
+        // Ne pas connecter la source à la destination pour éviter de jouer le son
+        // source.connect(audioContext.destination);
         analyser.fftSize = 2048;
         const bufferLength = analyser.frequencyBinCount;
         const dataArrayFrequency = new Uint8Array(bufferLength);
-        source.connect(audioContext.destination);
         source.start(0);
         const graphMinFrequency = 125;
         const graphMaxFrequency = 8000;
@@ -454,19 +455,29 @@ function analyseAudioExtremesConsole(audioFile) {
                     if (minFrequency > maxFrequency) {
                         maxFrequency = minFrequency;
                     }
-                    if (areResultsSatisfactory(minFrequency, maxFrequency) || attempts >= maxAttempts) {
+                    if (areResultsSatisfactory(minFrequency, maxFrequency)) {
                         resolve({
                             xMin: minFrequency,
                             xMax: maxFrequency,
                             yMin: Math.max(minIntensityDb, graphMinIntensity),
                             yMax: Math.min(maxIntensityDb, graphMaxIntensity)
                         });
+                        console.log("attempts", attempts);
                         source.stop();
                         audioContext.close();
                     }
                     else {
                         attempts++;
-                        requestAnimationFrame(checkAudioProcessing);
+                        if (attempts < maxAttempts) {
+                            requestAnimationFrame(checkAudioProcessing);
+                        }
+                        else {
+                            // Si après maxAttempts, nous n'avons pas de résultats satisfaisants, rejeter la promesse.
+                            console.log("max attempts reached");
+                            reject(new Error('Impossible d\'obtenir des résultats satisfaisants après plusieurs tentatives.'));
+                            source.stop();
+                            audioContext.close();
+                        }
                     }
                 }
                 else {
@@ -475,13 +486,9 @@ function analyseAudioExtremesConsole(audioFile) {
                         requestAnimationFrame(checkAudioProcessing);
                     }
                     else {
-                        // Si après maxAttempts, nous n'avons pas de résultats satisfaisants, on renvoie les résultats obtenus.
-                        resolve({
-                            xMin: minFreqIndex * audioContext.sampleRate / analyser.fftSize,
-                            xMax: maxFreqIndex * audioContext.sampleRate / analyser.fftSize,
-                            yMin: Math.max(minIntensityDb, graphMinIntensity),
-                            yMax: Math.min(maxIntensityDb, graphMaxIntensity)
-                        });
+                        // Si après maxAttempts, nous n'avons pas de résultats satisfaisants, rejeter la promesse.
+                        console.log("max attempts reached");
+                        reject(new Error('Impossible d\'obtenir des résultats satisfaisants après plusieurs tentatives.'));
                         source.stop();
                         audioContext.close();
                     }
@@ -536,7 +543,8 @@ function findSoundsWithPoint(freqPoint, dbPoint, sounds) {
                 }
             }
             catch (error) {
-                console.error('Erreur lors du chargement ou de l\'analyse du fichier audio:', error);
+                console.error(`Erreur lors du chargement ou de l'analyse du fichier audio ${sound}:`, error);
+                // Ignorer le son si l'analyse échoue après plusieurs tentatives
             }
         }
         return matchingSounds;
