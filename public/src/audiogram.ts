@@ -1,3 +1,5 @@
+import { Title } from "chart.js";
+
 // Déclare Chart.js comme une variable globale
 declare var Chart: any;
 declare var Swal: any;
@@ -1397,27 +1399,17 @@ async function callRecommendation(freqPoint : number, dbPoint:number) {
     const soundFiles = await response.json();
     const result = await findSoundsWithPoint(freqPoint, dbPoint, soundFiles);
     if(result.length == 0){
-      modalText.textContent = "Aucun fichiers ne correspond";
-      modal.style.display = "block"; // Show the modal
+      Swal.fire("Aucun son correspondant");
     } else {
-      modalText.textContent = "Fichiers correspondants: " + result.join(", ");
-      modal.style.display = "block"; // Show the modal
+      Swal.fire({Title :'Analyse pour la fréquence '+ freqPoint+'hz effectuer.',
+      text :'Pour afficher un son conseillé sur l\'audiogramme, \ncliquer sur selectionner un son dans le menu déroulant a gauche.'});
     }
 
   } catch (error) {
     console.error("Erreur lors de la récupération ou de la recherche des fichiers audio:", error);
-    modalText.textContent = "Erreur lors de la recherche des fichiers.";
+    Swal.fire("Erreur lors de la recherche des fichiers.");
   }
 
-  closeSpan.onclick = function() {
-    modal.style.display = "none";
-  }
-
-  window.onclick = function(event) {
-    if (event.target == modal) {
-      modal.style.display = "none";
-    }
-  }
 }
 
 
