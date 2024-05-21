@@ -1,3 +1,4 @@
+
 // Déclare Chart.js comme une variable globale
 declare var Chart: any;
 declare var Swal: any;
@@ -1314,7 +1315,9 @@ function toggleDropdownMenu() {
 function setupClickListeners(chart: any, ear: string, legendSelector: HTMLSelectElement) {
   const canvas = chart.canvas;
   canvas.addEventListener('click', function(event: MouseEvent) {
-
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
      if(isRecommandationMode){
       if(isDeletionModeActive){
 
@@ -1325,7 +1328,7 @@ function setupClickListeners(chart: any, ear: string, legendSelector: HTMLSelect
         const datasetIndex = points[0].datasetIndex;
         const index = points[0].index;
         const pointData = chart.data.datasets[datasetIndex].data[index];
-        callRecommendation(pointData.x,pointData.y)
+        callRecommendation(chart,pointData.x,pointData.y,x,y)
       }
     }
 
@@ -1373,13 +1376,14 @@ function setupClickListeners(chart: any, ear: string, legendSelector: HTMLSelect
  * puis utilise ces données pour trouver les fichiers correspondants aux critères donnés. Les résultats sont affichés dans
  * un modal. Si une erreur survient pendant la récupération ou la recherche des fichiers, un message d'erreur est affiché.
  * 
+ * @param chart - Le graphique sur lequel le point est cliqué.
  * @param freqPoint - La fréquence du point pour lequel une recommandation est recherchée.
  * @param dbPoint - Le niveau de décibels du point pour lequel une recommandation est recherchée.
  * 
  * @example
- * callRecommendation(1000, 50); // Cherche des fichiers audio correspondant à 1000 Hz et 50 dB et affiche les résultats dans un modal.
+ * callRecommendation(myChart, 1000, 50); // Cherche des fichiers audio correspondant à 1000 Hz et 50 dB et affiche les résultats dans un modal.
  */
-async function callRecommendation(freqPoint : number, dbPoint:number) {
+async function callRecommendation(chart: any, freqPoint: number, dbPoint: number, x: number, y: number) {
   const modal = document.getElementById("resultModal") as HTMLDivElement | null;
   const modalText = document.getElementById("modalText") as HTMLParagraphElement | null;
   const closeSpan = document.querySelector(".close_reco") as HTMLSpanElement | null;
@@ -1396,11 +1400,12 @@ async function callRecommendation(freqPoint : number, dbPoint:number) {
     }
     const soundFiles = await response.json();
     const result = await findSoundsWithPoint(freqPoint, dbPoint, soundFiles);
-    if(result.length == 0){
-      modalText.textContent = "Aucun fichiers ne correspond";
+    
+    if (result.length == 0) {
+      modalText.textContent = "Aucun sons ne correspond";
       modal.style.display = "block"; // Show the modal
     } else {
-      modalText.textContent = "Fichiers correspondants: " + result.join(", ");
+      modalText.innerHTML = "Pour la fréquence : " + freqPoint + "Hz<br>Sons correspondants:<br>" + result.join("<br>");
       modal.style.display = "block"; // Show the modal
       updateSoundSelector(result);
     }
@@ -1417,9 +1422,11 @@ async function callRecommendation(freqPoint : number, dbPoint:number) {
   window.onclick = function(event) {
     if (event.target == modal) {
       modal.style.display = "none";
+
     }
   }
 }
+
 
 /**
  * Met à jour le sélecteur de sons avec les options fournies.

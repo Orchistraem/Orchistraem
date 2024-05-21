@@ -1178,6 +1178,9 @@ function toggleDropdownMenu() {
 function setupClickListeners(chart, ear, legendSelector) {
     const canvas = chart.canvas;
     canvas.addEventListener('click', function (event) {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
         if (isRecommandationMode) {
             if (isDeletionModeActive) {
                 showNotification("Le mode de suppression est déjà activé");
@@ -1188,7 +1191,7 @@ function setupClickListeners(chart, ear, legendSelector) {
                     const datasetIndex = points[0].datasetIndex;
                     const index = points[0].index;
                     const pointData = chart.data.datasets[datasetIndex].data[index];
-                    callRecommendation(pointData.x, pointData.y);
+                    callRecommendation(chart, pointData.x, pointData.y, x, y);
                 }
             }
         }
@@ -1233,13 +1236,14 @@ function setupClickListeners(chart, ear, legendSelector) {
  * puis utilise ces données pour trouver les fichiers correspondants aux critères donnés. Les résultats sont affichés dans
  * un modal. Si une erreur survient pendant la récupération ou la recherche des fichiers, un message d'erreur est affiché.
  *
+ * @param chart - Le graphique sur lequel le point est cliqué.
  * @param freqPoint - La fréquence du point pour lequel une recommandation est recherchée.
  * @param dbPoint - Le niveau de décibels du point pour lequel une recommandation est recherchée.
  *
  * @example
- * callRecommendation(1000, 50); // Cherche des fichiers audio correspondant à 1000 Hz et 50 dB et affiche les résultats dans un modal.
+ * callRecommendation(myChart, 1000, 50); // Cherche des fichiers audio correspondant à 1000 Hz et 50 dB et affiche les résultats dans un modal.
  */
-function callRecommendation(freqPoint, dbPoint) {
+function callRecommendation(chart, freqPoint, dbPoint, x, y) {
     return __awaiter(this, void 0, void 0, function* () {
         const modal = document.getElementById("resultModal");
         const modalText = document.getElementById("modalText");
@@ -1256,11 +1260,11 @@ function callRecommendation(freqPoint, dbPoint) {
             const soundFiles = yield response.json();
             const result = yield findSoundsWithPoint(freqPoint, dbPoint, soundFiles);
             if (result.length == 0) {
-                modalText.textContent = "Aucun fichiers ne correspond";
+                modalText.textContent = "Aucun sons ne correspond";
                 modal.style.display = "block"; // Show the modal
             }
             else {
-                modalText.textContent = "Fichiers correspondants: " + result.join(", ");
+                modalText.innerHTML = "Pour la fréquence : " + freqPoint + "Hz<br>Sons correspondants:<br>" + result.join("<br>");
                 modal.style.display = "block"; // Show the modal
                 updateSoundSelector(result);
             }
