@@ -1477,7 +1477,7 @@ async function callRecommendation(chart: any, freqPoint: number, dbPoint: number
       modalText.textContent = "Aucun sons ne correspond";
       modal.style.display = "block"; // Show the modal
     } else {
-      modalText.innerHTML = "Pour la fréquence : " + freqPoint + "Hz<br>Sons correspondants:<br>" + result.join("<br>");
+      modalText.innerHTML = "Pour la fréquence : <b>" + freqPoint + "Hz</b><br>Sons correspondants:<br><b>" + result.join("<br>")+"</b>";
       modal.style.display = "block"; // Show the modal
       updateSoundSelector(result);
     }
